@@ -506,8 +506,9 @@ module.exports = class coinbasepro extends Exchange {
         // level 1 - only the best bid and ask
         // level 2 - top 50 bids and asks (aggregated)
         // level 3 - full order book (non aggregated)
+        const market = this.market (symbol);
         const request = {
-            'id': this.marketId (symbol),
+            'id': market['id'],
             'level': 2, // 1 best bidask, 2 aggregated, 3 full
         };
         const response = await this.publicGetProductsIdBook (this.extend (request, params));
