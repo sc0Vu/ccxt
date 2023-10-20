@@ -142,8 +142,8 @@ import { OrderBook as WsOrderBook, IndexedOrderBook, CountedOrderBook } from './
 //
 
 // import types
-import { Market, Trade, Fee, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, Transaction, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, OpenInterest } from './types.js';
-export {Market, Trade, Fee, Position, Ticker} from './types.js'
+import { Market, Trade, Fee, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, Transaction, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, OpenInterest, Liquidation } from './types.js';
+export {Market, Trade, Fee, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, Transaction, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, Liquidation} from './types.js'
 
 // ----------------------------------------------------------------------------
 // move this elsewhere
@@ -1235,10 +1235,16 @@ export default class Exchange {
                             //               V
                             client.throttle (cost).then (() => {
                                 client.send (message);
-                            }).catch ((e) => { throw e });
+                            }).catch ((e) => { 
+                                delete client.subscriptions[subscribeHash];
+                                future.reject (e);
+                            });
                         } else {
                             client.send (message)
-                            .catch ((e) => { throw e });
+                            .catch ((e) => {
+                                delete client.subscriptions[subscribeHash];
+                                future.reject (e);
+                            });
                         }
                     }
                 }).catch ((e)=> {
@@ -1314,6 +1320,10 @@ export default class Exchange {
 
     convertToBigInt(value: string) {
         return BigInt(value); // used on XT
+    }
+
+    stringToCharsArray (value) {
+        return value.split ('');
     }
 
     valueIsDefined(value){
@@ -1831,6 +1841,88 @@ export default class Exchange {
                 },
             },
         }, currency);
+    }
+
+    safeMarketStructure (market: object = undefined) {
+        const cleanStructure = {
+            'id': undefined,
+            'lowercaseId': undefined,
+            'symbol': undefined,
+            'base': undefined,
+            'quote': undefined,
+            'settle': undefined,
+            'baseId': undefined,
+            'quoteId': undefined,
+            'settleId': undefined,
+            'type': undefined,
+            'spot': undefined,
+            'margin': undefined,
+            'swap': undefined,
+            'future': undefined,
+            'option': undefined,
+            'index': undefined,
+            'active': undefined,
+            'contract': undefined,
+            'linear': undefined,
+            'inverse': undefined,
+            'taker': undefined,
+            'maker': undefined,
+            'contractSize': undefined,
+            'expiry': undefined,
+            'expiryDatetime': undefined,
+            'strike': undefined,
+            'optionType': undefined,
+            'precision': {
+                'amount': undefined,
+                'price': undefined,
+                'cost': undefined,
+                'base': undefined,
+                'quote': undefined,
+            },
+            'limits': {
+                'leverage': {
+                    'min': undefined,
+                    'max': undefined,
+                },
+                'amount': {
+                    'min': undefined,
+                    'max': undefined,
+                },
+                'price': {
+                    'min': undefined,
+                    'max': undefined,
+                },
+                'cost': {
+                    'min': undefined,
+                    'max': undefined,
+                },
+            },
+            'created': undefined,
+            'info': undefined,
+        };
+        if (market !== undefined) {
+            const result = this.extend (cleanStructure, market);
+            // set undefined swap/future/etc
+            if (result['spot']) {
+                if (result['contract'] === undefined) {
+                    result['contract'] = false;
+                }
+                if (result['swap'] === undefined) {
+                    result['swap'] = false;
+                }
+                if (result['future'] === undefined) {
+                    result['future'] = false;
+                }
+                if (result['option'] === undefined) {
+                    result['option'] = false;
+                }
+                if (result['index'] === undefined) {
+                    result['index'] = false;
+                }
+            }
+            return result;
+        }
+        return cleanStructure;
     }
 
     setMarkets (markets, currencies = undefined) {
@@ -3578,6 +3670,10 @@ export default class Exchange {
         throw new NotSupported (this.id + ' fetchTickers() is not supported yet');
     }
 
+    async fetchOrderBooks (symbols: string[] = undefined, limit: Int = undefined, params = {}): Promise<Dictionary<OrderBook>> {
+        throw new NotSupported (this.id + ' fetchOrderBooks() is not supported yet');
+    }
+
     async watchTickers (symbols: string[] = undefined, params = {}): Promise<Dictionary<Ticker>> {
         throw new NotSupported (this.id + ' watchTickers() is not supported yet');
     }
@@ -3659,6 +3755,14 @@ export default class Exchange {
 
     async fetchMyTrades (symbol: string = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
         throw new NotSupported (this.id + ' fetchMyTrades() is not supported yet');
+    }
+
+    async fetchMyLiquidations (symbol: string = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Liquidation[]> {
+        throw new NotSupported (this.id + ' fetchMyLiquidations() is not supported yet');
+    }
+
+    async fetchLiquidations (symbol: string, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Liquidation[]> {
+        throw new NotSupported (this.id + ' fetchLiquidations() is not supported yet');
     }
 
     async fetchMyTradesWs (symbol: string = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
@@ -4530,6 +4634,15 @@ export default class Exchange {
         return this.filterByArray (objects, key, values, indexed) as Position[];
     }
 
+    filterByArrayTickers (objects, key: IndexType, values = undefined, indexed = true): Dictionary<Ticker> {
+        /**
+         * @ignore
+         * @method
+         * @description Typed wrapper for filterByArray that returns a dictionary of tickers
+         */
+        return this.filterByArray (objects, key, values, indexed) as Dictionary<Ticker>;
+    }
+
     resolvePromiseIfMessagehashMatches (client, prefix: string, symbol: string, data) {
         const messageHashes = this.findMessageHashes (client, prefix);
         for (let i = 0; i < messageHashes.length; i++) {
@@ -4846,6 +4959,32 @@ export default class Exchange {
             'datetime': this.safeString (interest, 'datetime'),
             'info': this.safeValue (interest, 'info'),
         });
+    }
+
+    parseLiquidation (liquidation, market = undefined): Liquidation {
+        throw new NotSupported (this.id + ' parseLiquidation () is not supported yet');
+    }
+
+    parseLiquidations (liquidations, market = undefined, since: Int = undefined, limit: Int = undefined): Liquidation[] {
+        /**
+         * @ignore
+         * @method
+         * @description parses liquidation info from the exchange response
+         * @param {object[]} liquidations each item describes an instance of a liquidation event
+         * @param {object} market ccxt market
+         * @param {int} [since] when defined, the response items are filtered to only include items after this timestamp
+         * @param {int} [limit] limits the number of items in the response
+         * @returns {object[]} an array of [liquidation structures]{@link https://github.com/ccxt/ccxt/wiki/Manual#liquidation-structure}
+         */
+        const result = [];
+        for (let i = 0; i < liquidations.length; i++) {
+            const entry = liquidations[i];
+            const parsed = this.parseLiquidation (entry, market);
+            result.push (parsed);
+        }
+        const sorted = this.sortBy (result, 'timestamp');
+        const symbol = this.safeString (market, 'symbol');
+        return this.filterBySymbolSinceLimit (sorted, symbol, since, limit);
     }
 }
 

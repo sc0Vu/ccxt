@@ -619,6 +619,7 @@ export default class bingx extends Exchange {
                     'max': this.safeNumber (market, 'maxNotional'),
                 },
             },
+            'created': undefined,
             'info': market,
         };
         return entry;
@@ -891,14 +892,19 @@ export default class bingx extends Exchange {
         if (time === 0) {
             time = undefined;
         }
-        const isBuyerMaker = this.safeValue2 (trade, 'buyerMaker', 'isBuyerMaker');
-        const side = this.safeStringLower2 (trade, 'side', 'S');
         const cost = this.safeString (trade, 'quoteQty');
         const type = (cost === undefined) ? 'spot' : 'swap';
         const currencyId = this.safeString2 (trade, 'currency', 'N');
         const currencyCode = this.safeCurrencyCode (currencyId);
         const m = this.safeValue (trade, 'm', false);
         const marketId = this.safeString (trade, 's');
+        const isBuyerMaker = this.safeValue2 (trade, 'buyerMaker', 'isBuyerMaker');
+        let takeOrMaker = (isBuyerMaker || m) ? 'maker' : 'taker';
+        let side = this.safeStringLower2 (trade, 'side', 'S');
+        if (side === undefined) {
+            side = (isBuyerMaker || m) ? 'sell' : 'buy';
+            takeOrMaker = 'taker';
+        }
         return this.safeTrade ({
             'id': this.safeStringN (trade, [ 'id', 't' ]),
             'info': trade,
@@ -908,7 +914,7 @@ export default class bingx extends Exchange {
             'order': this.safeString2 (trade, 'orderId', 'i'),
             'type': this.safeStringLower (trade, 'o'),
             'side': this.parseOrderSide (side),
-            'takerOrMaker': (isBuyerMaker || m) ? 'maker' : 'taker',
+            'takerOrMaker': takeOrMaker,
             'price': this.safeString2 (trade, 'price', 'p'),
             'amount': this.safeStringN (trade, [ 'qty', 'amount', 'q' ]),
             'cost': cost,
@@ -1570,7 +1576,7 @@ export default class bingx extends Exchange {
             'info': position,
             'id': this.safeString (position, 'positionId'),
             'symbol': this.safeSymbol (marketId, market, '-', 'swap'),
-            'notional': this.safeString (position, 'positionAmt'),
+            'notional': this.safeNumber (position, 'positionAmt'),
             'marginMode': marginMode,
             'liquidationPrice': undefined,
             'entryPrice': this.safeNumber2 (position, 'avgPrice', 'entryPrice'),
@@ -2716,8 +2722,10 @@ export default class bingx extends Exchange {
         const network = this.safeString (transaction, 'network');
         const currencyId = this.safeString (transaction, 'coin');
         let code = this.safeCurrencyCode (currencyId, currency);
-        if (code !== undefined && code.indexOf (network) >= 0) {
-            code = code.replace (network, '');
+        if ((code !== undefined) && (code !== network) && code.indexOf (network) >= 0) {
+            if (network !== undefined) {
+                code = code.replace (network, '');
+            }
         }
         const rawType = this.safeString (transaction, 'transferType');
         const type = (rawType === '0') ? 'deposit' : 'withdrawal';

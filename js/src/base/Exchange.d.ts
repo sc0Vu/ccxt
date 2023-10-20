@@ -4,8 +4,8 @@ ExchangeError, AuthenticationError, DDoSProtection, RequestTimeout, ExchangeNotA
 import WsClient from './ws/WsClient.js';
 import { Future } from './ws/Future.js';
 import { OrderBook as WsOrderBook, IndexedOrderBook, CountedOrderBook } from './ws/OrderBook.js';
-import { Market, Trade, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, OpenInterest } from './types.js';
-export { Market, Trade, Fee, Position, Ticker } from './types.js';
+import { Market, Trade, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, OpenInterest, Liquidation } from './types.js';
+export { Market, Trade, Fee, Ticker, OHLCV, OHLCVC, Order, OrderBook, Balance, Balances, Dictionary, Transaction, DepositAddressResponse, Currency, MinMax, IndexType, Int, OrderType, OrderSide, Position, FundingRateHistory, Liquidation } from './types.js';
 /**
  * @class Exchange
  */
@@ -516,6 +516,7 @@ export default class Exchange {
     close(): Promise<any[]>;
     loadOrderBook(client: any, messageHash: any, symbol: any, limit?: any, params?: {}): Promise<void>;
     convertToBigInt(value: string): bigint;
+    stringToCharsArray(value: any): any;
     valueIsDefined(value: any): boolean;
     arraySlice(array: any, first: any, second?: any): any;
     getProperty(obj: any, property: any, defaultValue?: any): any;
@@ -602,6 +603,7 @@ export default class Exchange {
         info: object;
     };
     safeCurrencyStructure(currency: object): any;
+    safeMarketStructure(market?: object): any;
     setMarkets(markets: any, currencies?: any): Dictionary<any>;
     safeBalance(balance: object): Balances;
     safeOrder(order: object, market?: object): Order;
@@ -704,6 +706,7 @@ export default class Exchange {
     fetchTicker(symbol: string, params?: {}): Promise<Ticker>;
     watchTicker(symbol: string, params?: {}): Promise<Ticker>;
     fetchTickers(symbols?: string[], params?: {}): Promise<Dictionary<Ticker>>;
+    fetchOrderBooks(symbols?: string[], limit?: Int, params?: {}): Promise<Dictionary<OrderBook>>;
     watchTickers(symbols?: string[], params?: {}): Promise<Dictionary<Ticker>>;
     fetchOrder(id: string, symbol?: string, params?: {}): Promise<Order>;
     fetchOrderWs(id: string, symbol?: string, params?: {}): Promise<Order>;
@@ -724,6 +727,8 @@ export default class Exchange {
     fetchOpenOrdersWs(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Order[]>;
     fetchClosedOrders(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Order[]>;
     fetchMyTrades(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Trade[]>;
+    fetchMyLiquidations(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Liquidation[]>;
+    fetchLiquidations(symbol: string, since?: Int, limit?: Int, params?: {}): Promise<Liquidation[]>;
     fetchMyTradesWs(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Trade[]>;
     watchMyTrades(symbol?: string, since?: Int, limit?: Int, params?: {}): Promise<Trade[]>;
     fetchOHLCVWs(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
@@ -803,6 +808,7 @@ export default class Exchange {
     parseWsOHLCVs(ohlcvs: object[], market?: any, timeframe?: string, since?: Int, limit?: Int): any[];
     fetchTransactions(code?: string, since?: Int, limit?: Int, params?: {}): Promise<any>;
     filterByArrayPositions(objects: any, key: IndexType, values?: any, indexed?: boolean): Position[];
+    filterByArrayTickers(objects: any, key: IndexType, values?: any, indexed?: boolean): Dictionary<Ticker>;
     resolvePromiseIfMessagehashMatches(client: any, prefix: string, symbol: string, data: any): void;
     resolveMultipleOHLCV(client: any, prefix: string, symbol: string, timeframe: string, data: any): void;
     createOHLCVObject(symbol: string, timeframe: string, data: any): Dictionary<Dictionary<OHLCV[]>>;
@@ -816,5 +822,7 @@ export default class Exchange {
     removeRepeatedElementsFromArray(input: any): any;
     handleUntilOption(key: any, request: any, params: any, multiplier?: number): any[];
     safeOpenInterest(interest: any, market?: any): OpenInterest;
+    parseLiquidation(liquidation: any, market?: any): Liquidation;
+    parseLiquidations(liquidations: any, market?: any, since?: Int, limit?: Int): Liquidation[];
 }
 export { Exchange, };

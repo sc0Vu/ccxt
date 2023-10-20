@@ -41,11 +41,11 @@ use Exception;
 
 include 'Throttle.php';
 
-$version = '4.1.11';
+$version = '4.1.18';
 
 class Exchange extends \ccxt\Exchange {
 
-    const VERSION = '4.1.11';
+    const VERSION = '4.1.18';
 
     public $browser;
     public $marketsLoading = null;
@@ -761,6 +761,88 @@ class Exchange extends \ccxt\Exchange {
                 ),
             ),
         ), $currency);
+    }
+
+    public function safe_market_structure(?array $market = null) {
+        $cleanStructure = array(
+            'id' => null,
+            'lowercaseId' => null,
+            'symbol' => null,
+            'base' => null,
+            'quote' => null,
+            'settle' => null,
+            'baseId' => null,
+            'quoteId' => null,
+            'settleId' => null,
+            'type' => null,
+            'spot' => null,
+            'margin' => null,
+            'swap' => null,
+            'future' => null,
+            'option' => null,
+            'index' => null,
+            'active' => null,
+            'contract' => null,
+            'linear' => null,
+            'inverse' => null,
+            'taker' => null,
+            'maker' => null,
+            'contractSize' => null,
+            'expiry' => null,
+            'expiryDatetime' => null,
+            'strike' => null,
+            'optionType' => null,
+            'precision' => array(
+                'amount' => null,
+                'price' => null,
+                'cost' => null,
+                'base' => null,
+                'quote' => null,
+            ),
+            'limits' => array(
+                'leverage' => array(
+                    'min' => null,
+                    'max' => null,
+                ),
+                'amount' => array(
+                    'min' => null,
+                    'max' => null,
+                ),
+                'price' => array(
+                    'min' => null,
+                    'max' => null,
+                ),
+                'cost' => array(
+                    'min' => null,
+                    'max' => null,
+                ),
+            ),
+            'created' => null,
+            'info' => null,
+        );
+        if ($market !== null) {
+            $result = array_merge($cleanStructure, $market);
+            // set null swap/future/etc
+            if ($result['spot']) {
+                if ($result['contract'] === null) {
+                    $result['contract'] = false;
+                }
+                if ($result['swap'] === null) {
+                    $result['swap'] = false;
+                }
+                if ($result['future'] === null) {
+                    $result['future'] = false;
+                }
+                if ($result['option'] === null) {
+                    $result['option'] = false;
+                }
+                if ($result['index'] === null) {
+                    $result['index'] = false;
+                }
+            }
+            return $result;
+        }
+        return $cleanStructure;
     }
 
     public function set_markets($markets, $currencies = null) {
@@ -2545,6 +2627,10 @@ class Exchange extends \ccxt\Exchange {
         throw new NotSupported($this->id . ' fetchTickers() is not supported yet');
     }
 
+    public function fetch_order_books(?array $symbols = null, ?int $limit = null, $params = array ()) {
+        throw new NotSupported($this->id . ' fetchOrderBooks() is not supported yet');
+    }
+
     public function watch_tickers(?array $symbols = null, $params = array ()) {
         throw new NotSupported($this->id . ' watchTickers() is not supported yet');
     }
@@ -2630,6 +2716,14 @@ class Exchange extends \ccxt\Exchange {
 
     public function fetch_my_trades(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()) {
         throw new NotSupported($this->id . ' fetchMyTrades() is not supported yet');
+    }
+
+    public function fetch_my_liquidations(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()) {
+        throw new NotSupported($this->id . ' fetchMyLiquidations() is not supported yet');
+    }
+
+    public function fetch_liquidations(string $symbol, ?int $since = null, ?int $limit = null, $params = array ()) {
+        throw new NotSupported($this->id . ' fetchLiquidations() is not supported yet');
     }
 
     public function fetch_my_trades_ws(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()) {
@@ -3519,6 +3613,14 @@ class Exchange extends \ccxt\Exchange {
         return $this->filter_by_array($objects, $key, $values, $indexed);
     }
 
+    public function filter_by_array_tickers($objects, int|string $key, $values = null, $indexed = true) {
+        /**
+         * @ignore
+         * Typed wrapper for filterByArray that returns a dictionary of tickers
+         */
+        return $this->filter_by_array($objects, $key, $values, $indexed);
+    }
+
     public function resolve_promise_if_messagehash_matches($client, string $prefix, string $symbol, $data) {
         $messageHashes = $this->findMessageHashes ($client, $prefix);
         for ($i = 0; $i < count($messageHashes); $i++) {
@@ -3845,5 +3947,30 @@ class Exchange extends \ccxt\Exchange {
             'datetime' => $this->safe_string($interest, 'datetime'),
             'info' => $this->safe_value($interest, 'info'),
         ));
+    }
+
+    public function parse_liquidation($liquidation, $market = null) {
+        throw new NotSupported($this->id . ' parseLiquidation () is not supported yet');
+    }
+
+    public function parse_liquidations($liquidations, $market = null, ?int $since = null, ?int $limit = null) {
+        /**
+         * @ignore
+         * parses liquidation info from the exchange response
+         * @param {array[]} $liquidations each item describes an instance of a liquidation event
+         * @param {array} $market ccxt $market
+         * @param {int} [$since] when defined, the response items are filtered to only include items after this timestamp
+         * @param {int} [$limit] limits the number of items in the response
+         * @return {array[]} an array of {@link https://github.com/ccxt/ccxt/wiki/Manual#liquidation-structure liquidation structures}
+         */
+        $result = array();
+        for ($i = 0; $i < count($liquidations); $i++) {
+            $entry = $liquidations[$i];
+            $parsed = $this->parseLiquidation ($entry, $market);
+            $result[] = $parsed;
+        }
+        $sorted = $this->sort_by($result, 'timestamp');
+        $symbol = $this->safe_string($market, 'symbol');
+        return $this->filter_by_symbol_since_limit($sorted, $symbol, $since, $limit);
     }
 }

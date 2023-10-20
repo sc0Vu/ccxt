@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.1.11'
+__version__ = '4.1.18'
 
 # -----------------------------------------------------------------------------
 
@@ -1649,6 +1649,9 @@ class Exchange(object):
     def convert_to_big_int(self, value):
         return int(value) if isinstance(value, str) else value
 
+    def string_to_chars_array(self, value):
+        return list(value)
+
     def valueIsDefined(self, value):
         return value is not None
 
@@ -2056,6 +2059,80 @@ class Exchange(object):
                 },
             },
         }, currency)
+
+    def safe_market_structure(self, market: Optional[object] = None):
+        cleanStructure = {
+            'id': None,
+            'lowercaseId': None,
+            'symbol': None,
+            'base': None,
+            'quote': None,
+            'settle': None,
+            'baseId': None,
+            'quoteId': None,
+            'settleId': None,
+            'type': None,
+            'spot': None,
+            'margin': None,
+            'swap': None,
+            'future': None,
+            'option': None,
+            'index': None,
+            'active': None,
+            'contract': None,
+            'linear': None,
+            'inverse': None,
+            'taker': None,
+            'maker': None,
+            'contractSize': None,
+            'expiry': None,
+            'expiryDatetime': None,
+            'strike': None,
+            'optionType': None,
+            'precision': {
+                'amount': None,
+                'price': None,
+                'cost': None,
+                'base': None,
+                'quote': None,
+            },
+            'limits': {
+                'leverage': {
+                    'min': None,
+                    'max': None,
+                },
+                'amount': {
+                    'min': None,
+                    'max': None,
+                },
+                'price': {
+                    'min': None,
+                    'max': None,
+                },
+                'cost': {
+                    'min': None,
+                    'max': None,
+                },
+            },
+            'created': None,
+            'info': None,
+        }
+        if market is not None:
+            result = self.extend(cleanStructure, market)
+            # set None swap/future/etc
+            if result['spot']:
+                if result['contract'] is None:
+                    result['contract'] = False
+                if result['swap'] is None:
+                    result['swap'] = False
+                if result['future'] is None:
+                    result['future'] = False
+                if result['option'] is None:
+                    result['option'] = False
+                if result['index'] is None:
+                    result['index'] = False
+            return result
+        return cleanStructure
 
     def set_markets(self, markets, currencies=None):
         values = []
@@ -3484,6 +3561,9 @@ class Exchange(object):
     def fetch_tickers(self, symbols: Optional[List[str]] = None, params={}):
         raise NotSupported(self.id + ' fetchTickers() is not supported yet')
 
+    def fetch_order_books(self, symbols: Optional[List[str]] = None, limit: Optional[int] = None, params={}):
+        raise NotSupported(self.id + ' fetchOrderBooks() is not supported yet')
+
     def watch_tickers(self, symbols: Optional[List[str]] = None, params={}):
         raise NotSupported(self.id + ' watchTickers() is not supported yet')
 
@@ -3546,6 +3626,12 @@ class Exchange(object):
 
     def fetch_my_trades(self, symbol: Optional[str] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
         raise NotSupported(self.id + ' fetchMyTrades() is not supported yet')
+
+    def fetch_my_liquidations(self, symbol: Optional[str] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
+        raise NotSupported(self.id + ' fetchMyLiquidations() is not supported yet')
+
+    def fetch_liquidations(self, symbol: str, since: Optional[int] = None, limit: Optional[int] = None, params={}):
+        raise NotSupported(self.id + ' fetchLiquidations() is not supported yet')
 
     def fetch_my_trades_ws(self, symbol: Optional[str] = None, since: Optional[int] = None, limit: Optional[int] = None, params={}):
         raise NotSupported(self.id + ' fetchMyTradesWs() is not supported yet')
@@ -4243,6 +4329,13 @@ class Exchange(object):
         """
         return self.filter_by_array(objects, key, values, indexed)
 
+    def filter_by_array_tickers(self, objects, key: IndexType, values=None, indexed=True):
+        """
+         * @ignore
+        Typed wrapper for filterByArray that returns a dictionary of tickers
+        """
+        return self.filter_by_array(objects, key, values, indexed)
+
     def resolve_promise_if_messagehash_matches(self, client, prefix: str, symbol: str, data):
         messageHashes = self.findMessageHashes(client, prefix)
         for i in range(0, len(messageHashes)):
@@ -4495,3 +4588,25 @@ class Exchange(object):
             'datetime': self.safe_string(interest, 'datetime'),
             'info': self.safe_value(interest, 'info'),
         })
+
+    def parse_liquidation(self, liquidation, market=None):
+        raise NotSupported(self.id + ' parseLiquidation() is not supported yet')
+
+    def parse_liquidations(self, liquidations, market=None, since: Optional[int] = None, limit: Optional[int] = None):
+        """
+         * @ignore
+        parses liquidation info from the exchange response
+        :param dict[] liquidations: each item describes an instance of a liquidation event
+        :param dict market: ccxt market
+        :param int [since]: when defined, the response items are filtered to only include items after self timestamp
+        :param int [limit]: limits the number of items in the response
+        :returns dict[]: an array of `liquidation structures <https://github.com/ccxt/ccxt/wiki/Manual#liquidation-structure>`
+        """
+        result = []
+        for i in range(0, len(liquidations)):
+            entry = liquidations[i]
+            parsed = self.parseLiquidation(entry, market)
+            result.append(parsed)
+        sorted = self.sort_by(result, 'timestamp')
+        symbol = self.safe_string(market, 'symbol')
+        return self.filter_by_symbol_since_limit(sorted, symbol, since, limit)
