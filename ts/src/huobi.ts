@@ -7505,18 +7505,17 @@ export default class huobi extends Exchange {
         const request = {
             'contract_code': market['id'],
         };
-        let method = undefined;
+        let response = undefined;
         if (market['future']) {
             request['contract_type'] = this.safeString (market['info'], 'contract_type');
             request['symbol'] = market['baseId'];
-            method = 'contractPublicGetApiV1ContractOpenInterest'; // COIN-M futures
+            response = await this.contractPublicGetApiV1ContractOpenInterest (this.extend (request, params)); // COIN-M futures
         } else if (market['linear']) {
             request['contract_type'] = 'swap';
-            method = 'contractPublicGetLinearSwapApiV1SwapOpenInterest'; // USDT-M
+            response = await this.contractPublicGetLinearSwapApiV1SwapOpenInterest (this.extend (request, params)); // USDT-M
         } else {
-            method = 'contractPublicGetSwapApiV1SwapOpenInterest'; // COIN-M swaps
+            response = await this.contractPublicGetSwapApiV1SwapOpenInterest (this.extend (request, params)); // COIN-M swaps
         }
-        const response = await this[method] (this.extend (request, params));
         //
         // USDT-M contractPublicGetLinearSwapApiV1SwapOpenInterest
         //
