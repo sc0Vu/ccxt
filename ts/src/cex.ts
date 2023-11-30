@@ -89,6 +89,8 @@ export default class cex extends Exchange {
                 'logo': 'https://user-images.githubusercontent.com/1294454/27766442-8ddc33b0-5ed8-11e7-8b98-f786aef0f3c9.jpg',
                 'api': {
                     'rest': 'https://cex.io/api',
+                    'public': 'https://api.plus.cex.io/rest-public',
+                    'private': 'https://api.plus.cex.io/rest',
                 },
                 'www': 'https://cex.io',
                 'doc': 'https://cex.io/cex-api',
@@ -117,12 +119,14 @@ export default class cex extends Exchange {
                         'trade_history/{pair}/',
                     ],
                     'post': [
+                        'get_order_book',
                         'convert/{pair}',
                         'price_stats/{pair}',
                     ],
                 },
                 'private': {
                     'post': [
+                        'get_my_account_status_v3',
                         'active_orders_status/',
                         'archived_orders/{pair}/',
                         'balance/',
@@ -1580,25 +1584,24 @@ export default class cex extends Exchange {
     }
 
     sign (path, api = 'public', method = 'GET', params = {}, headers = undefined, body = undefined) {
-        let url = this.urls['api']['rest'] + '/' + this.implodeParams (path, params);
+        const url = this.urls['api'][api] + '/' + this.implodeParams (path, params);
         const query = this.omit (params, this.extractParams (path));
-        if (api === 'public') {
-            if (Object.keys (query).length) {
-                url += '?' + this.urlencode (query);
-            }
-        } else {
+        body = this.json (this.extend ({
+        }, query));
+        headers = {
+            'Content-Type': 'application/json',
+        };
+        if (api === 'private') {
             this.checkRequiredCredentials ();
-            const nonce = this.nonce ().toString ();
-            const auth = nonce + this.uid + this.apiKey;
-            const signature = this.hmac (this.encode (auth), this.encode (this.secret), sha256);
-            body = this.json (this.extend ({
-                'key': this.apiKey,
-                'signature': signature.toUpperCase (),
-                'nonce': nonce,
-            }, query));
-            headers = {
-                'Content-Type': 'application/json',
-            };
+            const timestamp = this.parseNumber (Date.now () / 1000);
+            const apiKey = Buffer.from (this.apiKey).toString ('base64');
+            const secret = Buffer.from (this.secret).toString ('base64');
+            const action = 'get_my_account_status_v3';
+            const payload = action + timestamp + JSON.stringify (query);
+            const signature = this.hmac (this.encode (payload), this.encode (secret), sha256);
+            headers['X-AGGR-KEY'] = apiKey;
+            headers['X-AGGR-TIMESTAMP'] = timestamp;
+            headers['X-AGGR-SIGNATURE'] = signature;
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
     }
