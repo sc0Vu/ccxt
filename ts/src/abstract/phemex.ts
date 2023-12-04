@@ -9,7 +9,7 @@ import { implicitReturnType } from '../base/types.js';
 import { Exchange as _Exchange } from '../base/Exchange.js';
 
 interface Exchange {
-    publicGetCfgV2Products (params?: {}): Promise<implicitReturnType>;
+    publicGetExchangePublicCfgV2Products (params?: {}): Promise<implicitReturnType>;
     publicGetCfgFundingRates (params?: {}): Promise<implicitReturnType>;
     publicGetProducts (params?: {}): Promise<implicitReturnType>;
     publicGetNomicsTrades (params?: {}): Promise<implicitReturnType>;
@@ -21,6 +21,7 @@ interface Exchange {
     publicGetMdTrade (params?: {}): Promise<implicitReturnType>;
     publicGetMdSpotTicker24hr (params?: {}): Promise<implicitReturnType>;
     publicGetExchangePublicCfgChainSettings (params?: {}): Promise<implicitReturnType>;
+    publicGetPublicProducts (params?: {}): Promise<implicitReturnType>;
     v1GetMdFullbook (params?: {}): Promise<implicitReturnType>;
     v1GetMdOrderbook (params?: {}): Promise<implicitReturnType>;
     v1GetMdTrade (params?: {}): Promise<implicitReturnType>;

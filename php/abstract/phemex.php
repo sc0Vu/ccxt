@@ -7,8 +7,8 @@ namespace ccxt\abstract;
 
 
 abstract class phemex extends \ccxt\Exchange {
-    public function public_get_cfg_v2_products($params = array()) {
-        return $this->request('cfg/v2/products', 'public', 'GET', $params, null, null, array("cost" => 5));
+    public function public_get_exchange_public_cfg_v2_products($params = array()) {
+        return $this->request('exchange/public/cfg/v2/products', 'public', 'GET', $params, null, null, array("cost" => 5));
     }
     public function public_get_cfg_fundingrates($params = array()) {
         return $this->request('cfg/fundingRates', 'public', 'GET', $params, null, null, array("cost" => 5));
@@ -42,6 +42,9 @@ abstract class phemex extends \ccxt\Exchange {
     }
     public function public_get_exchange_public_cfg_chain_settings($params = array()) {
         return $this->request('exchange/public/cfg/chain-settings', 'public', 'GET', $params, null, null, array("cost" => 5));
+    }
+    public function public_get_public_products($params = array()) {
+        return $this->request('public/products', 'public', 'GET', $params, null, null, array("cost" => 5));
     }
     public function v1_get_md_fullbook($params = array()) {
         return $this->request('md/fullbook', 'v1', 'GET', $params, null, null, array("cost" => 5));
@@ -334,8 +337,8 @@ abstract class phemex extends \ccxt\Exchange {
     public function private_delete_g_orders_all($params = array()) {
         return $this->request('g-orders/all', 'private', 'DELETE', $params, null, null, array("cost" => 3));
     }
-    public function publicGetCfgV2Products($params = array()) {
-        return $this->request('cfg/v2/products', 'public', 'GET', $params, null, null, array("cost" => 5));
+    public function publicGetExchangePublicCfgV2Products($params = array()) {
+        return $this->request('exchange/public/cfg/v2/products', 'public', 'GET', $params, null, null, array("cost" => 5));
     }
     public function publicGetCfgFundingRates($params = array()) {
         return $this->request('cfg/fundingRates', 'public', 'GET', $params, null, null, array("cost" => 5));
@@ -369,6 +372,9 @@ abstract class phemex extends \ccxt\Exchange {
     }
     public function publicGetExchangePublicCfgChainSettings($params = array()) {
         return $this->request('exchange/public/cfg/chain-settings', 'public', 'GET', $params, null, null, array("cost" => 5));
+    }
+    public function publicGetPublicProducts($params = array()) {
+        return $this->request('public/products', 'public', 'GET', $params, null, null, array("cost" => 5));
     }
     public function v1GetMdFullbook($params = array()) {
         return $this->request('md/fullbook', 'v1', 'GET', $params, null, null, array("cost" => 5));

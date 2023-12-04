@@ -90,13 +90,13 @@ class phemex extends phemex$1 {
                 'test': {
                     'v1': 'https://testnet-api.phemex.com/v1',
                     'v2': 'https://testnet-api.phemex.com',
-                    'public': 'https://testnet-api.phemex.com/exchange/public',
+                    'public': 'https://testnet-api.phemex.com',
                     'private': 'https://testnet-api.phemex.com',
                 },
                 'api': {
                     'v1': 'https://{hostname}/v1',
                     'v2': 'https://{hostname}',
-                    'public': 'https://{hostname}/exchange/public',
+                    'public': 'https://{hostname}',
                     'private': 'https://{hostname}',
                 },
                 'www': 'https://phemex.com',
@@ -128,7 +128,7 @@ class phemex extends phemex$1 {
             'api': {
                 'public': {
                     'get': {
-                        'cfg/v2/products': 5,
+                        'exchange/public/cfg/v2/products': 5,
                         'cfg/fundingRates': 5,
                         'products': 5,
                         'nomics/trades': 5,
@@ -139,7 +139,8 @@ class phemex extends phemex$1 {
                         'md/orderbook': 5,
                         'md/trade': 5,
                         'md/spot/ticker/24hr': 5,
-                        'exchange/public/cfg/chain-settings': 5, // ?currency=<currency>
+                        'exchange/public/cfg/chain-settings': 5,
+                        'public/products': 5,
                     },
                 },
                 'v1': {
@@ -722,7 +723,12 @@ class phemex extends phemex$1 {
          * @param {object} [params] extra parameters specific to the exchange API endpoint
          * @returns {object[]} an array of objects representing market data
          */
-        const v2Products = await this.publicGetCfgV2Products(params);
+        await this.publicGetExchangePublicCfgV2Products(params);
+
+
+        return {
+
+        }
         //
         //     {
         //         "code":0,
@@ -807,8 +813,8 @@ class phemex extends phemex$1 {
         //         }
         //     }
         //
-        const v1Products = await this.v1GetExchangePublicProducts(params);
-        const v1ProductsData = this.safeValue(v1Products, 'data', []);
+        // const v1Products = await this.v1GetExchangePublicProducts(params);
+        // const v1ProductsData = this.safeValue(v1Products, 'data', []);
         //
         //     {
         //         "code":0,
@@ -844,35 +850,35 @@ class phemex extends phemex$1 {
         //         ]
         //     }
         //
-        const v2ProductsData = this.safeValue(v2Products, 'data', {});
-        const products = this.safeValue(v2ProductsData, 'products', []);
-        const riskLimits = this.safeValue(v2ProductsData, 'riskLimits', []);
-        const currencies = this.safeValue(v2ProductsData, 'currencies', []);
-        const riskLimitsById = this.indexBy(riskLimits, 'symbol');
-        const v1ProductsById = this.indexBy(v1ProductsData, 'symbol');
-        const currenciesByCode = this.indexBy(currencies, 'currency');
-        const result = [];
-        for (let i = 0; i < products.length; i++) {
-            let market = products[i];
-            const type = this.safeStringLower(market, 'type');
-            if ((type === 'perpetual') || (type === 'perpetualv2')) {
-                const id = this.safeString(market, 'symbol');
-                const riskLimitValues = this.safeValue(riskLimitsById, id, {});
-                market = this.extend(market, riskLimitValues);
-                const v1ProductsValues = this.safeValue(v1ProductsById, id, {});
-                market = this.extend(market, v1ProductsValues);
-                market = this.parseSwapMarket(market);
-            }
-            else {
-                const baseCurrency = this.safeString(market, 'baseCurrency');
-                const currencyValues = this.safeValue(currenciesByCode, baseCurrency, {});
-                const valueScale = this.safeString(currencyValues, 'valueScale', '8');
-                market = this.extend(market, { 'valueScale': valueScale });
-                market = this.parseSpotMarket(market);
-            }
-            result.push(market);
-        }
-        return result;
+        // const v2ProductsData = this.safeValue(v2Products, 'data', {});
+        // const products = this.safeValue(v2ProductsData, 'products', []);
+        // const riskLimits = this.safeValue(v2ProductsData, 'riskLimits', []);
+        // const currencies = this.safeValue(v2ProductsData, 'currencies', []);
+        // const riskLimitsById = this.indexBy(riskLimits, 'symbol');
+        // const v1ProductsById = this.indexBy(v1ProductsData, 'symbol');
+        // const currenciesByCode = this.indexBy(currencies, 'currency');
+        // const result = [];
+        // for (let i = 0; i < products.length; i++) {
+        //     let market = products[i];
+        //     const type = this.safeStringLower(market, 'type');
+        //     if ((type === 'perpetual') || (type === 'perpetualv2')) {
+        //         const id = this.safeString(market, 'symbol');
+        //         const riskLimitValues = this.safeValue(riskLimitsById, id, {});
+        //         market = this.extend(market, riskLimitValues);
+        //         const v1ProductsValues = this.safeValue(v1ProductsById, id, {});
+        //         market = this.extend(market, v1ProductsValues);
+        //         market = this.parseSwapMarket(market);
+        //     }
+        //     else {
+        //         const baseCurrency = this.safeString(market, 'baseCurrency');
+        //         const currencyValues = this.safeValue(currenciesByCode, baseCurrency, {});
+        //         const valueScale = this.safeString(currencyValues, 'valueScale', '8');
+        //         market = this.extend(market, { 'valueScale': valueScale });
+        //         market = this.parseSpotMarket(market);
+        //     }
+        //     result.push(market);
+        // }
+        // return result;
     }
     async fetchCurrencies(params = {}) {
         /**
@@ -882,7 +888,7 @@ class phemex extends phemex$1 {
          * @param {object} [params] extra parameters specific to the exchange API endpoint
          * @returns {object} an associative dictionary of currencies
          */
-        const response = await this.publicGetCfgV2Products(params);
+        const response = await this.publicGetExchangePublicCfgV2Products(params);
         //
         //     {
         //         "code":0,

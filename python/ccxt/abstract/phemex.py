@@ -2,7 +2,7 @@ from ccxt.base.types import Entry
 
 
 class ImplicitAPI:
-    public_get_cfg_v2_products = publicGetCfgV2Products = Entry('cfg/v2/products', 'public', 'GET', {'cost': 5})
+    public_get_exchange_public_cfg_v2_products = publicGetExchangePublicCfgV2Products = Entry('exchange/public/cfg/v2/products', 'public', 'GET', {'cost': 5})
     public_get_cfg_fundingrates = publicGetCfgFundingRates = Entry('cfg/fundingRates', 'public', 'GET', {'cost': 5})
     public_get_products = publicGetProducts = Entry('products', 'public', 'GET', {'cost': 5})
     public_get_nomics_trades = publicGetNomicsTrades = Entry('nomics/trades', 'public', 'GET', {'cost': 5})
@@ -14,6 +14,7 @@ class ImplicitAPI:
     public_get_md_trade = publicGetMdTrade = Entry('md/trade', 'public', 'GET', {'cost': 5})
     public_get_md_spot_ticker_24hr = publicGetMdSpotTicker24hr = Entry('md/spot/ticker/24hr', 'public', 'GET', {'cost': 5})
     public_get_exchange_public_cfg_chain_settings = publicGetExchangePublicCfgChainSettings = Entry('exchange/public/cfg/chain-settings', 'public', 'GET', {'cost': 5})
+    public_get_public_products = publicGetPublicProducts = Entry('public/products', 'public', 'GET', {'cost': 5})
     v1_get_md_fullbook = v1GetMdFullbook = Entry('md/fullbook', 'v1', 'GET', {'cost': 5})
     v1_get_md_orderbook = v1GetMdOrderbook = Entry('md/orderbook', 'v1', 'GET', {'cost': 5})
     v1_get_md_trade = v1GetMdTrade = Entry('md/trade', 'v1', 'GET', {'cost': 5})

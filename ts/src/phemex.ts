@@ -92,13 +92,13 @@ export default class phemex extends Exchange {
                 'test': {
                     'v1': 'https://testnet-api.phemex.com/v1',
                     'v2': 'https://testnet-api.phemex.com',
-                    'public': 'https://testnet-api.phemex.com/exchange/public',
+                    'public': 'https://testnet-api.phemex.com',
                     'private': 'https://testnet-api.phemex.com',
                 },
                 'api': {
                     'v1': 'https://{hostname}/v1',
                     'v2': 'https://{hostname}',
-                    'public': 'https://{hostname}/exchange/public',
+                    'public': 'https://{hostname}',
                     'private': 'https://{hostname}',
                 },
                 'www': 'https://phemex.com',
@@ -130,7 +130,7 @@ export default class phemex extends Exchange {
             'api': {
                 'public': {
                     'get': {
-                        'cfg/v2/products': 5, // spot + contracts
+                        'exchange/public/cfg/v2/products': 5, // spot + contracts
                         'cfg/fundingRates': 5,
                         'products': 5, // contracts only
                         'nomics/trades': 5, // ?market=<symbol>&since=<since>
@@ -142,6 +142,7 @@ export default class phemex extends Exchange {
                         'md/trade': 5, // ?symbol=<symbol>
                         'md/spot/ticker/24hr': 5, // ?symbol=<symbol>
                         'exchange/public/cfg/chain-settings': 5, // ?currency=<currency>
+                        'public/products': 5,
                     },
                 },
                 'v1': {
@@ -726,7 +727,7 @@ export default class phemex extends Exchange {
          * @param {object} [params] extra parameters specific to the exchange API endpoint
          * @returns {object[]} an array of objects representing market data
          */
-        const v2Products = await this.publicGetCfgV2Products (params);
+        const v2Products = await this.publicGetExchangePublicCfgV2Products (params);
         //
         //     {
         //         "code":0,
@@ -886,7 +887,7 @@ export default class phemex extends Exchange {
          * @param {object} [params] extra parameters specific to the exchange API endpoint
          * @returns {object} an associative dictionary of currencies
          */
-        const response = await this.publicGetCfgV2Products (params);
+        const response = await this.publicGetExchangePublicCfgV2Products (params);
         //
         //     {
         //         "code":0,
