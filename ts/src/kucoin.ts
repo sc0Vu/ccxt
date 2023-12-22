@@ -1889,14 +1889,17 @@ export default class kucoin extends Exchange {
          * @see https://docs.kucoin.com/spot#place-a-margin-order
          * @see https://docs.kucoin.com/spot-hf/#place-hf-order
          * @see https://www.kucoin.com/docs/rest/spot-trading/orders/place-order-test
+         * @see https://www.kucoin.com/docs/rest/spot-trading/oco-order/place-order
          * @see https://www.kucoin.com/docs/rest/margin-trading/orders/place-margin-order-test
          * @param {string} symbol Unified CCXT market symbol
-         * @param {string} type 'limit' or 'market'
+         * @param {string} type 'limit' or 'market' or 'oco'
          * @param {string} side 'buy' or 'sell'
          * @param {float} amount the amount of currency to trade
          * @param {float} [price] *ignored in "market" orders* the price at which the order is to be fullfilled at in units of the quote currency
          * @param {object} [params]  extra parameters specific to the exchange API endpoint
          * @param {float} [params.triggerPrice] The price at which a trigger order is triggered at
+         * @param {float} [params.takeProfitPrice] The price at which a trigger order is triggered at
+         * @param {float} [params.stopLossPrice] The price at which a trigger order is triggered at
          * @param {string} [params.marginMode] 'cross', // cross (cross mode) and isolated (isolated mode), set to cross by default, the isolated mode will be released soon, stay tuned
          * @param {string} [params.timeInForce] GTC, GTT, IOC, or FOK, default is GTC, limit orders only
          * @param {string} [params.postOnly] Post only flag, invalid when timeInForce is IOC or FOK
@@ -1927,7 +1930,9 @@ export default class kucoin extends Exchange {
         const testOrder = this.safeValue (params, 'test', false);
         params = this.omit (params, 'test');
         const isHf = this.safeValue (params, 'hf', false);
-        const [ triggerPrice, stopLossPrice, takeProfitPrice ] = this.handleTriggerPrices (params);
+        const triggerPrice = this.safeValue2 (params, 'triggerPrice', 'stopPrice');
+        const stopLossPrice = this.safeValue (params, 'stopLossPrice');
+        const takeProfitPrice = this.safeValue (params, 'takeProfitPrice');
         const tradeType = this.safeString (params, 'tradeType'); // keep it for backward compatibility
         const isTriggerOrder = (triggerPrice || stopLossPrice || takeProfitPrice);
         const marginResult = this.handleMarginModeAndParams ('createOrder', params);
@@ -1936,7 +1941,9 @@ export default class kucoin extends Exchange {
         // don't omit anything before calling createOrderRequest
         const orderRequest = this.createOrderRequest (symbol, type, side, amount, price, params);
         let response = undefined;
-        if (testOrder) {
+        if (type === 'oco') {
+            response = await this.privatePostOcoOrder (orderRequest);
+        } else if (testOrder) {
             if (isMarginOrder) {
                 response = await this.privatePostMarginOrderTest (orderRequest);
             } else {
@@ -2056,8 +2063,10 @@ export default class kucoin extends Exchange {
             'clientOid': clientOrderId,
             'side': side,
             'symbol': market['id'],
-            'type': type, // limit or market
         };
+        if (type !== 'oco') {
+            request['type'] = type; // limit or market
+        }
         const quoteAmount = this.safeNumber2 (params, 'cost', 'funds');
         let amountString = undefined;
         let costString = undefined;
@@ -2079,12 +2088,24 @@ export default class kucoin extends Exchange {
             request['price'] = this.priceToPrecision (symbol, price);
         }
         const tradeType = this.safeString (params, 'tradeType'); // keep it for backward compatibility
-        const [ triggerPrice, stopLossPrice, takeProfitPrice ] = this.handleTriggerPrices (params);
+        const triggerPrice = this.safeValue2 (params, 'triggerPrice', 'stopPrice');
+        const stopLossPrice = this.safeValue (params, 'stopLossPrice');
+        const takeProfitPrice = this.safeValue (params, 'takeProfitPrice');
         const isTriggerOrder = (triggerPrice || stopLossPrice || takeProfitPrice);
         const isMarginOrder = tradeType === 'MARGIN_TRADE' || marginMode !== undefined;
         params = this.omit (params, [ 'stopLossPrice', 'takeProfitPrice', 'triggerPrice', 'stopPrice' ]);
         if (isTriggerOrder) {
-            if (triggerPrice) {
+            if (type === 'oco') {
+                request['stopPrice'] = this.priceToPrecision (symbol, triggerPrice);
+                let limitPrice = undefined;
+                if (stopLossPrice) {
+                    limitPrice = this.safeValue (params, 'limitPrice', stopLossPrice);
+                } else {
+                    limitPrice = this.safeValue (params, 'limitPrice', takeProfitPrice);
+                }
+                params = this.omit (params, 'limitPrice');
+                request['limitPrice'] = this.priceToPrecision (symbol, limitPrice);
+            } else if (triggerPrice) {
                 request['stopPrice'] = this.priceToPrecision (symbol, triggerPrice);
             } else if (stopLossPrice || takeProfitPrice) {
                 if (stopLossPrice) {

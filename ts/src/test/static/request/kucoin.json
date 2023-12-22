@@ -45,6 +45,23 @@
                   }
                 ],
                 "output": "{\"clientOid\":\"7417761e-9fa9-4030-8863-66fba6487b24\",\"side\":\"buy\",\"symbol\":\"LTC-USDT\",\"type\":\"limit\",\"size\":\"0.1\",\"price\":\"55\",\"stopPrice\":\"60\"}"
+            },
+            {
+                "description": "Spot oco order",
+                "method": "createOrder",
+                "url": "https://api.kucoin.com/api/v3/oco/order",
+                "input": [
+                    "LTC/USDT",
+                    "oco",
+                    "sell",
+                    0.1,
+                    55,
+                    {
+                        "triggerPrice": 60,
+                        "stopLossPrice": 70
+                    }
+                ],
+                "output": "{\"clientOid\":\"d8610377-8177-4b75-a68a-b01ef4a27168\",\"side\":\"sell\",\"symbol\":\"LTC-USDT\",\"size\":\"0.1\",\"price\":\"55\",\"stopPrice\":\"60\",\"limitPrice\":\"70\"}"
             }
         ],
         "fetchOpenOrders": [
