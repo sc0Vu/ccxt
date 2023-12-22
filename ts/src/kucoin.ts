@@ -2471,11 +2471,13 @@ export default class kucoin extends Exchange {
          * @see https://docs.kucoin.com/spot#get-single-order-by-clientoid
          * @see https://docs.kucoin.com/spot-hf/#details-of-a-single-hf-order
          * @see https://docs.kucoin.com/spot-hf/#obtain-details-of-a-single-hf-order-using-clientoid
+         * @see https://www.kucoin.com/zh-hant/docs/rest/spot-trading/get-order-info-by-orderid
          * @param {string} id Order id
          * @param {string} symbol not sent to exchange except for stop orders with clientOid, but used internally by CCXT to filter
          * @param {object} [params] exchange specific parameters
          * @param {bool} [params.stop] true if fetching a stop order
          * @param {bool} [params.hf] false, // true for hf order
+         * @param {bool} [params.oco] false, // true for oco order
          * @param {bool} [params.clientOid] unique order id created by users to identify their orders
          * @returns An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
          */
@@ -2484,6 +2486,7 @@ export default class kucoin extends Exchange {
         const clientOrderId = this.safeString2 (params, 'clientOid', 'clientOrderId');
         const stop = this.safeValue (params, 'stop', false);
         const hf = this.safeValue (params, 'hf', false);
+        const oco = this.safeValue (params, 'oco', false);
         let market = undefined;
         if (symbol !== undefined) {
             market = this.market (symbol);
@@ -2494,11 +2497,13 @@ export default class kucoin extends Exchange {
             }
             request['symbol'] = market['id'];
         }
-        params = this.omit (params, [ 'stop', 'hf', 'clientOid', 'clientOrderId' ]);
+        params = this.omit (params, [ 'stop', 'hf', 'oco', 'clientOid', 'clientOrderId' ]);
         let response = undefined;
         if (clientOrderId !== undefined) {
             request['clientOid'] = clientOrderId;
-            if (stop) {
+            if (oco) {
+                response = await this.privateGetOcoClientOrderClientOid (this.extend (request, params));
+            } else if (stop) {
                 if (symbol !== undefined) {
                     request['symbol'] = market['id'];
                 }
@@ -2516,7 +2521,9 @@ export default class kucoin extends Exchange {
                 throw new InvalidOrder (this.id + ' fetchOrder() requires an order id');
             }
             request['orderId'] = id;
-            if (stop) {
+            if (oco) {
+                response = await this.privateGetOcoOrderOrderId (this.extend (request, params));
+            } else if (stop) {
                 response = await this.privateGetStopOrderOrderId (this.extend (request, params));
             } else if (hf) {
                 response = await this.privateGetHfOrdersOrderId (this.extend (request, params));

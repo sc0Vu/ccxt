@@ -180,6 +180,104 @@
                     "USDT"
                 ]
             }
+        ],
+        "fetchOrder": [
+            {
+                "description": "fetch order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/orders/6572fdd65723280007deb5e0",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT"
+                ]
+            },
+            {
+                "description": "fetch order - stop order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/stop-order/6572fdd65723280007deb5e0",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "stop": true
+                    }
+                ]
+            },
+            {
+                "description": "fetch order - hf order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/6572fdd65723280007deb5e0?symbol=LTC-USDT",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "hf": true
+                    }
+                ]
+            },
+            {
+                "description": "fetch order - oco order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v3/oco/order/6572fdd65723280007deb5e0",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "oco": true
+                    }
+                ]
+            },
+            {
+                "description": "fetch order by clientOid",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/order/client-order/6572fdd65723280007deb5e0",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "clientOid": "6572fdd65723280007deb5e0"
+                    }
+                ]
+            },
+            {
+                "description": "fetch order by clientOid - stop order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/stop-order/queryOrderByClientOid?clientOid=6572fdd65723280007deb5e0&symbol=LTC-USDT",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "clientOid": "6572fdd65723280007deb5e0",
+                        "stop": true
+                    }
+                ]
+            },
+            {
+                "description": "fetch order by clientOid - hf order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/client-order/6572fdd65723280007deb5e0?symbol=LTC-USDT",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "clientOid": "6572fdd65723280007deb5e0",
+                        "hf": true
+                    }
+                ]
+            },
+            {
+                "description": "fetch order by clientOid - oco order",
+                "method": "fetchOrder",
+                "url": "https://api.kucoin.com/api/v3/oco/client-order/6572fdd65723280007deb5e0",
+                "input": [
+                    "6572fdd65723280007deb5e0",
+                    "LTC/USDT",
+                    {
+                        "clientOid": "6572fdd65723280007deb5e0",
+                        "oco": true
+                    }
+                ]
+            }
         ]
     }
 }
