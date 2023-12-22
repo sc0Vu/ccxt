@@ -2255,13 +2255,15 @@ export default class kucoin extends Exchange {
          * @param {string} [params.orderIds] *stop orders only* Comma seperated order IDs
          * @param {bool} [params.stop] True if cancelling a stop order
          * @param {bool} [params.hf] false, // true for hf order
+         * @param {bool} [params.oco] false, // true for oco order
          * @returns Response from the exchange
          */
         await this.loadMarkets ();
         const request = {};
         const stop = this.safeValue (params, 'stop', false);
         const hf = this.safeValue (params, 'hf', false);
-        params = this.omit (params, [ 'stop', 'hf' ]);
+        const oco = this.safeValue (params, 'oco', false);
+        params = this.omit (params, [ 'stop', 'hf', 'oco' ]);
         const [ marginMode, query ] = this.handleMarginModeAndParams ('cancelAllOrders', params);
         if (symbol !== undefined) {
             request['symbol'] = this.marketId (symbol);
@@ -2273,7 +2275,9 @@ export default class kucoin extends Exchange {
             }
         }
         let response = undefined;
-        if (stop) {
+        if (oco) {
+            response = await this.privateDeleteOcoOrders (this.extend (request, query));
+        } else if (stop) {
             response = await this.privateDeleteStopOrderCancel (this.extend (request, query));
         } else if (hf) {
             if (symbol === undefined) {
