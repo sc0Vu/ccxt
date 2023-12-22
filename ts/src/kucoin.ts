@@ -2303,6 +2303,7 @@ export default class kucoin extends Exchange {
          * @param {string} [params.orderIds] *stop orders only* comma seperated order ID list
          * @param {bool} [params.stop] True if fetching a stop order
          * @param {bool} [params.hf] false, // true for hf order
+         * @param {bool} [params.oco] false, // true for oco order
          * @returns An [array of order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
          */
         await this.loadMarkets ();
@@ -2310,16 +2311,15 @@ export default class kucoin extends Exchange {
         const until = this.safeInteger2 (params, 'until', 'till');
         const stop = this.safeValue (params, 'stop', false);
         const hf = this.safeValue (params, 'hf', false);
-        params = this.omit (params, [ 'stop', 'hf', 'till', 'until' ]);
+        const oco = this.safeValue (params, 'oco', false);
+        params = this.omit (params, [ 'stop', 'hf', 'oco', 'till', 'until' ]);
         const [ marginMode, query ] = this.handleMarginModeAndParams ('fetchOrdersByStatus', params);
         if (lowercaseStatus === 'open') {
             lowercaseStatus = 'active';
         } else if (lowercaseStatus === 'closed') {
             lowercaseStatus = 'done';
         }
-        const request = {
-            'status': lowercaseStatus,
-        };
+        const request = {};
         let market = undefined;
         if (symbol !== undefined) {
             market = this.market (symbol);
@@ -2334,9 +2334,13 @@ export default class kucoin extends Exchange {
         if (until) {
             request['endAt'] = until;
         }
-        request['tradeType'] = this.safeString (this.options['marginModes'], marginMode, 'TRADE');
+        if (!oco) {
+            request['tradeType'] = this.safeString (this.options['marginModes'], marginMode, 'TRADE');
+        }
         let response = undefined;
-        if (stop) {
+        if (oco) {
+            response = await this.privateGetOcoOrders (this.extend (request, query));
+        } else if (stop) {
             response = await this.privateGetStopOrder (this.extend (request, query));
         } else if (hf) {
             if (lowercaseStatus === 'active') {
@@ -2345,6 +2349,7 @@ export default class kucoin extends Exchange {
                 response = await this.privateGetHfOrdersDone (this.extend (request, query));
             }
         } else {
+            request['status'] = lowercaseStatus;
             response = await this.privateGetOrders (this.extend (request, query));
         }
         //

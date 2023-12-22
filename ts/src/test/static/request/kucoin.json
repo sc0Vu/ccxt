@@ -72,6 +72,45 @@
                 "input": [
                     "LTC/USDT"
                 ]
+            },
+            {
+                "description": "Spot open orders - stop order",
+                "method": "fetchOpenOrders",
+                "url": "https://api.kucoin.com/api/v1/stop-order?symbol=LTC-USDT&tradeType=TRADE",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "stop": true
+                    }
+                ]
+            },
+            {
+                "description": "Spot open orders - hf order",
+                "method": "fetchOpenOrders",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/active?symbol=LTC-USDT&tradeType=TRADE",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "hf": true
+                    }
+                ]
+            },
+            {
+                "description": "Spot open orders - oco order",
+                "method": "fetchOpenOrders",
+                "url": "https://api.kucoin.com/api/v3/oco/orders?symbol=LTC-USDT",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "oco": true
+                    }
+                ]
             }
         ],
         "fetchClosedOrders": [
@@ -81,6 +120,45 @@
                 "url": "https://api.kucoin.com/api/v1/orders?status=done&symbol=LTC-USDT&tradeType=TRADE",
                 "input": [
                     "LTC/USDT"
+                ]
+            },
+            {
+                "description": "Spot closed orders - stop order",
+                "method": "fetchClosedOrders",
+                "url": "https://api.kucoin.com/api/v1/stop-order?symbol=LTC-USDT&tradeType=TRADE",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "stop": true
+                    }
+                ]
+            },
+            {
+                "description": "Spot closed orders - hf order",
+                "method": "fetchClosedOrders",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/done?symbol=LTC-USDT&tradeType=TRADE",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "hf": true
+                    }
+                ]
+            },
+            {
+                "description": "Spot closed orders - oco order",
+                "method": "fetchClosedOrders",
+                "url": "https://api.kucoin.com/api/v3/oco/orders?symbol=LTC-USDT",
+                "input": [
+                    "LTC/USDT",
+                    null,
+                    null,
+                    {
+                        "oco": true
+                    }
                 ]
             }
         ],
