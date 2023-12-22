@@ -205,6 +205,56 @@
                     "clientOrderId": "myorderid"
                   }
                 ]
+            },
+            {
+                "description": "Canceling hf order",
+                "method": "cancelOrder",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/vs8lgpan88t0q73m003j7m81?symbol=LTC-USDT",
+                "input": [
+                  "vs8lgpan88t0q73m003j7m81",
+                  "LTC/USDT",
+                  {
+                    "hf": true
+                  }
+                ]
+            },
+            {
+                "description": "Canceling hf order",
+                "method": "cancelOrder",
+                "url": "https://api.kucoin.com/api/v1/hf/orders/client-order/vs8lgpan88t0q73m003j7m81?symbol=LTC-USDT",
+                "input": [
+                  "vs8lgpan88t0q73m003j7m81",
+                  "LTC/USDT",
+                  {
+                    "clientOrderId": "vs8lgpan88t0q73m003j7m81",
+                    "hf": true
+                  }
+                ]
+            },
+            {
+                "description": "Canceling oco order",
+                "method": "cancelOrder",
+                "url": "https://api.kucoin.com/api/v3/oco/order/vs8lgpan88t0q73m003j7m81",
+                "input": [
+                  "vs8lgpan88t0q73m003j7m81",
+                  "LTC/USDT",
+                  {
+                    "oco": true
+                  }
+                ]
+            },
+            {
+                "description": "Canceling oco order",
+                "method": "cancelOrder",
+                "url": "https://api.kucoin.com/api/v3/oco/client-order/vs8lgpan88t0q73m003j7m81",
+                "input": [
+                  "vs8lgpan88t0q73m003j7m81",
+                  "LTC/USDT",
+                  {
+                    "clientOrderId": "vs8lgpan88t0q73m003j7m81",
+                    "oco": true
+                  }
+                ]
             }
         ],
         "fetchBalance": [

@@ -2196,6 +2196,7 @@ export default class kucoin extends Exchange {
          * @param {object} [params] extra parameters specific to the exchange API endpoint
          * @param {bool} [params.stop] True if cancelling a stop order
          * @param {bool} [params.hf] false, // true for hf order
+         * @param {bool} [params.oco] false, // true for oco order
          * @returns Response from the exchange
          */
         await this.loadMarkets ();
@@ -2203,6 +2204,7 @@ export default class kucoin extends Exchange {
         const clientOrderId = this.safeString2 (params, 'clientOid', 'clientOrderId');
         const stop = this.safeValue2 (params, 'stop', 'trigger', false);
         const hf = this.safeValue (params, 'hf', false);
+        const oco = this.safeValue (params, 'oco', false);
         if (hf) {
             if (symbol === undefined) {
                 throw new ArgumentsRequired (this.id + ' cancelOrder() requires a symbol parameter for hf orders');
@@ -2211,10 +2213,12 @@ export default class kucoin extends Exchange {
             request['symbol'] = market['id'];
         }
         let response = undefined;
-        params = this.omit (params, [ 'clientOid', 'clientOrderId', 'stop', 'hf', 'trigger' ]);
+        params = this.omit (params, [ 'clientOid', 'clientOrderId', 'stop', 'hf', 'oco', 'trigger' ]);
         if (clientOrderId !== undefined) {
             request['clientOid'] = clientOrderId;
-            if (stop) {
+            if (oco) {
+                response = await this.privateDeleteOcoClientOrderClientOid (this.extend (request, params));
+            } else if (stop) {
                 response = await this.privateDeleteStopOrderCancelOrderByClientOid (this.extend (request, params));
             } else if (hf) {
                 response = await this.privateDeleteHfOrdersClientOrderClientOid (this.extend (request, params));
@@ -2223,7 +2227,9 @@ export default class kucoin extends Exchange {
             }
         } else {
             request['orderId'] = id;
-            if (stop) {
+            if (oco) {
+                response = await this.privateDeleteOcoOrderOrderId (this.extend (request, params));
+            } else if (stop) {
                 response = await this.privateDeleteStopOrderOrderId (this.extend (request, params));
             } else if (hf) {
                 response = await this.privateDeleteHfOrdersOrderId (this.extend (request, params));
