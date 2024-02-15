@@ -166,14 +166,17 @@ export default class coinone extends Exchange {
                         'account/balance',
                         'account/trade_fee',
                         'account/trade_fee/{quote_currency}/{target_currency}',
-                        'order/limit',
+                        'order',
+                        'order/active_orders',
+                        'order/detail',
+                        'order/limit', // DEPRECATED
                         'order/cancel',
                         'order/cancel/all',
-                        'order/open_orders',
-                        'order/open_orders/all',
+                        'order/open_orders', // DEPRECATED
+                        'order/open_orders/all', // DEPRECATED
                         'order/complete_orders',
                         'order/complete_orders/all',
-                        'order/info',
+                        'order/info', // DEPRECATED
                         'transaction/krw/history',
                         'transaction/coin/history',
                         'transaction/coin/withdrawal/limit',
