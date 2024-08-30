@@ -37,6 +37,7 @@ export default class bitget extends bitgetRest {
                 'watchOrders': true,
                 'watchTicker': true,
                 'watchTickers': true,
+                'watchBidsAsks': true,
                 'watchTrades': true,
                 'watchTradesForSymbols': true,
                 'watchPositions': true,
@@ -218,6 +219,10 @@ export default class bitget extends bitgetRest {
         //         "ts": 1701842994341
         //     }
         //
+        const bidsAsksMessageHashes = this.findMessageHashes (client, 'bidask:');
+        if (bidsAsksMessageHashes.length > 0) {
+            return this.handleBidAsk (client, message);
+        }
         const ticker = this.parseWsTicker (message);
         const symbol = ticker['symbol'];
         this.tickers[symbol] = ticker;
@@ -327,6 +332,102 @@ export default class bitget extends bitgetRest {
             'average': undefined,
             'baseVolume': this.safeString (ticker, 'baseVolume'),
             'quoteVolume': this.safeString (ticker, 'quoteVolume'),
+            'info': ticker,
+        }, market);
+    }
+
+    async watchBidsAsks (symbols: Strings = undefined, params = {}): Promise<Tickers> {
+        /**
+         * @method
+         * @name bitget#watchBidsAsks
+         * @see https://www.bitget.com/api-doc/spot/websocket/public/Depth-Channel
+         * @see https://www.bitget.com/api-doc/contract/websocket/public/Order-Book-Channel
+         * @description watches best bid & ask for symbols
+         * @param {string[]} symbols unified symbol of the market to fetch the ticker for
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+         */
+        await this.loadMarkets ();
+        symbols = this.marketSymbols (symbols, undefined, true, false, true);
+        const market = this.market (symbols[0]);
+        let instType = undefined;
+        [ instType, params ] = this.getInstType (market, params);
+        const topics = [];
+        const messageHashes = [];
+        for (let i = 0; i < symbols.length; i++) {
+            const symbol = symbols[i];
+            const marketInner = this.market (symbol);
+            const args: Dict = {
+                'instType': instType,
+                'channel': 'ticker',
+                'instId': marketInner['id'],
+            };
+            topics.push (args);
+            messageHashes.push ('bidask:' + symbol);
+        }
+        const result = await this.watchPublicMultiple (messageHashes, topics, params);
+        if (this.newUpdates) {
+            return result;
+        }
+        return this.filterByArray (this.bidsasks, 'symbol', symbols);
+    }
+
+    handleBidAsk (client: Client, message) {
+        //
+        //     {
+        //         "action": "snapshot",
+        //         "arg": {
+        //             "instType": "SPOT",
+        //             "channel": "ticker",
+        //             "instId": "BTCUSDT"
+        //         },
+        //         "data": [
+        //             {
+        //                 "instId": "BTCUSDT",
+        //                 "lastPr": "43528.19",
+        //                 "open24h": "42267.78",
+        //                 "high24h": "44490.00",
+        //                 "low24h": "41401.53",
+        //                 "change24h": "0.03879",
+        //                 "bidPr": "43528",
+        //                 "askPr": "43528.01",
+        //                 "bidSz": "0.0334",
+        //                 "askSz": "0.1917",
+        //                 "baseVolume": "15002.4216",
+        //                 "quoteVolume": "648006446.7164",
+        //                 "openUtc": "44071.18",
+        //                 "changeUtc24h": "-0.01232",
+        //                 "ts": "1701842994338"
+        //             }
+        //         ],
+        //         "ts": 1701842994341
+        //     }
+        //
+        const arg = this.safeValue (message, 'arg', {});
+        const instType = this.safeString (arg, 'instType');
+        const marketType = (instType === 'SPOT') ? 'spot' : 'contract';
+        const marketId = this.safeString (arg, 'instId');
+        const market = this.safeMarket (marketId, undefined, undefined, marketType);
+        const data = this.safeList (message, 'data', []);
+        const ticker = this.safeDict (data, 0, {});
+        const parsedTicker = this.parseWsBidAsk (ticker, market);
+        const symbol = parsedTicker['symbol'];
+        this.bidsasks[symbol] = parsedTicker;
+        const messageHash = 'bidask:' + symbol;
+        client.resolve (parsedTicker, messageHash);
+    }
+
+    parseWsBidAsk (ticker, market = undefined) {
+        const symbol = this.safeString (market, 'symbol');
+        const timestamp = this.safeInteger (ticker, 'ts');
+        return this.safeTicker ({
+            'symbol': symbol,
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'ask': this.safeString (ticker, 'askPr'),
+            'askVolume': this.safeString (ticker, 'askSz'),
+            'bid': this.safeString (ticker, 'bidPr'),
+            'bidVolume': this.safeString (ticker, 'bidSz'),
             'info': ticker,
         }, market);
     }
