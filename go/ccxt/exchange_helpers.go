@@ -348,6 +348,10 @@ func ToFloat64(v interface{}) float64 {
 	case reflect.Float64:
 		result = val.Float()
 	case reflect.String:
+		result, err := strconv.ParseFloat(val.String(), 64)
+		if err == nil {
+			return result
+		}
 		result = 0 // Convert string to float64, example implementation
 	}
 	return result
@@ -860,7 +864,12 @@ func GetArg(v []interface{}, index int, def interface{}) interface{} {
 	if len(v) <= index {
 		return def
 	}
-	return v[index]
+	val := v[index]
+
+	if val == nil {
+		return def
+	}
+	return val
 }
 
 func Ternary(cond bool, whenTrue interface{}, whenFalse interface{}) interface{} {

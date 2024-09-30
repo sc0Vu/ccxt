@@ -43,3 +43,4 @@ obj/
 
 # go
 go/cli/test
+.custom_gitignore

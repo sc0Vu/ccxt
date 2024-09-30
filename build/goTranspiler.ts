@@ -49,7 +49,7 @@ const BASE_METHODS_FILE = './go/ccxt/exchange_generated.go';
 const EXCHANGES_FOLDER = './go/ccxt/';
 // const EXCHANGES_WS_FOLDER = './go/ccxt/exchanges/pro/';
 // const GENERATED_TESTS_FOLDER = './go/tests/Generated/Exchange/';
-// const BASE_TESTS_FOLDER = './go/tests/Generated/Base';
+const BASE_TESTS_FOLDER = './go/tests/base';
 // const BASE_TESTS_FILE =  './go/tests/Generated/TestMethods.go';
 // const EXCHANGE_BASE_FOLDER = './go/tests/Generated/Exchange/Base/';
 // const EXCHANGE_GENERATED_FOLDER = './go/tests/Generated/Exchange/';
@@ -771,11 +771,14 @@ class NewTranspiler {
 
 
         // custom transformations needed for go
+        baseClass = baseClass.replaceAll(/\=\snew\s/gm, "= ");
         baseClass = baseClass.replaceAll(/(?<!<-)this\.callInternal/gm, "<-this.callInternal");
         baseClass = baseClass.replaceAll (/currentRestInstance interface\{\},/g, "currentRestInstance Exchange,");
         baseClass = baseClass.replaceAll (/parentRestInstance interface\{\},/g, "parentRestInstance Exchange,");
         baseClass = baseClass.replaceAll (/client interface\{\},/g, "client Client,");
         baseClass = baseClass.replaceAll (/this.Number = String/g, 'this.Number = "string"');
+        baseClass = baseClass.replaceAll(/(\w+)(\.StoreArray\(.+\))/gm, '($1.(*OrderBookSide))$2'); // tmp fix for c#
+
 
         // baseClass = baseClass.replaceAll("client.futures", "getValue(client, \"futures\")"); // tmp fix for c# not needed after ws-merge
         // baseClass = baseClass.replace("((object)this).number = String;", "this.number = typeof(String);"); // tmp fix for c#
@@ -920,7 +923,7 @@ class NewTranspiler {
         }
 
 
-        // this.transpileTests()
+        this.transpileTests()
 
         this.transpileErrorHierarchy ()
 
@@ -972,7 +975,7 @@ class NewTranspiler {
         // transpile using webworker
         const allFilesPath = exchanges.map (file => jsFolder + file );
         // const transpiledFiles =  await this.webworkerTranspile(allFilesPath, this.getTranspilerConfig());
-        log.blue('[csharp] Transpiling [', exchanges.join(', '), ']');
+        log.blue('[go] Transpiling [', exchanges.join(', '), ']');
         const transpiledFiles =  allFilesPath.map(file => this.transpiler.transpileGoByPath(file));
 
         if (!ws) {
@@ -1155,39 +1158,32 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
 
     // ---------------------------------------------------------------------------------------------
 
-    transpileCryptoTestsToCSharp (outDir: string) {
+    transpileCryptoTestsToGo (outDir: string) {
 
         const jsFile = './ts/src/test/base/test.cryptography.ts';
-        const csharpFile = `${outDir}/Cryptography.go`;
+        const goFile = `${outDir}/test.cryptography.go`;
 
-        log.magenta ('[csharp] Transpiling from', (jsFile as any).yellow)
+        log.magenta ('[go] Transpiling from', (jsFile as any).yellow)
 
-        const csharp = this.transpiler.transpileCSharpByPath(jsFile);
+        const csharp = this.transpiler.transpileGoByPath(jsFile);
         let content = csharp.content;
         content = this.regexAll (content, [
-            [ /\s*public\sobject\sequals(([^}]|\n)+)+}/gm, '' ], // remove equals
-            [/assert/g, 'Assert'],
+            [/new ccxt.Exchange.+\n.+\n.+/gm, 'ccxt.Exchange{}' ],
+            [ /interface{}\sfunc\sEquals.+\n.*\n.+\n.+/gm, '' ], // remove equals
             // [/(^\s*Assert\(equals\(ecdsa\([^;]+;)/gm, '/*\n $1\nTODO: add ecdsa\n*/'] // temporarily disable ecdsa tests
         ]).trim ()
 
-        const contentLines = content.split ('\n');
-        const contentIdented = contentLines.map (line => '        ' + line).join ('\n');
 
 
         const file = [
-            'using ccxt;',
-            'namespace Tests;',
-            '',
+            'package base',
             this.createGeneratedHeader().join('\n'),
-            'public partial class BaseTest',
-            '{',
-            contentIdented,
-            '}',
+            content
         ].join('\n')
 
-        log.magenta ('→', (csharpFile as any).yellow)
+        log.magenta ('→', (goFile as any).yellow)
 
-        overwriteFileAndFolder (csharpFile, file);
+        overwriteFileAndFolder (goFile, file);
     }
 
     transpileExchangeTest(name: string, path: string): [string, string] {
@@ -1238,12 +1234,12 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
         await Promise.all (transpiledFiles.map ((file, idx) => promisedWriteFile (outDir + file[0] + '.go', file[1])))
     }
 
-    transpileBaseTestsToCSharp () {
+    transpileBaseTestsToGo () {
         const outDir = BASE_TESTS_FOLDER;
         this.transpileBaseTests(outDir);
-        this.transpileCryptoTestsToCSharp(outDir);
-        this.transpileWsCacheTestsToCSharp(outDir);
-        this.transpileWsOrderbookTestsToCSharp(outDir);
+        this.transpileCryptoTestsToGo(outDir);
+        // this.transpileWsCacheTestsToCSharp(outDir);
+        // this.transpileWsOrderbookTestsToCSharp(outDir);
     }
 
     transpileBaseTests (outDir) {
@@ -1260,39 +1256,36 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
             if (!tsContent.includes ('// AUTO_TRANSPILE_ENABLED')) {
                 continue;
             }
-                
-            const csFileName = this.capitalize(testName.replace ('test.', ''));
-            const csharpFile = `${outDir}/${csFileName}.go`;
+
+            if (tsFile.indexOf('json') > -1) {
+                continue; // skip json tests for now, exception handling outside classes is not supported
+            }
+
+            // const goFileName = this.capitalize(testName.replace ('test.', ''));
+            const goFile = `${outDir}/${testName}.go`;
 
             log.magenta ('Transpiling from', (tsFile as any).yellow)
 
-            const csharp = this.transpiler.transpileCSharpByPath(tsFile);
-            let content = csharp.content;
+            const go = this.transpiler.transpileGoByPath(tsFile);
+            let content = go.content;
             content = this.regexAll (content, [
-                [/object  = functions;/g, '' ], // tmp fix
-                [/assert/g, 'Assert'],
-                [ /\s*public\sobject\sequals(([^}]|\n)+)+}/gm, '' ], // remove equals
-
+                [/new ccxt.Exchange.+\n.+\n.+/gm, 'ccxt.Exchange{}' ],
+                [ /interface{}\sfunc\sEquals.+\n.*\n.+\n.+/gm, '' ], // remove equals
+                [/Precise\.String/gm, 'ccxt.Precise.String']
             ]).trim ()
 
-            const contentLines = content.split ('\n');
-            const contentIdented = contentLines.map (line => '        ' + line).join ('\n');
-
             const file = [
-                'using ccxt;',
-                'namespace Tests;',
+                'package base',
+                testName.indexOf('tests.init') === -1 ? 'import "ccxt"' : '',
                 '',
                 this.createGeneratedHeader().join('\n'),
-                'public partial class BaseTest',
-                '{',
-                contentIdented,
-                '}',
+                content,
             ].join('\n')
 
-            log.magenta ('→', (csharpFile as any).yellow)
+            log.magenta ('→', (goFile as any).yellow)
 
-            overwriteFileAndFolder (csharpFile, file);
-        } 
+            overwriteFileAndFolder (goFile, file);
+        }
     }
 
     capitalize(s: string) {
@@ -1300,7 +1293,7 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
     }
 
     transpileMainTest(files) {
-        log.magenta ('[csharp] Transpiling from', files.tsFile.yellow)
+        log.magenta ('[go] Transpiling from', files.tsFile.yellow)
         let ts = fs.readFileSync (files.tsFile).toString ();
 
         ts = this.regexAll (ts, [
@@ -1456,9 +1449,9 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
     }
 
     transpileTests(){
-        this.transpileBaseTestsToCSharp();
-        this.transpileExchangeTests();
-        this.transpileWsExchangeTests();
+        this.transpileBaseTestsToGo();
+        // this.transpileExchangeTests();
+        // this.transpileWsExchangeTests();
     }
 }
 
