@@ -52,6 +52,18 @@ export default class zonda extends zondaRest {
         return await this.watch (url, messageHash, message, messageHash);
     }
 
+    async unWatchPublic (topic, messageHash, params = {}) {
+        await this.loadMarkets ();
+        const url = this.urls['api']['ws'];
+        const request: Dict = {
+            'action': 'unsubscribe',
+            'module': 'trading',
+            'path': topic,
+        };
+        const message = this.extend (request, params);
+        return await this.watch (url, messageHash, message, messageHash);
+    }
+
     async watchTicker (symbol: string, params = {}): Promise<Ticker> {
         /**
          * @method
@@ -70,6 +82,25 @@ export default class zonda extends zondaRest {
         return await this.watchPublic (topic, messageHash, params);
     }
 
+    async unWatchTicker (symbol: string, params = {}): Promise<any> {
+        /**
+         * @method
+         * @name zonda#unWatchTicker
+         * @description unWatches a price ticker, a statistical calculation with the information calculated over the past 24 hours for a specific market
+         * @see https://docs.zondacrypto.exchange/reference/ticker-2
+         * @param {string} symbol unified symbol of the market to fetch the ticker for
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @param {string} [params.channel] the channel to subscribe to, tickers by default. Can be tickers, sprd-tickers, index-tickers, block-tickers
+         * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+         */
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        symbol = market['symbol'];
+        const topic = 'ticker/' + market['id'];
+        const messageHash = 'ticker:' + symbol;
+        return await this.unWatchPublic (topic, messageHash, params);
+    }
+
     async watchTickers (symbols: Strings = undefined, params = {}): Promise<Tickers> {
         /**
          * @method
@@ -86,6 +117,23 @@ export default class zonda extends zondaRest {
         const messageHash = 'ticker';
         await this.watchPublic (topic, messageHash, params);
         return this.filterByArray (this.tickers, 'symbol', symbols);
+    }
+
+    async unWatchTickers (symbols: Strings = undefined, params = {}): Promise<any> {
+        /**
+         * @method
+         * @name zonda#unWatchTickers
+         * @description unWatches a price ticker, a statistical calculation with the information calculated over the past 24 hours for all markets of a specific list
+         * @see https://docs.zondacrypto.exchange/reference/ticker-2
+         * @param {string[]} [symbols] unified symbol of the market to fetch the ticker for
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+         */
+        await this.loadMarkets ();
+        symbols = this.marketSymbols (symbols);
+        const topic = 'ticker';
+        const messageHash = 'ticker';
+        return await this.unWatchPublic (topic, messageHash, params);
     }
 
     handleTicker (client: Client, message) {
