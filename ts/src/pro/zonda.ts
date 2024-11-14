@@ -3,7 +3,7 @@
 import zondaRest from '../zonda.js';
 import Client from '../base/ws/Client.js';
 import { ExchangeError } from '../base/errors.js';
-import { Dict, Ticker } from '../base/types.js';
+import { Dict, Strings, Ticker, Tickers } from '../base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ export default class zonda extends zondaRest {
                 'watchOHLCV': false,
                 'watchOrderBook': false,
                 'watchTicker': true,
-                'watchTickers': false,
+                'watchTickers': true,
                 'watchTrades': false,
                 'watchTradesForSymbols': false,
                 'watchBalance': false,
@@ -70,6 +70,24 @@ export default class zonda extends zondaRest {
         return await this.watchPublic (topic, messageHash, params);
     }
 
+    async watchTickers (symbols: Strings = undefined, params = {}): Promise<Tickers> {
+        /**
+         * @method
+         * @name zonda#watchTickers
+         * @description watches a price ticker, a statistical calculation with the information calculated over the past 24 hours for all markets of a specific list
+         * @see https://docs.zondacrypto.exchange/reference/ticker-2
+         * @param {string[]} [symbols] unified symbol of the market to fetch the ticker for
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+         */
+        await this.loadMarkets ();
+        symbols = this.marketSymbols (symbols);
+        const topic = 'ticker';
+        const messageHash = 'ticker';
+        await this.watchPublic (topic, messageHash, params);
+        return this.filterByArray (this.tickers, 'symbol', symbols);
+    }
+
     handleTicker (client: Client, message) {
         //
         // {
@@ -106,7 +124,9 @@ export default class zonda extends zondaRest {
         const parsedTicker = this.parseTicker (data);
         const symbol = parsedTicker['symbol'];
         this.tickers[symbol] = parsedTicker;
-        const messageHash = 'ticker:' + symbol;
+        const topic = 'ticker';
+        client.resolve (parsedTicker, topic);
+        const messageHash = topic + ':' + symbol;
         client.resolve (parsedTicker, messageHash);
     }
 
