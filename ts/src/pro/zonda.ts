@@ -3,7 +3,7 @@
 import zondaRest from '../zonda.js';
 import Client from '../base/ws/Client.js';
 import { ExchangeError } from '../base/errors.js';
-import { Dict, Strings, Ticker, Tickers } from '../base/types.js';
+import { Dict, Int, OrderBook, Strings, Ticker, Tickers } from '../base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -13,7 +13,7 @@ export default class zonda extends zondaRest {
             'has': {
                 'ws': true,
                 'watchOHLCV': false,
-                'watchOrderBook': false,
+                'watchOrderBook': true,
                 'watchTicker': true,
                 'watchTickers': true,
                 'watchTrades': false,
@@ -40,7 +40,7 @@ export default class zonda extends zondaRest {
         });
     }
 
-    async watchPublic (topic, messageHash, params = {}) {
+    async watchPublic (topic, messageHash, subscription, params = {}) {
         await this.loadMarkets ();
         const url = this.urls['api']['ws'];
         const request: Dict = {
@@ -49,7 +49,7 @@ export default class zonda extends zondaRest {
             'path': topic,
         };
         const message = this.extend (request, params);
-        return await this.watch (url, messageHash, message, messageHash);
+        return await this.watch (url, messageHash, message, messageHash, subscription);
     }
 
     async unWatchPublic (topic, messageHash, params = {}) {
@@ -79,7 +79,7 @@ export default class zonda extends zondaRest {
         symbol = market['symbol'];
         const topic = 'ticker/' + market['id'];
         const messageHash = 'ticker:' + symbol;
-        return await this.watchPublic (topic, messageHash, params);
+        return await this.watchPublic (topic, messageHash, undefined, params);
     }
 
     async unWatchTicker (symbol: string, params = {}): Promise<any> {
@@ -115,7 +115,7 @@ export default class zonda extends zondaRest {
         symbols = this.marketSymbols (symbols);
         const topic = 'ticker';
         const messageHash = 'ticker';
-        await this.watchPublic (topic, messageHash, params);
+        await this.watchPublic (topic, messageHash, undefined, params);
         return this.filterByArray (this.tickers, 'symbol', symbols);
     }
 
@@ -178,6 +178,166 @@ export default class zonda extends zondaRest {
         client.resolve (parsedTicker, messageHash);
     }
 
+    async watchOrderBook (symbol: string, limit: Int = undefined, params = {}): Promise<OrderBook> {
+        /**
+         * @method
+         * @name zonda#watchOrderBook
+         * @description watches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
+         * @see https://docs.zondacrypto.exchange/reference/orderbook-3
+         * @param {string} symbol unified symbol of the market to fetch the order book for
+         * @param {int} [limit] the maximum amount of order book entries to return
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/#/?id=order-book-structure} indexed by market symbols
+         */
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        symbol = market['symbol'];
+        const topic = 'orderbook/' + market['id'].toLowerCase ();
+        const subscription: Dict = {
+            'topic': topic,
+            'method': this.handleOrderBookSubscription,
+            'symbol': symbol,
+            'limit': limit,
+            'params': params,
+        };
+        const orderbook = await this.watchPublic (topic, topic, subscription, params);
+        return orderbook.limit ();
+    }
+
+    handleOrderBook (client: Client, message) {
+        //
+        // {
+        //     "action": "push",
+        //     "topic": "trading/orderbook/btc-pln",
+        //     "message": {
+        //       "changes": [
+        //         {
+        //           "marketCode": "BTC-PLN",
+        //           "entryType": "Buy",
+        //           "rate": "27601.35",
+        //           "action": "update",
+        //           "state": {
+        //             "ra": "27601.35",
+        //             "ca": "0.46205049",
+        //             "sa": "0.46205049",
+        //             "pa": "0.46205049",
+        //             "co": 4
+        //           }
+        //         }
+        //       ],
+        //       "timestamp": "1576847016253"
+        //     },
+        //     "timestamp": "1576847016253",
+        //     "seqNo": 40018807
+        // }
+        //
+        const data = this.safeDict (message, 'message', {});
+        const updates = this.safeList (data, 'changes', []);
+        const first = this.safeDict (updates, 0);
+        const marketId = this.safeString (first, 'marketCode');
+        const market = this.market (marketId);
+        const messageHash = 'orderbook/' + market['id'].toLowerCase ();
+        const symbol = market['symbol'];
+        if (!(symbol in this.orderbooks)) {
+            return;
+        }
+        const orderbook = this.orderbooks[symbol];
+        const timestamp = this.safeInteger (orderbook, 'timestamp');
+        if (timestamp === undefined) {
+            orderbook.cache.push (message);
+        } else {
+            try {
+                const ts = this.safeInteger (data, 'timestamp');
+                if (ts > timestamp) {
+                    this.handleOrderBookMessage (client, message, orderbook);
+                    client.resolve (orderbook, messageHash);
+                }
+            } catch (e) {
+                delete this.orderbooks[symbol];
+                delete client.subscriptions[messageHash];
+                client.reject (e, messageHash);
+            }
+        }
+    }
+
+    handleOrderBookSubscription (client: Client, message, subscription) {
+        const defaultLimit = this.safeInteger (this.options, 'watchOrderBookLimit', 1000);
+        const limit = this.safeInteger (subscription, 'limit', defaultLimit);
+        const symbol = this.safeString (subscription, 'symbol'); // watchOrderBook
+        if (symbol in this.orderbooks) {
+            delete this.orderbooks[symbol];
+        }
+        this.orderbooks[symbol] = this.orderBook ({}, limit);
+        this.spawn (this.fetchOrderBookSnapshot, client, message, subscription);
+    }
+
+    async fetchOrderBookSnapshot (client, message, subscription) {
+        const symbol = this.safeString (subscription, 'symbol');
+        const messageHash = this.safeString (message, 'path');
+        try {
+            const defaultLimit = this.safeInteger (this.options, 'watchOrderBookLimit', 1000);
+            const limit = this.safeInteger (subscription, 'limit', defaultLimit);
+            const params = this.safeValue (subscription, 'params');
+            const snapshot = await this.fetchRestOrderBookSafe (symbol, limit, params);
+            if (this.safeValue (this.orderbooks, symbol) === undefined) {
+                // if the orderbook is dropped before the snapshot is received
+                return;
+            }
+            const orderbook = this.orderbooks[symbol];
+            orderbook.reset (snapshot);
+            const messages = orderbook.cache;
+            for (let i = 0; i < messages.length; i++) {
+                const messageItem = messages[i];
+                const ts = this.safeInteger (messageItem, 'ts');
+                if (ts < orderbook['timestamp']) {
+                    continue;
+                } else {
+                    this.handleOrderBookMessage (client, messageItem, orderbook);
+                }
+            }
+            this.orderbooks[symbol] = orderbook;
+            client.resolve (orderbook, messageHash);
+        } catch (e) {
+            delete client.subscriptions[messageHash];
+            client.reject (e, messageHash);
+        }
+    }
+
+    handleOrderBookMessage (client: Client, message, orderbook) {
+        const data = this.safeDict (message, 'message');
+        const updates = this.safeList (data, 'changes', []);
+        const rawBids = [];
+        const rawAsks = [];
+        for (let i = 0; i < updates.length; i++) {
+            const update = updates[i];
+            const type = this.safeStringLower (update, 'entryType');
+            const raw = this.safeDict (update, 'state', {});
+            if (type === 'sell') {
+                rawAsks.push (raw);
+            } else {
+                rawBids.push (raw);
+            }
+        }
+        this.handleDeltas (orderbook['asks'], this.parseBidsAsks (rawAsks, 'ra', 'ca'));
+        this.handleDeltas (orderbook['bids'], this.parseBidsAsks (rawBids, 'ra', 'ca'));
+        const timestamp = this.safeInteger (data, 'timestamp');
+        orderbook['timestamp'] = timestamp;
+        orderbook['datetime'] = this.iso8601 (timestamp);
+        return orderbook;
+    }
+
+    handleDelta (bookside, delta) {
+        const price = this.safeFloat (delta, 0);
+        const amount = this.safeFloat (delta, 1);
+        bookside.store (price, amount);
+    }
+
+    handleDeltas (bookside, deltas) {
+        for (let i = 0; i < deltas.length; i++) {
+            this.handleDelta (bookside, deltas[i]);
+        }
+    }
+
     ping (client: Client) {
         return {
             'action': 'ping',
@@ -194,6 +354,24 @@ export default class zonda extends zondaRest {
         return message;
     }
 
+    handleSubscribe (client: Client, message) {
+        //
+        // {
+        //     "action": "subscribe-public-confirm",
+        //     "module": "trading",
+        //     "path": "orderbook/SOL-USDC"
+        // }
+        //
+        const topic = this.safeString (message, 'path');
+        const subscriptionsById = this.indexBy (client.subscriptions, 'topic');
+        const subscription = this.safeValue (subscriptionsById, topic, {});
+        const method = this.safeValue (subscription, 'method');
+        if (method !== undefined) {
+            method.call (this, client, message, subscription);
+        }
+        return message;
+    }
+
     handleMessage (client: Client, message) {
         const error = this.safeString (message, 'error');
         if (error !== undefined) {
@@ -204,12 +382,17 @@ export default class zonda extends zondaRest {
             this.handlePong (client, message);
             return;
         }
+        if (action === 'subscribe-public-confirm') {
+            this.handleSubscribe (client, message);
+            return;
+        }
         const topic = this.safeString (message, 'topic');
         if (topic !== undefined) {
             const part = topic.split ('/');
             const channels = this.safeString (part, 1);
             const methods: Dict = {
                 'ticker': this.handleTicker,
+                'orderbook': this.handleOrderBook,
             };
             const exacMethod = this.safeValue (methods, channels);
             if (exacMethod !== undefined) {
