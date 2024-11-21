@@ -3,7 +3,8 @@
 import zondaRest from '../zonda.js';
 import Client from '../base/ws/Client.js';
 import { ExchangeError } from '../base/errors.js';
-import { Dict, Int, OrderBook, Strings, Ticker, Tickers } from '../base/types.js';
+import { Dict, Int, OrderBook, Strings, Ticker, Tickers, Trade } from '../base/types.js';
+import { ArrayCache } from '../base/ws/Cache.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -16,7 +17,7 @@ export default class zonda extends zondaRest {
                 'watchOrderBook': true,
                 'watchTicker': true,
                 'watchTickers': true,
-                'watchTrades': false,
+                'watchTrades': true,
                 'watchTradesForSymbols': false,
                 'watchBalance': false,
                 'watchOrders': false,
@@ -338,6 +339,71 @@ export default class zonda extends zondaRest {
         }
     }
 
+    async watchTrades (symbol: string, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
+        /**
+         * @method
+         * @name zonda#watchTrades
+         * @description watches information on multiple trades made in a market
+         * @see https://docs.zondacrypto.exchange/reference/last-transactions-ws
+         * @param {string} symbol unified symbol of the market to fetch the ticker for
+         * @param {int} [since] the earliest time in ms to fetch trades for
+         * @param {int} [limit] the maximum number of trade structures to retrieve
+         * @param {object} [params] extra parameters specific to the exchange API endpoint
+         * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+         */
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        symbol = market['symbol'];
+        const topic = 'transactions/' + market['id'];
+        const messageHash = 'trade:' + symbol;
+        const trades = await this.watchPublic (topic, messageHash, undefined, params);
+        if (this.newUpdates) {
+            limit = trades.getLimit (market['symbol'], limit);
+        }
+        return this.filterBySymbolSinceLimit (trades, symbol, since, limit, true);
+    }
+
+    handleTrades (client: Client, message) {
+        //
+        // {
+        //     "action": "push",
+        //     "topic": "trading/transactions/btc-pln",
+        //     "message": {
+        //         "transactions": [
+        //             {
+        //                 "id": "e211a107-a7b5-11ef-86d5-0242ac110005",
+        //                 "t": "1732158509549",
+        //                 "a": "0.00025710",
+        //                 "r": "389100",
+        //                 "ty": "Buy"
+        //             }
+        //         ]
+        //     },
+        //     "timestamp": "1732158509549",
+        //     "seqNo": 7184609
+        // }
+        //
+        const topic = this.safeString (message, 'topic');
+        const part = topic.split ('/');
+        const marketId = this.safeStringUpper (part, 2);
+        const market = this.market (marketId);
+        const symbol = market['symbol'];
+        const data = this.safeDict (message, 'message', {});
+        const trades = this.safeList (data, 'transactions', []);
+        let stored = this.safeValue (this.trades, symbol);
+        if (stored === undefined) {
+            const limit = this.safeInteger (this.options, 'tradesLimit', 1000);
+            stored = new ArrayCache (limit);
+            this.trades[symbol] = stored;
+        }
+        for (let i = 0; i < trades.length; i++) {
+            const parsedTrade = this.parseTrade (trades[i], market);
+            stored.append (parsedTrade);
+        }
+        const messageHash = 'trade:' + symbol;
+        client.resolve (stored, messageHash);
+    }
+
     ping (client: Client) {
         return {
             'action': 'ping',
@@ -363,13 +429,16 @@ export default class zonda extends zondaRest {
         // }
         //
         const topic = this.safeString (message, 'path');
-        const subscriptionsById = this.indexBy (client.subscriptions, 'topic');
-        const subscription = this.safeValue (subscriptionsById, topic, {});
-        const method = this.safeValue (subscription, 'method');
-        if (method !== undefined) {
-            method.call (this, client, message, subscription);
+        const part = topic.split ('/');
+        if (this.safeString (part, 0) === 'orderbook') {
+            const subscriptionsById = this.indexBy (client.subscriptions, 'topic');
+            const subscription = this.safeValue (subscriptionsById, topic, {});
+            const method = this.safeValue (subscription, 'method');
+            if (method !== undefined) {
+                method.call (this, client, message, subscription);
+            }
+            return message;
         }
-        return message;
     }
 
     handleMessage (client: Client, message) {
@@ -393,6 +462,7 @@ export default class zonda extends zondaRest {
             const methods: Dict = {
                 'ticker': this.handleTicker,
                 'orderbook': this.handleOrderBook,
+                'transactions': this.handleTrades,
             };
             const exacMethod = this.safeValue (methods, channels);
             if (exacMethod !== undefined) {
