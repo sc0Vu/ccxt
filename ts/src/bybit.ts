@@ -120,6 +120,7 @@ export default class bybit extends Exchange {
                 'fetchPositionsHistory': true,
                 'fetchPremiumIndexOHLCV': true,
                 'fetchSettlementHistory': true,
+                'fetchStatus': true,
                 'fetchTicker': true,
                 'fetchTickers': true,
                 'fetchTime': true,
@@ -220,6 +221,7 @@ export default class bybit extends Exchange {
                         'derivatives/v3/public/insurance': 1,
                         // v5
                         'v5/announcements/index': 5, // 10/s = 1000 / (20 * 5)
+                        'v5/system/status': 5,
                         // market
                         'v5/market/time': 5,
                         'v5/market/kline': 5,
@@ -1597,6 +1599,49 @@ export default class bybit extends Exchange {
             return this.costToPrecision (symbol, cost);
         }
         return cost;
+    }
+
+    /**
+     * @method
+     * @name bybit#fetchStatus
+     * @description the latest known information on the availability of the exchange API
+     * @see https://bybit-exchange.github.io/docs/v5/system-status
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} a [status structure]{@link https://docs.ccxt.com/#/?id=exchange-status-structure}
+     */
+    async fetchStatus (params = {}) {
+        const response = await this.publicGetV5SystemStatus (params);
+        //
+        //     {
+        //         "retCode": 0,
+        //         "retMsg": "",
+        //         "result": {
+        //             "list": []
+        //         },
+        //         "retExtInfo": {},
+        //         "time": 1754442981446
+        //     }
+        //
+        const data = this.safeDict (response, 'result', {});
+        const statusRaw = this.safeList (data, 'list', []);
+        let status = 'ok';
+        for (let i = 0; i < statusRaw.length; i++) {
+            const entry = statusRaw[i];
+            const state = this.safeString (entry, 'state');
+            if (state === 'ongoing') {
+                const begin = this.safeInteger (entry, 'begin');
+                if (this.milliseconds () > begin) {
+                    status = 'maintenance';
+                }
+            }
+        }
+        return {
+            'status': status,
+            'updated': undefined,
+            'eta': undefined,
+            'url': undefined,
+            'info': response,
+        };
     }
 
     /**
