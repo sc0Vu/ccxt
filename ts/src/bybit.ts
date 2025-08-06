@@ -246,6 +246,11 @@ export default class bybit extends Exchange {
                         'v5/spot-cross-margin-trade/data': 5,
                         'v5/spot-cross-margin-trade/pledge-token': 5,
                         'v5/spot-cross-margin-trade/borrow-token': 5,
+                        // crypto loan (new)
+                        'v5/crypto-loan-common/loanable-data': 5,
+                        'v5/crypto-loan-common/collateral-data': 5,
+                        'v5/crypto-loan-fixed/supply-order-quote': 5,
+                        'v5/crypto-loan-fixed/borrow-order-quote': 5,
                         // crypto loan
                         'v5/crypto-loan/collateral-data': 5,
                         'v5/crypto-loan/loanable-data': 5,
@@ -390,6 +395,18 @@ export default class bybit extends Exchange {
                         'v5/spot-cross-margin-trade/account': 1, // 50/s => cost = 50 / 50 = 1
                         'v5/spot-cross-margin-trade/orders': 1, // 50/s => cost = 50 / 50 = 1
                         'v5/spot-cross-margin-trade/repay-history': 1, // 50/s => cost = 50 / 50 = 1
+                        // crypto loan (new)
+                        'v5/crypto-loan-common/max-collateral-amount': 5,
+                        'v5/crypto-loan-common/adjustment-history': 5,
+                        'v5/crypto-loan-common/position': 5,
+                        'v5/crypto-loan-flexible/ongoing-coin': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-flexible/borrow-history': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-flexible/repayment-history': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-fixed/borrow-contract-info': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-fixed/supply-contract-info': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-fixed/borrow-order-info': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-fixed/supply-order-info': 10, // 5/s => cost = 50 / 5 = 10
+                        'v5/crypto-loan-fixed/repayment-history': 10, // 5/s => cost = 50 / 5 = 10
                         // crypto loan
                         'v5/crypto-loan/borrowable-collateralisable-number': 5,
                         'v5/crypto-loan/ongoing-orders': 5,
@@ -532,6 +549,15 @@ export default class bybit extends Exchange {
                         'v5/spot-cross-margin-trade/loan': 2.5, // 20/s => cost = 50 / 20 = 2.5
                         'v5/spot-cross-margin-trade/repay': 2.5, // 20/s => cost = 50 / 20 = 2.5
                         'v5/spot-cross-margin-trade/switch': 2.5, // 20/s => cost = 50 / 20 = 2.5
+                        // crypto loan (new)
+                        'v5/crypto-loan-common/adjust-ltv': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-flexible/borrow': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-flexible/repay': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-fixed/borrow': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-fixed/supply': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-fixed/borrow-order-cancel': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-fixed/supply-order-cancel': 50, // 1/s => cost = 50 / 1 = 50
+                        'v5/crypto-loan-fixed/fully-repay': 50, // 1/s => cost = 50 / 1 = 50
                         // crypto loan
                         'v5/crypto-loan/borrow': 5,
                         'v5/crypto-loan/repay': 5,
