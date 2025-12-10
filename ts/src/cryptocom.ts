@@ -2122,7 +2122,7 @@ export default class cryptocom extends Exchange {
         const fiatOnly = this.safeBool (params, 'fiat', false);
         const until = this.safeInteger (params, 'until');
         params = this.omit (params, [ 'fiat', 'fiatOnly', 'until' ]);
-        let depositList = undefined;
+        let response = undefined;
         if (fiatOnly) {
             request['page'] = 0;
             if (since !== undefined) {
@@ -2136,7 +2136,7 @@ export default class cryptocom extends Exchange {
             if (until !== undefined) {
                 request['end_time'] = until;
             }
-            const response = await this.v1PrivatePostPrivateFiatFiatDepositHistory (this.extend (request, params));
+            response = await this.v1PrivatePostPrivateFiatFiatDepositHistory (this.extend (request, params));
             //     {
             //         "id": "123456",
             //         "method": "private/fiat/fiat-deposit-history",
@@ -2168,8 +2168,6 @@ export default class cryptocom extends Exchange {
             //             "page_size": 10
             //         }
             //     }
-            const data = this.safeDict (response, 'data', {});
-            depositList = this.safeList (data, 'transaction_history_list', []);
         } else {
             if (code !== undefined) {
                 currency = this.safeCurrency (code);
@@ -2185,7 +2183,7 @@ export default class cryptocom extends Exchange {
             if (until !== undefined) {
                 request['end_ts'] = until;
             }
-            const response = await this.v1PrivatePostPrivateGetDepositHistory (this.extend (request, params));
+            response = await this.v1PrivatePostPrivateGetDepositHistory (this.extend (request, params));
             //
             //     {
             //         "id": 1688701375714,
@@ -2208,9 +2206,9 @@ export default class cryptocom extends Exchange {
             //         }
             //     }
             //
-            const data = this.safeDict (response, 'result', {});
-            depositList = this.safeList (data, 'deposit_list', []);
         }
+        const data = this.safeDict2 (response, 'result', 'data', {});
+        const depositList = this.safeList2 (data, 'deposit_list', 'transaction_history_list', []);
         return this.parseTransactions (depositList, currency, since, limit);
     }
 
@@ -2219,10 +2217,12 @@ export default class cryptocom extends Exchange {
      * @name cryptocom#fetchWithdrawals
      * @description fetch all withdrawals made from an account
      * @see https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#private-get-withdrawal-history
+     * @see https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#private-fiat-fiat-withdraw-history
      * @param {string} code unified currency code
      * @param {int} [since] the earliest time in ms to fetch withdrawals for
      * @param {int} [limit] the maximum number of withdrawals structures to retrieve
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {bool} [params.fiat] if true, only fiat deposits will be returned
      * @param {int} [params.until] timestamp in ms for the ending date filter, default is the current time
      * @returns {object[]} a list of [transaction structures]{@link https://docs.ccxt.com/#/?id=transaction-structure}
      */
@@ -2230,49 +2230,96 @@ export default class cryptocom extends Exchange {
         await this.loadMarkets ();
         let currency = undefined;
         const request: Dict = {};
-        if (code !== undefined) {
-            currency = this.safeCurrency (code);
-            request['currency'] = currency['id'];
-        }
-        if (since !== undefined) {
-            // 90 days date range
-            request['start_ts'] = since;
-        }
-        if (limit !== undefined) {
-            request['page_size'] = limit;
-        }
+        const fiatOnly = this.safeBool (params, 'fiat', false);
         const until = this.safeInteger (params, 'until');
-        params = this.omit (params, [ 'until' ]);
-        if (until !== undefined) {
-            request['end_ts'] = until;
+        params = this.omit (params, [ 'fiat', 'fiatOnly', 'until' ]);
+        let response = undefined;
+        if (fiatOnly) {
+            request['page'] = 0;
+            if (since !== undefined) {
+                request['start_time'] = since;
+            }
+            if (limit !== undefined) {
+                request['page_size'] = limit;
+            } else {
+                request['page_size'] = 100;
+            }
+            if (until !== undefined) {
+                request['end_time'] = until;
+            }
+            response = await this.v1PrivatePostPrivateFiatFiatWithdrawHistory (this.extend (request, params));
+            //     {
+            //         "id": 0,
+            //         "code": 0,
+            //         "result": {
+            //             "page": 0,
+            //             "page_size": 10,
+            //             "transaction_history_list": [
+            //                 {
+            //                     "id": "37190e06-d4b4-4909-9177-e6117cbbf40f",
+            //                     "account_id": "adb80cff-f420-469c-b439-4d90272bf1a1",
+            //                     "currency": "USD",
+            //                     "amount": "501.0",
+            //                     "amount_in_usd": "501.0",
+            //                     "fee_currency": "USD",
+            //                     "fee_amount": "0.0",
+            //                     "fee_amount_in_usd": null,
+            //                     "payment_network": "usd_cubix",
+            //                     "status": "completed",
+            //                     "created_at": "1744888258315",
+            //                     "updated_at": "1744888470530",
+            //                     "completed_at": "1744888470530",
+            //                     "sender": null,
+            //                     "beneficiary": {
+            //                         "account_identifier_value": "d1b2b0d2-890f-4f57-a81b-b1cd016bcc63"
+            //                     }
+            //                 }
+            //             ]
+            //         }
+            //     }
+        } else {
+            if (code !== undefined) {
+                currency = this.safeCurrency (code);
+                request['currency'] = currency['id'];
+            }
+            if (since !== undefined) {
+                // 90 days date range
+                request['start_ts'] = since;
+            }
+            if (limit !== undefined) {
+                request['page_size'] = limit;
+            }
+            if (until !== undefined) {
+                request['end_ts'] = until;
+            }
+            response = await this.v1PrivatePostPrivateGetWithdrawalHistory (this.extend (request, params));
+            //
+            //     {
+            //         "id": 1688613879534,
+            //         "method": "private/get-withdrawal-history",
+            //         "code": 0,
+            //         "result": {
+            //             "withdrawal_list": [
+            //                 {
+            //                     "currency": "BTC",
+            //                     "client_wid": "",
+            //                     "fee": 0.0005,
+            //                     "create_time": 1688613850000,
+            //                     "id": "5275977",
+            //                     "update_time": 1688613850000,
+            //                     "amount": 0.0005,
+            //                     "address": "1234NMEWbiF8ZkwUMxmfzMxi2A1MQ44bMn",
+            //                     "status": "1",
+            //                     "txid": "",
+            //                     "network_id": "BTC"
+            //                 }
+            //             ]
+            //         }
+            //     }
+            //
         }
-        const response = await this.v1PrivatePostPrivateGetWithdrawalHistory (this.extend (request, params));
-        //
-        //     {
-        //         "id": 1688613879534,
-        //         "method": "private/get-withdrawal-history",
-        //         "code": 0,
-        //         "result": {
-        //             "withdrawal_list": [
-        //                 {
-        //                     "currency": "BTC",
-        //                     "client_wid": "",
-        //                     "fee": 0.0005,
-        //                     "create_time": 1688613850000,
-        //                     "id": "5275977",
-        //                     "update_time": 1688613850000,
-        //                     "amount": 0.0005,
-        //                     "address": "1234NMEWbiF8ZkwUMxmfzMxi2A1MQ44bMn",
-        //                     "status": "1",
-        //                     "txid": "",
-        //                     "network_id": "BTC"
-        //                 }
-        //             ]
-        //         }
-        //     }
-        //
-        const data = this.safeDict (response, 'result', {});
-        const withdrawalList = this.safeList (data, 'withdrawal_list', []);
+        const data = this.safeDict2 (response, 'result', 'data', {});
+        const withdrawalList = this.safeList2 (data, 'withdrawal_list', 'transaction_history_list', []);
         return this.parseTransactions (withdrawalList, currency, since, limit);
     }
 
@@ -2634,11 +2681,16 @@ export default class cryptocom extends Exchange {
         let type = undefined;
         const rawStatus = this.safeString (transaction, 'status');
         let status = undefined;
+        const beneficiary = this.safeDict (transaction, 'beneficiary');
         if ('client_wid' in transaction) {
             type = 'withdrawal';
             status = this.parseWithdrawalStatus (rawStatus);
         } else {
-            type = 'deposit';
+            if (beneficiary !== undefined) {
+                type = 'withdrawal';
+            } else {
+                type = 'deposit';
+            }
             status = this.parseDepositStatus (rawStatus);
         }
         const addressString = this.safeString (transaction, 'address');
