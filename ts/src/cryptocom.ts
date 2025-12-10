@@ -2106,10 +2106,12 @@ export default class cryptocom extends Exchange {
      * @name cryptocom#fetchDeposits
      * @description fetch all deposits made to an account
      * @see https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#private-get-deposit-history
+     * @see https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#private-fiat-fiat-deposit-history
      * @param {string} code unified currency code
      * @param {int} [since] the earliest time in ms to fetch deposits for
      * @param {int} [limit] the maximum number of deposits structures to retrieve
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {bool} [params.fiat] if true, only fiat deposits will be returned
      * @param {int} [params.until] timestamp in ms for the ending date filter, default is the current time
      * @returns {object[]} a list of [transaction structures]{@link https://docs.ccxt.com/#/?id=transaction-structure}
      */
@@ -2117,47 +2119,98 @@ export default class cryptocom extends Exchange {
         await this.loadMarkets ();
         let currency = undefined;
         const request: Dict = {};
-        if (code !== undefined) {
-            currency = this.safeCurrency (code);
-            request['currency'] = currency['id'];
-        }
-        if (since !== undefined) {
-            // 90 days date range
-            request['start_ts'] = since;
-        }
-        if (limit !== undefined) {
-            request['page_size'] = limit;
-        }
+        const fiatOnly = this.safeBool (params, 'fiat', false);
         const until = this.safeInteger (params, 'until');
-        params = this.omit (params, [ 'until' ]);
-        if (until !== undefined) {
-            request['end_ts'] = until;
+        params = this.omit (params, [ 'fiat', 'fiatOnly', 'until' ]);
+        let depositList = undefined;
+        if (fiatOnly) {
+            request['page'] = 0;
+            if (since !== undefined) {
+                request['start_time'] = since;
+            }
+            if (limit !== undefined) {
+                request['page_size'] = limit;
+            } else {
+                request['page_size'] = 100;
+            }
+            if (until !== undefined) {
+                request['end_time'] = until;
+            }
+            const response = await this.v1PrivatePostPrivateFiatFiatDepositHistory (this.extend (request, params));
+            //     {
+            //         "id": "123456",
+            //         "method": "private/fiat/fiat-deposit-history",
+            //         "code": 0,
+            //         "msg": "success",
+            //         "data": {
+            //             "transaction_history_list": [
+            //                 {
+            //                     "id": "068ccfae-a85d-4023-aca7-c5979ff16703",
+            //                     "account_id": "adb80cff-f420-469c-b439-4d90272bf1a1",
+            //                     "currency": "USD",
+            //                     "amount": "12.0",
+            //                     "amount_in_usd": null,
+            //                     "fee_currency": "USD",
+            //                     "fee_amount": "0.0",
+            //                     "fee_amount_in_usd": null,
+            //                     "payment_network": "usd_swift",
+            //                     "status": "completed",
+            //                     "created_at": "1751126400000",
+            //                     "updated_at": "1751126400000",
+            //                     "completed_at": null,
+            //                     "sender": {
+            //                         "account_identifier_value": "12345555"
+            //                     },
+            //                     "beneficiary": null
+            //                 }
+            //             ],
+            //             "page": 0,
+            //             "page_size": 10
+            //         }
+            //     }
+            const data = this.safeDict (response, 'data', {});
+            depositList = this.safeList (data, 'transaction_history_list', []);
+        } else {
+            if (code !== undefined) {
+                currency = this.safeCurrency (code);
+                request['currency'] = currency['id'];
+            }
+            if (since !== undefined) {
+                // 90 days date range
+                request['start_ts'] = since;
+            }
+            if (limit !== undefined) {
+                request['page_size'] = limit;
+            }
+            if (until !== undefined) {
+                request['end_ts'] = until;
+            }
+            const response = await this.v1PrivatePostPrivateGetDepositHistory (this.extend (request, params));
+            //
+            //     {
+            //         "id": 1688701375714,
+            //         "method": "private/get-deposit-history",
+            //         "code": 0,
+            //         "result": {
+            //             "deposit_list": [
+            //                 {
+            //                     "currency": "BTC",
+            //                     "fee": 0,
+            //                     "create_time": 1688023659000,
+            //                     "id": "6201135",
+            //                     "update_time": 1688178509000,
+            //                     "amount": 0.00114571,
+            //                     "address": "1234fggxTSmJ3H4jaMQuWyEiLBzZdAbK6d",
+            //                     "status": "1",
+            //                     "txid": "f0ae4202b76eb999c301eccdde44dc639bee42d1fdd5974105286ca3393f6065/2"
+            //                 },
+            //             ]
+            //         }
+            //     }
+            //
+            const data = this.safeDict (response, 'result', {});
+            depositList = this.safeList (data, 'deposit_list', []);
         }
-        const response = await this.v1PrivatePostPrivateGetDepositHistory (this.extend (request, params));
-        //
-        //     {
-        //         "id": 1688701375714,
-        //         "method": "private/get-deposit-history",
-        //         "code": 0,
-        //         "result": {
-        //             "deposit_list": [
-        //                 {
-        //                     "currency": "BTC",
-        //                     "fee": 0,
-        //                     "create_time": 1688023659000,
-        //                     "id": "6201135",
-        //                     "update_time": 1688178509000,
-        //                     "amount": 0.00114571,
-        //                     "address": "1234fggxTSmJ3H4jaMQuWyEiLBzZdAbK6d",
-        //                     "status": "1",
-        //                     "txid": "f0ae4202b76eb999c301eccdde44dc639bee42d1fdd5974105286ca3393f6065/2"
-        //                 },
-        //             ]
-        //         }
-        //     }
-        //
-        const data = this.safeDict (response, 'result', {});
-        const depositList = this.safeList (data, 'deposit_list', []);
         return this.parseTransactions (depositList, currency, since, limit);
     }
 
@@ -2491,6 +2544,10 @@ export default class cryptocom extends Exchange {
             '1': 'ok',
             '2': 'failed',
             '3': 'pending',
+            'pending': 'pending',
+            'completed': 'ok',
+            'failed': 'failed',
+            'canceled': 'canceled',
         };
         return this.safeString (statuses, status, status);
     }
@@ -2522,6 +2579,28 @@ export default class cryptocom extends Exchange {
         //         "address": "1234fggxTSmJ3H4jaMQuWyEiLBzZdAbK6d",
         //         "status": "1",
         //         "txid": "f0ae4202b76eb999c301eccdde44dc639bee42d1fdd5974105286ca3393f6065/2"
+        //     }
+        //
+        // fetchDeposits - fiat
+        //
+        //     {
+        //         "id": "068ccfae-a85d-4023-aca7-c5979ff16703",
+        //         "account_id": "adb80cff-f420-469c-b439-4d90272bf1a1",
+        //         "currency": "USD",
+        //         "amount": "12.0",
+        //         "amount_in_usd": null,
+        //         "fee_currency": "USD",
+        //         "fee_amount": "0.0",
+        //         "fee_amount_in_usd": null,
+        //         "payment_network": "usd_swift",
+        //         "status": "completed",
+        //         "created_at": "1751126400000",
+        //         "updated_at": "1751126400000",
+        //         "completed_at": null,
+        //         "sender": {
+        //             "account_identifier_value": "12345555"
+        //         },
+        //         "beneficiary": null
         //     }
         //
         // fetchWithdrawals
@@ -2563,10 +2642,13 @@ export default class cryptocom extends Exchange {
             status = this.parseDepositStatus (rawStatus);
         }
         const addressString = this.safeString (transaction, 'address');
-        const [ address, tag ] = this.parseAddress (addressString);
+        let [ address, tag ] = [ undefined, undefined ];
+        if (addressString !== undefined) {
+            [ address, tag ] = this.parseAddress (addressString);
+        }
         const currencyId = this.safeString (transaction, 'currency');
         const code = this.safeCurrencyCode (currencyId, currency);
-        const timestamp = this.safeInteger (transaction, 'create_time');
+        const timestamp = this.safeInteger2 (transaction, 'create_time', 'created_at');
         const feeCost = this.safeNumber (transaction, 'fee');
         let fee = undefined;
         if (feeCost !== undefined) {
@@ -2578,7 +2660,7 @@ export default class cryptocom extends Exchange {
             'txid': this.safeString (transaction, 'txid'),
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
-            'network': undefined,
+            'network': this.safeString (transaction, 'payment_network'),
             'address': address,
             'addressTo': address,
             'addressFrom': undefined,
@@ -2589,7 +2671,7 @@ export default class cryptocom extends Exchange {
             'amount': this.safeNumber (transaction, 'amount'),
             'currency': code,
             'status': status,
-            'updated': this.safeInteger (transaction, 'update_time'),
+            'updated': this.safeInteger2 (transaction, 'update_time', 'updated_at'),
             'internal': undefined,
             'comment': this.safeString (transaction, 'client_wid'),
             'fee': fee,
