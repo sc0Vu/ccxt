@@ -379,7 +379,7 @@ export default class coinbaseinternational extends Exchange {
      * @description fetch all the accounts associated with a profile
      * @see https://docs.cloud.coinbase.com/intx/reference/getportfolios
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}) {
         await this.loadMarkets ();

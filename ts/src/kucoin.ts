@@ -1730,9 +1730,9 @@ export default class kucoin extends Exchange {
      * @method
      * @name kucoin#fetchAccounts
      * @description fetch all the accounts associated with a profile
-     * @see https://docs.kucoin.com/#list-accounts
+     * @see https://docs.kucoin.com/#list-accountshttps://docs.ccxt.com/?id=accounts-structure
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         const response = await this.privateGetAccounts (params);

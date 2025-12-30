@@ -2752,7 +2752,7 @@ export default class whitebit extends Exchange {
      * @description fetch all the accounts associated with a profile
      * @see https://docs.whitebit.com/private/http-main-v4/#sub-account-list
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object[]} a list of [account structures]{@link https://docs.ccxt.com/?id=account-structure}
+     * @returns {object[]} a list of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure}
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         await this.loadMarkets ();

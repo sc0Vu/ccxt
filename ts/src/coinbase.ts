@@ -552,7 +552,7 @@ export default class coinbase extends Exchange {
      * @see https://docs.cloud.coinbase.com/sign-in-with-coinbase/docs/api-accounts#list-accounts
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {boolean} [params.paginate] default false, when true will automatically paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         const method = this.safeString (this.options, 'fetchAccounts', 'fetchAccountsV3');
@@ -690,7 +690,7 @@ export default class coinbase extends Exchange {
      * @description fetch all the portfolios
      * @see https://docs.cloud.coinbase.com/advanced-trade/reference/retailbrokerageapi_getportfolios
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchPortfolios (params = {}): Promise<Account[]> {
         const response = await this.v3PrivateGetBrokeragePortfolios (params);
@@ -4990,7 +4990,7 @@ export default class coinbase extends Exchange {
                     'info': response,
                     'symbol': symbol,
                     'maker': taker_fee,
-                    'taker': marker_fee,
+                    'taker': marker_fee,https://docs.ccxt.com/?id=accounts-structure
                     'percentage': true,
                 };
             }
@@ -5005,7 +5005,7 @@ export default class coinbase extends Exchange {
      * @see https://docs.cloud.coinbase.com/advanced-trade/reference/retailbrokerageapi_getportfolios
      * @param {string} portfolioUuid The unique identifier of the portfolio to fetch
      * @param {Dict} [params] Extra parameters specific to the exchange API endpoint
-     * @returns {any[]} An account structure <https://docs.ccxt.com/?id=account-structure>
+     * @returns {any[]} An account structure <https://docs.ccxt.com/?id=accounts-structure>
      */
     async fetchPortfolioDetails (portfolioUuid: string, params = {}): Promise<any[]> {
         await this.loadMarkets ();

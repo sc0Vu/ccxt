@@ -2841,7 +2841,7 @@ export default class cryptocom extends Exchange {
      * @description fetch all the accounts associated with a profile
      * @see https://exchange-docs.crypto.com/exchange/v1/rest-ws/index.html#private-get-accounts
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         await this.loadMarkets ();

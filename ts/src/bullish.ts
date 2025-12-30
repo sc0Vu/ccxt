@@ -2254,7 +2254,7 @@ export default class bullish extends Exchange {
      * @description fetch all the accounts associated with a profile
      * @see https://api.exchange.bullish.com/docs/api/rest/trading-api/v2/#tag--trading-accounts
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         await Promise.all ([ this.loadMarkets (), this.handleToken () ]);

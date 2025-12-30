@@ -1642,7 +1642,7 @@ export default class oxfun extends Exchange {
      * @description fetch subaccounts associated with a profile
      * @see https://docs.ox.fun/?json#get-v3-account-names
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         await this.loadMarkets ();

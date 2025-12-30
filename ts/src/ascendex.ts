@@ -888,7 +888,7 @@ export default class ascendex extends Exchange {
      * @name ascendex#fetchAccounts
      * @description fetch all the accounts associated with a profile
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         let accountGroup = this.safeString (this.options, 'account-group');

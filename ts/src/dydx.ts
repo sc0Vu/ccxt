@@ -2258,7 +2258,7 @@ export default class dydx extends Exchange {
      * @see https://docs.dydx.xyz/indexer-client/http#get-subaccounts
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.address] wallet address that made trades
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         let userAddress = undefined;

@@ -3282,7 +3282,7 @@ export default class htx extends Exchange {
      * @description fetch all the accounts associated with a profile
      * @see https://huobiapi.github.io/docs/spot/v1/en/#get-all-accounts-of-the-current-user
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccounts (params = {}): Promise<Account[]> {
         await this.loadMarkets ();
@@ -3329,7 +3329,7 @@ export default class htx extends Exchange {
      * @param {string} [marginMode] 'cross' or 'isolated'
      * @param {string} [symbol] unified ccxt market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=account-structure} indexed by the account type
+     * @returns {object} a dictionary of [account structures]{@link https://docs.ccxt.com/?id=accounts-structure} indexed by the account type
      */
     async fetchAccountIdByType (type: string, marginMode: Str = undefined, symbol: Str = undefined, params = {}) {
         const accounts = await this.loadAccounts ();
