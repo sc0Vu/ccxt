@@ -109,6 +109,9 @@ export default class drift extends Exchange {
                         'tx/execute',
                         'tx/deposit',
                         'tx/withdraw',
+                        'tx/builder/init',
+                        'tx/builder/approve',
+                        'tx/settlePnl',
                     ],
                 },
                 'dlob': {
@@ -1972,6 +1975,18 @@ export default class drift extends Exchange {
             'comment': undefined,
             'internal': undefined,
         };
+    }
+
+    async createBuilder (params = {}) {
+        const builderId = this.safeString (params, 'builderId');
+        params = this.omit (params, 'builderId');
+        const request = {
+            'builderId': builderId,
+            'simulate': false,
+        };
+        const response = await this.publicPostTxBuilderInit (this.extend (request));
+        const txResponse = await this.executeTx (response['tx']);
+        return txResponse;
     }
 
     async executeTx (serializedTx: string): Promise<string> {

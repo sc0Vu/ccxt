@@ -28,6 +28,9 @@ interface Exchange {
     publicPostTxExecute (params?: {}): Promise<implicitReturnType>;
     publicPostTxDeposit (params?: {}): Promise<implicitReturnType>;
     publicPostTxWithdraw (params?: {}): Promise<implicitReturnType>;
+    publicPostTxBuilderInit (params?: {}): Promise<implicitReturnType>;
+    publicPostTxBuilderApprove (params?: {}): Promise<implicitReturnType>;
+    publicPostTxSettlePnl (params?: {}): Promise<implicitReturnType>;
     dlobGetL2 (params?: {}): Promise<implicitReturnType>;
     dlobGetBatchL2 (params?: {}): Promise<implicitReturnType>;
 }
