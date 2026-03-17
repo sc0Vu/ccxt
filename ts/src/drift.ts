@@ -18,7 +18,8 @@ export default class drift extends Exchange {
             'requiredCredentials': {
                 'apiKey': false,
                 'secret': false,
-                'accountId': true,
+                'walletAddress': true,
+                'accountId': false,
                 'privateKey': true,
             },
             'has': {
@@ -1001,8 +1002,10 @@ export default class drift extends Exchange {
         if (paginate) {
             return await this.fetchPaginatedCallCursor ('fetchMyTrades', symbol, since, limit, params, 'nextPage', 'page', undefined, 50) as Trade[];
         }
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchMyTrades', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         let market = undefined;
         let method = 'publicGetUserAccountIdTrades';
@@ -1209,8 +1212,10 @@ export default class drift extends Exchange {
     async fetchOrder (id: string, symbol: Str = undefined, params = {}): Promise<Order> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchOrder', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
             'orderId': id,
         };
         const response = await this.publicGetUserAccountIdOrdersIdOrderId (this.extend (request, params));
@@ -1281,8 +1286,10 @@ export default class drift extends Exchange {
         if (paginate) {
             return await this.fetchPaginatedCallCursor ('fetchOrders', symbol, since, limit, params, 'nextPage', 'page', undefined, 50) as Order[];
         }
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchOrders', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         let market = undefined;
         let method = 'publicGetUserAccountIdOrdersPerp';
@@ -1363,9 +1370,11 @@ export default class drift extends Exchange {
     async fetchOpenOrders (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Order[]> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchOpenOrders', 'accountId', 'account_id', this.accountId);
         const market = this.safeMarket (symbol);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountId (this.extend (request, params));
         //
@@ -1474,8 +1483,10 @@ export default class drift extends Exchange {
     async fetchBalance (params = {}): Promise<Balances> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchBalance', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountId (this.extend (request, params));
         //
@@ -1531,8 +1542,10 @@ export default class drift extends Exchange {
     async fetchPositions (symbols: Strings = undefined, params = {}): Promise<Position[]> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchPositions', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountId (this.extend (request, params));
         const rawPositions = this.safeList (response, 'positions', []);
@@ -1620,8 +1633,10 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchFundingHistory', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountIdFundingPayments (this.extend (request, params));
         //
@@ -1715,8 +1730,10 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchTransactions', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountIdDeposits (this.extend (request, params));
         const txs = this.safeList (response, 'records');
@@ -1822,8 +1839,10 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'fetchLedger', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         const response = await this.publicGetUserAccountIdSettlePnl (this.extend (request, params));
         const entries = this.safeList (response, 'records');
@@ -1850,10 +1869,12 @@ export default class drift extends Exchange {
     async createOrder (symbol: string, type: OrderType, side: OrderSide, amount: number, price: Num = undefined, params = {}): Promise<Order> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'createOrder', 'accountId', 'account_id', this.accountId);
         const market = this.market (symbol);
         const direction = (side === 'buy') ? 'long' : 'short';
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
             'symbol': market['id'],
             'direction': direction,
             'amount': this.amountToPrecision (symbol, amount),
@@ -1885,8 +1906,10 @@ export default class drift extends Exchange {
     async cancelOrder (id: string, symbol: Str = undefined, params = {}): Promise<Order> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'cancelOrder', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
             'orderId': id,
         };
         const response = await this.publicPostTxOrderCancel (this.extend (request, params));
@@ -1919,8 +1942,10 @@ export default class drift extends Exchange {
     async cancelAllOrders (symbol: Str = undefined, params = {}): Promise<Order[]> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'cancelAllOrders', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
         };
         let market = undefined;
         if (symbol !== undefined) {
@@ -1946,8 +1971,10 @@ export default class drift extends Exchange {
     async withdraw (code: string, amount: number, address: string, tag: Str = undefined, params = {}): Promise<Transaction> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'withdraw', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
-            'accountId': this.accountId,
+            'accountId': accountId,
             'amount': amount,
             'symbol': code,
         };
@@ -1959,9 +1986,9 @@ export default class drift extends Exchange {
             'txid': undefined,
             'timestamp': undefined,
             'datetime': undefined,
-            'address': this.accountId,
+            'address': accountId,
             'addressFrom': undefined,
-            'addressTo': this.accountId,
+            'addressTo': accountId,
             'tag': undefined,
             'tagFrom': undefined,
             'tagTo': undefined,
