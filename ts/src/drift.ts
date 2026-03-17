@@ -1977,6 +1977,45 @@ export default class drift extends Exchange {
         };
     }
 
+    async handleAccountId (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined) {
+        let accountId = undefined;
+        [ accountId, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
+        if (accountId === undefined) {
+            const walletAddress = this.walletAddress;
+            if (walletAddress === undefined || walletAddress === '') {
+                throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + '/' + optionName2 + ' parameter or walletAddress to fetch accountId');
+            }
+            const res = await this.publicGetAuthorityAuthorityIdAccounts ({ 'authorityId': walletAddress });
+            //
+            // {
+            //     "success": true,
+            //     "builderRevenueShareAccount": {
+            //         "accountId": "yyds",
+            //         "totalBuilderRewards": "0"
+            //     },
+            //     "revenueShareEscrow": null,
+            //     "accounts": [
+            //         {
+            //             "accountId": "yyds",
+            //             "subAccountId": 0,
+            //             "name": "Main Account"
+            //         }
+            //     ]
+            // }
+            //
+            const accounts = this.safeList (res, 'accounts');
+            if (Array.isArray (accounts)) {
+                const account = this.safeDict (accounts, 0);
+                if (account === undefined) {
+                    throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + ' or ' + optionName2 + ' parameter');
+                }
+                accountId = account['accountId'];
+                this.accountId = accountId;
+            }
+        }
+        return [ accountId, params ];
+    }
+
     async createBuilder (params = {}) {
         const builderId = this.safeString (params, 'builderId');
         params = this.omit (params, 'builderId');
@@ -1984,9 +2023,43 @@ export default class drift extends Exchange {
             'builderId': builderId,
             'simulate': false,
         };
-        const response = await this.publicPostTxBuilderInit (this.extend (request));
+        const response = await this.publicPostTxBuilderInit (request);
         const txResponse = await this.executeTx (response['tx']);
         return txResponse;
+    }
+
+    async approveBuilderFee (builder: string, maxFeeRate: number, numOrders: number) {
+        const request = {
+            'authorityId': this.walletAddress,
+            'builderId': builder,
+            'maxFeeTenthBps': maxFeeRate,
+            'numOrders': numOrders,
+            'simulate': false,
+        };
+        const response = await this.publicPostTxBuilderApprove (request);
+        const txResponse = await this.executeTx (response['tx']);
+        return txResponse;
+    }
+
+    async handleBuilderFeeApproval () {
+        const buildFee = this.safeBool (this.options, 'builderFee', true);
+        if (!buildFee) {
+            return false; // skip if builder fee is not enabled
+        }
+        const approvedBuilderFee = this.safeBool (this.options, 'approvedBuilderFee', false);
+        if (approvedBuilderFee) {
+            return true; // skip if builder fee is already approved
+        }
+        try {
+            const builder = this.safeString (this.options, 'builder', '');
+            const maxFeeRate = this.safeNumber (this.options, 'feeRate', 1);
+            const numOrders = this.safeNumber (this.options, 'numOrders', 32);
+            await this.approveBuilderFee (builder, maxFeeRate, numOrders);
+            this.options['approvedBuilderFee'] = true;
+        } catch (e) {
+            this.options['builderFee'] = false; // disable builder fee if an error occurs
+        }
+        return true;
     }
 
     async executeTx (serializedTx: string): Promise<string> {
