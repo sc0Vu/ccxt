@@ -1162,6 +1162,7 @@ class gate extends gate$1["default"] {
                     'Your order size': errors.InvalidOrder, // {"label":"INVALID_PARAM_VALUE","message":"Your order size 0.003749448 USDT is too small. The minimum is 3 USDT"}
                 },
             },
+            'rollingWindowSize': 5000.0,
         });
     }
     setSandboxMode(enable) {
@@ -4279,6 +4280,7 @@ class gate extends gate$1["default"] {
      * @param {int} [params.price_type] *contract only* 0 latest deal price, 1 mark price, 2 index price
      * @param {float} [params.cost] *spot market buy only* the quote quantity that can be used as an alternative for the amount
      * @param {bool} [params.unifiedAccount] set to true for creating an order in the unified account
+     * @param {string} [params.clientOrderId] the clientOrderId of the order
      * @returns {object|undefined} [An order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     async createOrder(symbol, type, side, amount, price = undefined, params = {}) {
@@ -4472,7 +4474,8 @@ class gate extends gate$1["default"] {
         }
         // we only omit the unified params here
         // this is because the other params will get extended into the request
-        params = this.omit(params, ['stopPrice', 'triggerPrice', 'stopLossPrice', 'takeProfitPrice', 'reduceOnly', 'timeInForce', 'postOnly']);
+        let clientOrderId = this.safeString2(params, 'text', 'clientOrderId');
+        params = this.omit(params, ['stopPrice', 'triggerPrice', 'stopLossPrice', 'takeProfitPrice', 'reduceOnly', 'timeInForce', 'postOnly', 'clientOrderId']);
         const isLimitOrder = (type === 'limit');
         const isMarketOrder = (type === 'market');
         if (isLimitOrder && price === undefined) {
@@ -4585,7 +4588,6 @@ class gate extends gate$1["default"] {
                     request['time_in_force'] = timeInForce;
                 }
             }
-            let clientOrderId = this.safeString2(params, 'text', 'clientOrderId');
             const textIsRequired = this.safeBool(params, 'textIsRequired', false);
             if (clientOrderId !== undefined) {
                 // user-defined, must follow the rules if not empty
@@ -4595,7 +4597,7 @@ class gate extends gate$1["default"] {
                 if (clientOrderId.length > 28) {
                     throw new errors.BadRequest(this.id + ' createOrder () clientOrderId or text param must be up to 28 characters');
                 }
-                params = this.omit(params, ['text', 'clientOrderId', 'textIsRequired']);
+                params = this.omit(params, 'textIsRequired');
                 if (clientOrderId[0] !== 't') {
                     clientOrderId = 't-' + clientOrderId;
                 }
@@ -4609,6 +4611,9 @@ class gate extends gate$1["default"] {
             }
         }
         else {
+            if (clientOrderId !== undefined) {
+                request['text'] = clientOrderId;
+            }
             if (market['option']) {
                 throw new errors.NotSupported(this.id + ' createOrder() conditional option orders are not supported');
             }
@@ -5135,6 +5140,9 @@ class gate extends gate$1["default"] {
         if (lastTradeTimestampStr !== undefined) {
             lastTradeTimestamp = this.parseToInt(lastTradeTimestampStr);
         }
+        const initial = this.safeDict(order, 'initial', {});
+        const reduceOnlyInitial = this.safeBool(initial, 'is_reduce_only');
+        const reduceOnly = this.safeBool(order, 'is_reduce_only', reduceOnlyInitial);
         return this.safeOrder({
             'id': this.safeString(order, 'id'),
             'clientOrderId': this.safeString(order, 'text'),
@@ -5146,7 +5154,7 @@ class gate extends gate$1["default"] {
             'type': type,
             'timeInForce': timeInForce,
             'postOnly': postOnly,
-            'reduceOnly': this.safeValue(order, 'is_reduce_only'),
+            'reduceOnly': reduceOnly,
             'side': side,
             'price': price,
             'triggerPrice': triggerPrice,

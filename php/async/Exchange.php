@@ -42,13 +42,15 @@ use React;
 use React\Async;
 use React\EventLoop\Loop;
 
+use Lighter\Signer;
+
 use Exception;
 
-$version = '4.5.40';
+$version = '4.5.43';
 
 class Exchange extends \ccxt\Exchange {
 
-    const VERSION = '4.5.40';
+    const VERSION = '4.5.43';
 
     public $browser;
     public $marketsLoading = null;
@@ -151,6 +153,26 @@ class Exchange extends \ccxt\Exchange {
                     $headers = array_merge(['User-Agent' => $userAgent], $headers);
                 } elseif ((gettype($userAgent) === 'array') && array_key_exists('User-Agent', $userAgent)) {
                     $headers = array_merge($userAgent, $headers);
+                }
+            }
+            // multipart/form-data
+            if (is_array($headers)) {
+                $tmp = $headers;
+                foreach ($tmp as $key => $value) {
+                    if (strtolower($key) == 'content-type') {
+                        if ($value == 'multipart/form-data') {
+                            $boundary = '--------------------------' . $this->random_bytes(12);
+                            $eol = "\r\n";
+                            $newBody = '';
+                            foreach ($body as $fKey => $fValue) {
+                                $newBody .= '--' . $boundary . $eol . 'Content-Disposition: form-data; name="' . $fKey . '"' . $eol . $eol . $fValue . $eol;
+                            }
+                            $newBody .= '--' . $boundary . '--' . $eol;
+                            $value .= '; boundary=' . $boundary;
+                            $headers[$key] = $value;
+                            $body = $newBody;
+                        }
+                    }
                 }
             }
             // set final headers
@@ -341,6 +363,12 @@ class Exchange extends \ccxt\Exchange {
         $str = $wrapper->serializeToJsonString();
         $dict = json_decode($str, true);
         return $dict;
+    }
+
+    public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
+        return Async\async(function () use ($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
+            return $this->load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex);
+        }) ();
     }
 
     // ########################################################################
@@ -1601,6 +1629,10 @@ class Exchange extends \ccxt\Exchange {
         // i.e. isRoundNumber(1.000) returns true, while isInteger(1.000) returns false
         $res = $this->parse_to_numeric((fmod($value, 1)));
         return $res === 0;
+    }
+
+    public function non_empty_string($value) {
+        return $this->value_is_defined($value) && $value !== '';
     }
 
     public function safe_number_omit_zero(array $obj, int|string $key, ?float $defaultValue = null) {
@@ -3934,7 +3966,8 @@ class Exchange extends \ccxt\Exchange {
 
     public function edit_order_with_client_order_id(string $clientOrderId, string $symbol, string $type, string $side, ?float $amount = null, ?float $price = null, $params = array ()) {
         return Async\async(function () use ($clientOrderId, $symbol, $type, $side, $amount, $price, $params) {
-            return Async\await($this->edit_order('', $symbol, $type, $side, $amount, $price, $this->extend(array( 'clientOrderId' => $clientOrderId ), $params)));
+            $extendedParams = $this->extend($params, array( 'clientOrderId' => $clientOrderId ));
+            return Async\await($this->edit_order('', $symbol, $type, $side, $amount, $price, $extendedParams));
         }) ();
     }
 

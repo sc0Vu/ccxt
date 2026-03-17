@@ -704,13 +704,18 @@ class mexc(ccxt.async_support.mexc):
         #       "amount":"366804.43",
         #       "windowEnd":"1754737980"
         #
+        volume = self.safe_number_2(ohlcv, 'v', 'volume')
+        # MEXC swap websocket klines publish contracts volume in `q`,
+        # while spot/protobuf uses `v`/`volume`.
+        if (market is not None) and (not self.safe_bool(market, 'spot')) and (volume is None):
+            volume = self.safe_number_2(ohlcv, 'q', 'v')
         return [
             self.safe_timestamp_2(ohlcv, 't', 'windowStart'),
             self.safe_number_2(ohlcv, 'o', 'openingPrice'),
             self.safe_number_2(ohlcv, 'h', 'highestPrice'),
             self.safe_number_2(ohlcv, 'l', 'lowestPrice'),
             self.safe_number_2(ohlcv, 'c', 'closingPrice'),
-            self.safe_number_2(ohlcv, 'v', 'volume'),
+            volume,
         ]
 
     async def watch_order_book(self, symbol: str, limit: Int = None, params={}) -> OrderBook:
@@ -1488,7 +1493,7 @@ class mexc(ccxt.async_support.mexc):
         #             "frozenBalance": 0,
         #             "positionMargin": 1.36945756
         #         },
-        #         "ts": 1680059188190
+        #         "ts": 1680059188191
         #     }
         #
         channel = self.safe_string(message, 'channel')
