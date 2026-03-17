@@ -1869,6 +1869,7 @@ export default class drift extends Exchange {
     async createOrder (symbol: string, type: OrderType, side: OrderSide, amount: number, price: Num = undefined, params = {}): Promise<Order> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        await this.handleBuilderFeeApproval ();
         let accountId = undefined;
         [ accountId, params ] = await this.handleAccountId (params, 'createOrder', 'accountId', 'account_id', this.accountId);
         const market = this.market (symbol);
@@ -1879,6 +1880,10 @@ export default class drift extends Exchange {
             'direction': direction,
             'amount': this.amountToPrecision (symbol, amount),
             'orderType': type,
+            'builderParams': {
+                'builderIdx': 0,
+                'builderFeeTenthBps': 1
+            },
         };
         const lowerType = type.toLowerCase ();
         if (lowerType === 'limit') {
