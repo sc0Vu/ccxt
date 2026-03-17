@@ -122,6 +122,11 @@ export default class drift extends Exchange {
                     ],
                 },
             },
+            'options': {
+                'builder': '',
+                'builderIdx': undefined,
+                'builderFee': 1,
+            },
             'exceptions': {
                 'exact': {
                     'ValidationError': ArgumentsRequired,
@@ -1881,7 +1886,7 @@ export default class drift extends Exchange {
             'amount': this.amountToPrecision (symbol, amount),
             'orderType': type,
             'builderParams': {
-                'builderIdx': 0,
+                'builderIdx': this.options['builderIdx'],
                 'builderFeeTenthBps': 1
             },
         };
@@ -2071,6 +2076,25 @@ export default class drift extends Exchange {
         return txResponse;
     }
 
+    async findBuilderIdx (builder: string) {
+        let builderIdx = this.options['builderIdx'];
+        if (builderIdx === undefined) {
+            const accountInfo = await this.publicGetAuthorityAuthorityIdAccounts ({ 'authorityId': this.walletAddress });
+            const revenueShareEscrow = this.safeDict (accountInfo, 'revenueShareEscrow');
+            const approvedBuilders = this.safeList (revenueShareEscrow, 'approvedBuilders');
+            if (Array.isArray (approvedBuilders)) {
+                for (let i = 0; i < approvedBuilders.length; i++) {
+                    const data = approvedBuilders[i];
+                    if (data['authority'] === builder) {
+                        builderIdx = i
+                        this.options['builderIdx'] = builderIdx;
+                    }
+                }
+            }
+        }
+        return builderIdx;
+    }
+
     async handleBuilderFeeApproval () {
         const buildFee = this.safeBool (this.options, 'builderFee', true);
         if (!buildFee) {
@@ -2084,7 +2108,11 @@ export default class drift extends Exchange {
             const builder = this.safeString (this.options, 'builder', '');
             const maxFeeRate = this.safeNumber (this.options, 'feeRate', 1);
             const numOrders = this.safeNumber (this.options, 'numOrders', 32);
-            await this.approveBuilderFee (builder, maxFeeRate, numOrders);
+            const builderIdx = await this.findBuilderIdx (builder);
+            if (builderIdx === undefined) {
+                await this.approveBuilderFee (builder, maxFeeRate, numOrders);
+                await this.findBuilderIdx (builder);
+            }
             this.options['approvedBuilderFee'] = true;
         } catch (e) {
             this.options['builderFee'] = false; // disable builder fee if an error occurs
