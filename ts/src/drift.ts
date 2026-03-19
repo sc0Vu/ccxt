@@ -2105,7 +2105,7 @@ export default class drift extends Exchange {
             return true; // skip if builder fee is already approved
         }
         try {
-            const builder = this.safeString (this.options, 'builder', '');
+            const builder = this.safeString (this.options, 'builder', 'J4CNqmFwXx1dZ5RwQS51e8E13ARsnomr1PzoX4cqmdwo');
             const maxFeeRate = this.safeNumber (this.options, 'feeRate', 1);
             const numOrders = this.safeNumber (this.options, 'numOrders', 32);
             let builderIdx = await this.findBuilderIdx (builder);

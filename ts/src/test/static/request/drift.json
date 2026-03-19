@@ -5,6 +5,9 @@
     "skipKeys": [
         "signature"
     ],
+    "options": {
+        "builderIdx": 0
+    },
     "outputType": "json",
     "methods": {
         "fetchOrderBook": [
@@ -142,7 +145,7 @@
                     0.001,
                     50000
                 ],
-                "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\"}"
+                "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\",\"builderParams\":{\"builderIdx\":0,\"builderFeeTenthBps\":1}}"
             }
         ],
         "cancelOrder": [
