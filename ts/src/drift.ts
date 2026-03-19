@@ -1881,7 +1881,7 @@ export default class drift extends Exchange {
      * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
      */
     async createOrder (symbol: string, type: OrderType, side: OrderSide, amount: number, price: Num = undefined, params = {}): Promise<Order> {
-        const reduceOnly = this.safeBool2 (params, 'reduceOnly', 'reduce_only');
+        const reduceOnly = this.safeBool2 (params, 'reduceOnly', 'reduce_only', false);
         params = this.omit (params, [ 'reduceOnly', 'reduce_only' ]);
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
@@ -1911,6 +1911,7 @@ export default class drift extends Exchange {
         }
         const postOnly = this.isPostOnly (!isLimit, undefined, params);
         request['postOnly'] = postOnly;
+        request['reduceOnly'] = reduceOnly;
         const response = await this.publicPostTxOrderPlace (this.extend (request, params));
         await this.executeTx (response['tx']);
         return this.parseOrder (response, market);

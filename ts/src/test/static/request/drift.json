@@ -146,6 +146,23 @@
                     50000
                 ],
                 "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\",\"builderParams\":{\"builderIdx\":0,\"builderFeeTenthBps\":1}}"
+            },
+            {
+                "description": "createOrder with reduceOnly and postOnly",
+                "method": "createOrder",
+                "url": "https://data.api.drift.trade/tx/order/place",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "limit",
+                    "buy",
+                    0.001,
+                    50000,
+                    {
+                        "reduceOnly": true,
+                        "postOnly": true
+                    }
+                ],
+                "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\",\"reduceOnly\":true,\"postOnly\":true,\"builderParams\":{\"builderIdx\":0,\"builderFeeTenthBps\":1}}"
             }
         ],
         "cancelOrder": [
