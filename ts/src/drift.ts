@@ -1940,7 +1940,7 @@ export default class drift extends Exchange {
             'id': id,
             'clientOrderId': undefined,
             'info': response,
-            'symbol': undefined,
+            'symbol': symbol,
             'timestamp': undefined,
             'datetime': undefined,
             'status': 'canceled',
