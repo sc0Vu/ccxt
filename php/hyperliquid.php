@@ -218,6 +218,7 @@ class hyperliquid extends Exchange {
             'options' => array(
                 'defaultType' => 'swap',
                 'sandboxMode' => false,
+                'builderFee' => true,
                 'defaultSlippage' => 0.05,
                 'marketHelperProps' => array( 'hip3TokensByName', 'cachedCurrenciesById' ),
                 'zeroAddress' => '0x0000000000000000000000000000000000000000',

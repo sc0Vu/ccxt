@@ -40,7 +40,7 @@ import {BaseError, ExchangeError, AuthenticationError, PermissionDenied, Account
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
 
-const version = '4.5.43';
+const version = '4.5.44';
 
 (Exchange as any).ccxtVersion = version
 
@@ -101,7 +101,6 @@ import coinspot from  './src/coinspot.js'
 import cryptocom from  './src/cryptocom.js'
 import cryptomus from  './src/cryptomus.js'
 import deepcoin from  './src/deepcoin.js'
-import defx from  './src/defx.js'
 import delta from  './src/delta.js'
 import deribit from  './src/deribit.js'
 import derive from  './src/derive.js'
@@ -113,6 +112,7 @@ import foxbit from  './src/foxbit.js'
 import gate from  './src/gate.js'
 import gateio from  './src/gateio.js'
 import gemini from  './src/gemini.js'
+import grvt from  './src/grvt.js'
 import hashkey from  './src/hashkey.js'
 import hibachi from  './src/hibachi.js'
 import hitbtc from  './src/hitbtc.js'
@@ -145,7 +145,6 @@ import paradex from  './src/paradex.js'
 import paymium from  './src/paymium.js'
 import phemex from  './src/phemex.js'
 import poloniex from  './src/poloniex.js'
-import timex from  './src/timex.js'
 import tokocrypto from  './src/tokocrypto.js'
 import toobit from  './src/toobit.js'
 import upbit from  './src/upbit.js'
@@ -200,7 +199,6 @@ import coinexPro from  './src/pro/coinex.js'
 import coinonePro from  './src/pro/coinone.js'
 import cryptocomPro from  './src/pro/cryptocom.js'
 import deepcoinPro from  './src/pro/deepcoin.js'
-import defxPro from  './src/pro/defx.js'
 import deribitPro from  './src/pro/deribit.js'
 import derivePro from  './src/pro/derive.js'
 import dydxPro from  './src/pro/dydx.js'
@@ -208,6 +206,7 @@ import exmoPro from  './src/pro/exmo.js'
 import gatePro from  './src/pro/gate.js'
 import gateioPro from  './src/pro/gateio.js'
 import geminiPro from  './src/pro/gemini.js'
+import grvtPro from  './src/pro/grvt.js'
 import hashkeyPro from  './src/pro/hashkey.js'
 import hitbtcPro from  './src/pro/hitbtc.js'
 import hollaexPro from  './src/pro/hollaex.js'
@@ -297,7 +296,6 @@ const exchanges = {
     'cryptocom':              cryptocom,
     'cryptomus':              cryptomus,
     'deepcoin':               deepcoin,
-    'defx':                   defx,
     'delta':                  delta,
     'deribit':                deribit,
     'derive':                 derive,
@@ -309,6 +307,7 @@ const exchanges = {
     'gate':                   gate,
     'gateio':                 gateio,
     'gemini':                 gemini,
+    'grvt':                   grvt,
     'hashkey':                hashkey,
     'hibachi':                hibachi,
     'hitbtc':                 hitbtc,
@@ -341,7 +340,6 @@ const exchanges = {
     'paymium':                paymium,
     'phemex':                 phemex,
     'poloniex':               poloniex,
-    'timex':                  timex,
     'tokocrypto':             tokocrypto,
     'toobit':                 toobit,
     'upbit':                  upbit,
@@ -396,7 +394,6 @@ const pro = {
     'coinone':                coinonePro,
     'cryptocom':              cryptocomPro,
     'deepcoin':               deepcoinPro,
-    'defx':                   defxPro,
     'deribit':                deribitPro,
     'derive':                 derivePro,
     'dydx':                   dydxPro,
@@ -404,6 +401,7 @@ const pro = {
     'gate':                   gatePro,
     'gateio':                 gateioPro,
     'gemini':                 geminiPro,
+    'grvt':                   grvtPro,
     'hashkey':                hashkeyPro,
     'hitbtc':                 hitbtcPro,
     'hollaex':                hollaexPro,
@@ -636,7 +634,6 @@ export {
     cryptocom,
     cryptomus,
     deepcoin,
-    defx,
     delta,
     deribit,
     derive,
@@ -648,6 +645,7 @@ export {
     gate,
     gateio,
     gemini,
+    grvt,
     hashkey,
     hibachi,
     hitbtc,
@@ -680,7 +678,6 @@ export {
     paymium,
     phemex,
     poloniex,
-    timex,
     tokocrypto,
     toobit,
     upbit,

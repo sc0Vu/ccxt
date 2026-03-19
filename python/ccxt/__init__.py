@@ -22,7 +22,7 @@
 
 # ----------------------------------------------------------------------------
 
-__version__ = '4.5.43'
+__version__ = '4.5.44'
 
 # ----------------------------------------------------------------------------
 
@@ -139,7 +139,6 @@ from ccxt.coinspot import coinspot                                    # noqa: F4
 from ccxt.cryptocom import cryptocom                                  # noqa: F401
 from ccxt.cryptomus import cryptomus                                  # noqa: F401
 from ccxt.deepcoin import deepcoin                                    # noqa: F401
-from ccxt.defx import defx                                            # noqa: F401
 from ccxt.delta import delta                                          # noqa: F401
 from ccxt.deribit import deribit                                      # noqa: F401
 from ccxt.derive import derive                                        # noqa: F401
@@ -151,6 +150,7 @@ from ccxt.foxbit import foxbit                                        # noqa: F4
 from ccxt.gate import gate                                            # noqa: F401
 from ccxt.gateio import gateio                                        # noqa: F401
 from ccxt.gemini import gemini                                        # noqa: F401
+from ccxt.grvt import grvt                                            # noqa: F401
 from ccxt.hashkey import hashkey                                      # noqa: F401
 from ccxt.hibachi import hibachi                                      # noqa: F401
 from ccxt.hitbtc import hitbtc                                        # noqa: F401
@@ -183,7 +183,6 @@ from ccxt.paradex import paradex                                      # noqa: F4
 from ccxt.paymium import paymium                                      # noqa: F401
 from ccxt.phemex import phemex                                        # noqa: F401
 from ccxt.poloniex import poloniex                                    # noqa: F401
-from ccxt.timex import timex                                          # noqa: F401
 from ccxt.tokocrypto import tokocrypto                                # noqa: F401
 from ccxt.toobit import toobit                                        # noqa: F401
 from ccxt.upbit import upbit                                          # noqa: F401
@@ -253,7 +252,6 @@ exchanges = [
     'cryptocom',
     'cryptomus',
     'deepcoin',
-    'defx',
     'delta',
     'deribit',
     'derive',
@@ -265,6 +263,7 @@ exchanges = [
     'gate',
     'gateio',
     'gemini',
+    'grvt',
     'hashkey',
     'hibachi',
     'hitbtc',
@@ -297,7 +296,6 @@ exchanges = [
     'paymium',
     'phemex',
     'poloniex',
-    'timex',
     'tokocrypto',
     'toobit',
     'upbit',

@@ -212,6 +212,7 @@ public partial class hyperliquid : Exchange
             { "options", new Dictionary<string, object>() {
                 { "defaultType", "swap" },
                 { "sandboxMode", false },
+                { "builderFee", true },
                 { "defaultSlippage", 0.05 },
                 { "marketHelperProps", new List<object>() {"hip3TokensByName", "cachedCurrenciesById"} },
                 { "zeroAddress", "0x0000000000000000000000000000000000000000" },
