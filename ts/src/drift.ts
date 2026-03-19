@@ -2047,7 +2047,7 @@ export default class drift extends Exchange {
                     throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + ' or ' + optionName2 + ' parameter');
                 }
                 accountId = account['accountId'];
-                this.accountId = accountId;
+                this.accountId = accountId.toString ();
             }
         }
         return [ accountId, params ];
