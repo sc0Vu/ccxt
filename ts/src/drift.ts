@@ -443,7 +443,7 @@ export default class drift extends Exchange {
      */
     async fetchMarkets (params = {}): Promise<Market[]> {
         const response = await this.publicGetStatsMarkets (params);
-        const allMarkets = this.safeValue (response, 'markets', []);
+        const allMarkets = this.safeList (response, 'markets', []);
         const result = [];
         for (let i = 0; i < allMarkets.length; i++) {
             const market = allMarkets[i];
@@ -469,10 +469,10 @@ export default class drift extends Exchange {
             if (status in activeStatuses) {
                 active = activeStatuses[status];
             }
-            const limits = this.safeValue (market, 'limits', {});
-            const leverageLimits = this.safeValue (limits, 'leverage', {});
-            const amountLimits = this.safeValue (limits, 'amount', {});
-            const fees = this.safeValue (market, 'fees', {});
+            const limits = this.safeDict (market, 'limits', {});
+            const leverageLimits = this.safeDict (limits, 'leverage', {});
+            const amountLimits = this.safeDict (limits, 'amount', {});
+            const fees = this.safeDict (market, 'fees', {});
             const precision = this.safeString (market, 'precision');
             result.push (this.safeMarketStructure ({
                 'id': id,
@@ -534,7 +534,7 @@ export default class drift extends Exchange {
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
         const response = await this.publicGetStatsMarkets (params);
-        const markets = this.safeValue (response, 'markets', []);
+        const markets = this.safeList (response, 'markets', []);
         const result: Dict = {};
         for (let i = 0; i < markets.length; i++) {
             const market = markets[i];
@@ -544,9 +544,9 @@ export default class drift extends Exchange {
             }
             const symbol = this.safeString (market, 'symbol');
             const status = this.safeString (market, 'status');
-            const limits = this.safeValue (market, 'limits', {});
-            const depositLimits = this.safeValue (limits, 'deposit', {});
-            const withdrawLimits = this.safeValue (limits, 'withdraw', {});
+            const limits = this.safeDict (market, 'limits', {});
+            const depositLimits = this.safeDict (limits, 'deposit', {});
+            const withdrawLimits = this.safeDict (limits, 'withdraw', {});
             const withdrawEnabled = status !== 'withdrawPaused';
             const isActive = status === 'active';
             result[symbol] = this.safeCurrencyStructure ({
@@ -614,35 +614,32 @@ export default class drift extends Exchange {
             askPrice = this.processObPrice (bestAsk[0]);
             askVolume = this.processObAmount (bestAsk[1]);
         }
-        const marketsStats = this.safeValue (responses[1], 'markets', []);
+        const marketsStats = this.safeList (responses[1], 'markets', []);
         const stats = this.findMarketStat (marketsStats, market['id']);
         const last = this.safeNumber (stats, 'price');
-        const priceHighObj = this.safeValue (stats, 'priceHigh');
-        const priceLowObj = this.safeValue (stats, 'priceLow');
+        const priceHighObj = this.safeDict (stats, 'priceHigh', {});
+        const priceLowObj = this.safeDict (stats, 'priceLow', {});
         const priceHigh = this.safeNumber (priceHighObj, 'fill');
         const priceLow = this.safeNumber (priceLowObj, 'fill');
-        return this.safeTicker (
-            {
-                'symbol': market['symbol'],
-                'timestamp': timestamp,
-                'datetime': this.iso8601 (timestamp),
-                'high': priceHigh,
-                'low': priceLow,
-                'bid': bidPrice,
-                'bidVolume': bidVolume,
-                'ask': askPrice,
-                'askVolume': askVolume,
-                'close': last,
-                'last': last,
-                'change': this.safeNumber (stats, 'priceChange24h'),
-                'percentage': this.safeNumber (stats, 'price24hChangePct'),
-                'baseVolume': this.safeNumber (stats, 'baseVolume'),
-                'quoteVolume': this.safeNumber (stats, 'quoteVolume'),
-                'markPrice': this.safeNumber (stats, 'markPrice'),
-                'info': this.deepExtend (dlobl2, stats),
-            },
-            market
-        );
+        return this.safeTicker ({
+            'symbol': market['symbol'],
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'high': priceHigh,
+            'low': priceLow,
+            'bid': bidPrice,
+            'bidVolume': bidVolume,
+            'ask': askPrice,
+            'askVolume': askVolume,
+            'close': last,
+            'last': last,
+            'change': this.safeNumber (stats, 'priceChange24h'),
+            'percentage': this.safeNumber (stats, 'price24hChangePct'),
+            'baseVolume': this.safeNumber (stats, 'baseVolume'),
+            'quoteVolume': this.safeNumber (stats, 'quoteVolume'),
+            'markPrice': this.safeNumber (stats, 'markPrice'),
+            'info': this.deepExtend (dlobl2, stats),
+        }, market);
     }
 
     findMarketStat (stats: any[], marketId: string): Dict {
@@ -688,7 +685,7 @@ export default class drift extends Exchange {
             this.publicGetStatsMarkets (),
         ];
         const responses = await Promise.all (promises);
-        const statsArray = this.safeValue (responses[1], 'markets', []);
+        const statsArray = this.safeList (responses[1], 'markets', []);
         const statsById: Dict = {};
         for (let i = 0; i < statsArray.length; i++) {
             const s = statsArray[i];
@@ -736,10 +733,10 @@ export default class drift extends Exchange {
                 askPrice = this.processObPrice (bestAsk[0]);
                 askVolume = this.processObAmount (bestAsk[1]);
             }
-            const marketStats = this.safeValue (statsById, marketId, {});
+            const marketStats = this.safeDict (statsById, marketId, {});
             const last = this.safeNumber (marketStats, 'price');
-            const priceHighObj = this.safeValue (marketStats, 'priceHigh');
-            const priceLowObj = this.safeValue (marketStats, 'priceLow');
+            const priceHighObj = this.safeDict (marketStats, 'priceHigh', {});
+            const priceLowObj = this.safeDict (marketStats, 'priceLow', {});
             const priceHigh = this.safeNumber (priceHighObj, 'fill');
             const priceLow = this.safeNumber (priceLowObj, 'fill');
             const ts = this.safeInteger (book, 'ts');
@@ -868,21 +865,13 @@ export default class drift extends Exchange {
         // }
         //
         const timestamp = this.safeInteger (response, 'ts');
-        const bids = this.safeValue (response, 'bids', []);
-        const asks = this.safeValue (response, 'asks', []);
-        const ob = this.parseOrderBook (
-            {
-                'bids': bids,
-                'asks': asks,
-                'timestamp': timestamp,
-            },
-            symbol,
-            timestamp,
-            'bids',
-            'asks',
-            'price',
-            'size'
-        );
+        const bids = this.safeList (response, 'bids', []);
+        const asks = this.safeList (response, 'asks', []);
+        const ob = this.parseOrderBook ({
+            'bids': bids,
+            'asks': asks,
+            'timestamp': timestamp,
+        }, symbol, timestamp, 'bids', 'asks', 'price', 'size');
         for (let i = 0; i < ob['bids'].length; i++) {
             ob['bids'][i][0] = this.processObPrice (ob['bids'][i][0]);
             ob['bids'][i][1] = this.processObAmount (ob['bids'][i][1]);
@@ -1013,7 +1002,8 @@ export default class drift extends Exchange {
             'accountId': accountId,
         };
         let market = undefined;
-        let method = 'publicGetUserAccountIdTrades';
+        let method = undefined;
+        [ method, params ] = this.handleOptionAndParams (params, 'fetchMyTrades', 'method', 'publicGetUserAccountIdTrades');
         if (symbol !== undefined) {
             market = this.market (symbol);
             method = 'publicGetUserAccountIdTradesSymbol';
@@ -1022,7 +1012,14 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
-        const response = await this[method] (this.extend (request, params));
+        let response = undefined;
+        if (method === 'publicGetUserAccountIdTrades') {
+            response = this.publicGetUserAccountIdTrades (this.extend (request, params));
+        } else if (method === 'publicGetUserAccountIdTradesSymbol') {
+            response = await this.publicGetUserAccountIdTradesSymbol (this.extend (request, params));
+        } else {
+            throw new NotSupported (this.id + ' fetchMyTrades doesn\'t support ' + method);
+        }
         //
         // {
         //     "success": true,
@@ -1153,13 +1150,9 @@ export default class drift extends Exchange {
     async fetchOHLCV (symbol: string, timeframe: string = '1m', since: Int = undefined, limit: Int = undefined, params = {}): Promise<OHLCV[]> {
         await this.loadMarkets ();
         const market = this.market (symbol);
-        const resolution = this.safeString (this.timeframes, timeframe);
-        if (resolution === undefined) {
-            throw new NotSupported (this.id + ' fetchOHLCV() does not support timeframe ' + timeframe);
-        }
         const request: Dict = {
             'symbol': market['id'],
-            'resolution': resolution,
+            'resolution': this.safeString (this.timeframes, timeframe, timeframe),
         };
         if (since !== undefined) {
             request['endTs'] = since;
@@ -1190,7 +1183,7 @@ export default class drift extends Exchange {
         //     ]
         // }
         //
-        const candles = this.safeValue (response, 'records', response);
+        const candles = this.safeList (response, 'records', response);
         return this.parseOHLCVs (candles, market, timeframe, since, limit);
     }
 
@@ -1301,7 +1294,8 @@ export default class drift extends Exchange {
             'accountId': accountId,
         };
         let market = undefined;
-        let method = 'publicGetUserAccountIdOrdersPerp';
+        let method = undefined;
+        [ method, params ] = this.handleOptionAndParams (params, 'fetchOrders', 'method', 'publicGetUserAccountIdOrdersPerp');
         if (symbol !== undefined) {
             market = this.market (symbol);
             method = 'publicGetUserAccountIdOrdersPerpSymbol';
@@ -1310,7 +1304,14 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
-        const response = await (this as any)[method] (this.extend (request, params));
+        let response = undefined;
+        if (method === 'publicGetUserAccountIdOrdersPerp') {
+            response = await this.publicGetUserAccountIdOrdersPerp (this.extend (request, params));
+        } else if (method === 'publicGetUserAccountIdOrdersPerpSymbol') {
+            response = await this.publicGetUserAccountIdOrdersPerpSymbol (this.extend (request, params));
+        } else {
+            throw new NotSupported (this.id + ' fetchOrders doesn\'t support ' + method);
+        }
         //
         // {
         //     "success": true,
@@ -1402,7 +1403,7 @@ export default class drift extends Exchange {
         //     "orders": []
         // }
         //
-        const orders = this.safeValue (response, 'orders', []);
+        const orders = this.safeList (response, 'orders', []);
         return this.parseOrders (orders, market, since, limit);
     }
 
@@ -1417,7 +1418,7 @@ export default class drift extends Exchange {
         const status = this.parseOrderStatus (this.safeString2 (order, 'lastActionStatus', 'status'));
         const cost = this.safeString2 (order, 'cost', 'quoteAssetAmountFilled');
         const triggerPrice = this.safeInteger (order, 'triggerPrice');
-        const triggerDirection = this.safeValue (order, 'triggerCondition');
+        const triggerDirection = this.safeString (order, 'triggerCondition');
         const immediateOrCancel = this.safeBool (order, 'immediateOrCancel');
         const timeInForce = immediateOrCancel ? 'IOC' : 'GTC';
         const feeCost = this.safeNumber (order, 'cumulativeFee');
@@ -1439,8 +1440,8 @@ export default class drift extends Exchange {
                 'datetime': this.iso8601 (timestamp),
                 'symbol': this.safeSymbol (symbol, market),
                 'type': this.parseOrderType (this.safeString (order, 'orderType')),
-                'postOnly': this.safeValue (order, 'postOnly', false),
-                'reduceOnly': this.safeValue (order, 'reduceOnly', false),
+                'postOnly': this.safeBool (order, 'postOnly', false),
+                'reduceOnly': this.safeBool (order, 'reduceOnly', false),
                 'side': side,
                 'price': this.safeString (order, 'price'),
                 'triggerPrice': triggerPrice,
@@ -1523,7 +1524,7 @@ export default class drift extends Exchange {
             'timestamp': undefined,
             'datetime': undefined,
         };
-        const balances = this.safeValue (response, 'balances', []);
+        const balances = this.safeList (response, 'balances', []);
         for (let i = 0; i < balances.length; i++) {
             const balance = balances[i];
             const currencyId = this.safeString (balance, 'symbol');
@@ -1692,7 +1693,7 @@ export default class drift extends Exchange {
                 if (!this.safeBool (m, 'swap', false)) {
                     continue;
                 }
-                const info = this.safeValue (m, 'info', {});
+                const info = this.safeDict (m, 'info', {});
                 const mIndex = this.safeInteger (info, 'marketIndex');
                 if (mIndex === marketIndex) {
                     marketId = this.safeString (m, 'id');
@@ -1843,7 +1844,9 @@ export default class drift extends Exchange {
         if (paginate) {
             return await this.fetchPaginatedCallCursor ('fetchLedger', code, since, limit, params, 'nextPage', 'page', undefined, 50) as LedgerEntry[];
         }
-        code = 'USDC'; // Everything settled in USDC
+        if (code !== 'USDC') {
+            throw new NotSupported (this.id + ' fetchLedger only support USDC');
+        }
         const currency = this.currency ('USDC');
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
@@ -1873,9 +1876,13 @@ export default class drift extends Exchange {
      * @param {float} amount how much you want to trade in units of the base currency
      * @param {float} [price] the price at which the order is to be fulfilled, in units of the quote currency, ignored in market orders
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} [params.reduceOnly] for swap and future reduceOnly is a string 'true' or 'false' that cant be sent with close position set to true or in hedge mode. For spot margin and option reduceOnly is a boolean.
+     * @param {string} [params.marginMode] 'cross' or 'isolated', for spot margin trading
      * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
      */
     async createOrder (symbol: string, type: OrderType, side: OrderSide, amount: number, price: Num = undefined, params = {}): Promise<Order> {
+        const reduceOnly = this.safeBool2 (params, 'reduceOnly', 'reduce_only');
+        params = this.omit (params, [ 'reduceOnly', 'reduce_only' ]);
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
         await this.handleBuilderFeeApproval ();
@@ -1883,27 +1890,28 @@ export default class drift extends Exchange {
         [ accountId, params ] = await this.handleAccountId (params, 'createOrder', 'accountId', 'account_id', this.accountId);
         const market = this.market (symbol);
         const direction = (side === 'buy') ? 'long' : 'short';
+        const lowerType = type.toLowerCase ();
+        const isLimit = lowerType === 'limit';
         const request: Dict = {
             'accountId': accountId,
             'symbol': market['id'],
             'direction': direction,
             'amount': this.amountToPrecision (symbol, amount),
-            'orderType': type,
+            'orderType': lowerType,
             'builderParams': {
                 'builderIdx': this.options['builderIdx'],
                 'builderFeeTenthBps': this.options['builderFee'],
             },
         };
-        const lowerType = type.toLowerCase ();
-        if (lowerType === 'limit') {
+        if (isLimit) {
             if (price === undefined) {
                 throw new ExchangeError (this.id + ' createOrder() requires a price argument for limit orders');
             }
             request['price'] = this.priceToPrecision (symbol, price);
         }
-        const response = await this.publicPostTxOrderPlace (
-            this.extend (request, params)
-        );
+        const postOnly = this.isPostOnly (!isLimit, undefined, params);
+        request['postOnly'] = postOnly;
+        const response = await this.publicPostTxOrderPlace (this.extend (request, params));
         await this.executeTx (response['tx']);
         return this.parseOrder (response, market);
     }
