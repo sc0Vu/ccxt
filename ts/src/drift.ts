@@ -1887,7 +1887,7 @@ export default class drift extends Exchange {
             'orderType': type,
             'builderParams': {
                 'builderIdx': this.options['builderIdx'],
-                'builderFeeTenthBps': 1
+                'builderFeeTenthBps': this.options['builderFee'],
             },
         };
         const lowerType = type.toLowerCase ();
@@ -2086,7 +2086,7 @@ export default class drift extends Exchange {
                 for (let i = 0; i < approvedBuilders.length; i++) {
                     const data = approvedBuilders[i];
                     if (data['authority'] === builder) {
-                        builderIdx = i
+                        builderIdx = i;
                         this.options['builderIdx'] = builderIdx;
                     }
                 }
