@@ -1217,6 +1217,10 @@ export default class drift extends Exchange {
     async fetchOrder (id: string, symbol: Str = undefined, params = {}): Promise<Order> {
         this.checkRequiredCredentials ();
         await this.loadMarkets ();
+        let market = undefined;
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+        }
         let accountId = undefined;
         [ accountId, params ] = await this.handleAccountId (params, 'fetchOrder', 'accountId', 'account_id', this.accountId);
         const request: Dict = {
@@ -1269,7 +1273,7 @@ export default class drift extends Exchange {
         if (record['orderId'] === undefined) {
             throw new OrderNotFound (this.id + ' fetchOrder() returned empty response');
         }
-        return this.parseOrder (record);
+        return this.parseOrder (record, market);
     }
 
     /**
@@ -2053,12 +2057,12 @@ export default class drift extends Exchange {
         return [ accountId, params ];
     }
 
-    async createBuilder (params = {}) {
+    async createBuilder (builder: string, params = {}) {
         const request = {
-            'builderId': this.walletAddress,
+            'builderId': builder,
             'simulate': false,
         };
-        const response = await this.publicPostTxBuilderInit (request);
+        const response = await this.publicPostTxBuilderInit (this.extend (request, params));
         const txResponse = await this.executeTx (response['tx']);
         return txResponse;
     }
