@@ -130,7 +130,9 @@
                 "description": "fetchLedger",
                 "method": "fetchLedger",
                 "url": "https://data.api.drift.trade/user/12345/settlePnl",
-                "input": []
+                "input": [
+                    "USDC"
+                ]
             }
         ],
         "createOrder": [
@@ -145,7 +147,7 @@
                     0.001,
                     50000
                 ],
-                "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\",\"builderParams\":{\"builderIdx\":0,\"builderFeeTenthBps\":1}}"
+                "output": "{\"accountId\":\"12345\",\"symbol\":\"BTC-PERP\",\"direction\":\"long\",\"amount\":\"0.001\",\"orderType\":\"limit\",\"price\":\"50000\",\"postOnly\":false,\"reduceOnly\":false,\"builderParams\":{\"builderIdx\":0,\"builderFeeTenthBps\":1}}"
             },
             {
                 "description": "createOrder with reduceOnly and postOnly",

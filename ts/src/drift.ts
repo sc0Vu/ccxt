@@ -1002,23 +1002,16 @@ export default class drift extends Exchange {
             'accountId': accountId,
         };
         let market = undefined;
-        let method = undefined;
-        [ method, params ] = this.handleOptionAndParams (params, 'fetchMyTrades', 'method', 'publicGetUserAccountIdTrades');
-        if (symbol !== undefined) {
-            market = this.market (symbol);
-            method = 'publicGetUserAccountIdTradesSymbol';
-            request['symbol'] = market['id'];
-        }
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
         let response = undefined;
-        if (method === 'publicGetUserAccountIdTrades') {
-            response = this.publicGetUserAccountIdTrades (this.extend (request, params));
-        } else if (method === 'publicGetUserAccountIdTradesSymbol') {
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+            request['symbol'] = market['id'];
             response = await this.publicGetUserAccountIdTradesSymbol (this.extend (request, params));
         } else {
-            throw new NotSupported (this.id + ' fetchMyTrades doesn\'t support ' + method);
+            response = await this.publicGetUserAccountIdTrades (this.extend (request, params));
         }
         //
         // {
@@ -1294,23 +1287,16 @@ export default class drift extends Exchange {
             'accountId': accountId,
         };
         let market = undefined;
-        let method = undefined;
-        [ method, params ] = this.handleOptionAndParams (params, 'fetchOrders', 'method', 'publicGetUserAccountIdOrdersPerp');
-        if (symbol !== undefined) {
-            market = this.market (symbol);
-            method = 'publicGetUserAccountIdOrdersPerpSymbol';
-            request['symbol'] = market['id'];
-        }
         if (limit !== undefined) {
             limit = Math.min (limit, 100);
         }
         let response = undefined;
-        if (method === 'publicGetUserAccountIdOrdersPerp') {
-            response = await this.publicGetUserAccountIdOrdersPerp (this.extend (request, params));
-        } else if (method === 'publicGetUserAccountIdOrdersPerpSymbol') {
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+            request['symbol'] = market['id'];
             response = await this.publicGetUserAccountIdOrdersPerpSymbol (this.extend (request, params));
         } else {
-            throw new NotSupported (this.id + ' fetchOrders doesn\'t support ' + method);
+            response = await this.publicGetUserAccountIdOrdersPerp (this.extend (request, params));
         }
         //
         // {
