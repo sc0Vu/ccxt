@@ -258,7 +258,6 @@ export default class drift extends driftRest {
         const limit = this.safeInteger (this.options, 'tradesLimit', 1000);
         for (let i = 0; i < trades.length; i++) {
             const rawTrade = trades[i];
-            const data = this.safeValue (rawTrade, 'data');
             const marketId = this.safeString (rawTrade, 'symbol');
             const market = this.safeMarket (marketId);
             const symbol = market['symbol'];
@@ -395,7 +394,6 @@ export default class drift extends driftRest {
         }
         if ('candle' in message) {
             this.handleOHLCV (client, message);
-            return;
         }
     }
 
