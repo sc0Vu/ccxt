@@ -533,6 +533,9 @@ export default class drift extends Exchange {
      * @returns {Currencies} an associative dictionary of currencies
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
+        if (this.checkRequiredCredentials (false)) {
+            await this.handleBuilderFeeApproval ();
+        }
         const response = await this.publicGetStatsMarkets (params);
         const markets = this.safeList (response, 'markets', []);
         const result: Dict = {};
