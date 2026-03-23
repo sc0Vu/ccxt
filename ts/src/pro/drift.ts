@@ -2,8 +2,8 @@
 
 import driftRest from '../drift.js';
 import { AuthenticationError } from '../base/errors.js';
-import { ArrayCacheByTimestamp } from '../base/ws/Cache.js';
-import type { Int, OrderBook, OHLCV, Dict, Bool } from '../base/types.js';
+import { ArrayCacheByTimestamp, ArrayCache } from '../base/ws/Cache.js';
+import type { Int, OrderBook, OHLCV, Dict, Bool, Trade } from '../base/types.js';
 import Client from '../base/ws/Client.js';
 
 // ----------------------------------------------------------------------------
@@ -21,7 +21,7 @@ export default class drift extends driftRest {
                 'watchTicker': false,
                 'watchTickers': true,
                 'watchBidsAsks': false,
-                'watchTrades': false,
+                'watchTrades': true,
                 'watchTradesForSymbols': false,
                 'watchPositions': false,
             },
@@ -49,9 +49,9 @@ export default class drift extends driftRest {
         });
     }
 
-    async watchPublic (messageHash, message) {
+    async watchPublic (messageHash, subscribeHash, message) {
         const url = this.urls['api']['ws']['public'];
-        return await this.watch (url, messageHash, message, messageHash, message);
+        return await this.watch (url, messageHash, message, subscribeHash, message);
     }
 
     /**
@@ -77,7 +77,7 @@ export default class drift extends driftRest {
             'symbol': market['id'],
         };
         const message = this.extend (request, params);
-        const ohlcv = await this.watchPublic (topic, message);
+        const ohlcv = await this.watchPublic (topic, topic, message);
         if (this.newUpdates) {
             limit = ohlcv.getLimit (market['symbol'], limit);
         }
@@ -152,6 +152,8 @@ export default class drift extends driftRest {
         const ohlcvCache = this.ohlcvs[symbol][timeframe];
         ohlcvCache.append (parsed);
         client.resolve (ohlcvCache, topic);
+        // trades data is sent with ohlcv topic
+        this.handleTrade (client, message);
     }
 
     /**
@@ -173,7 +175,7 @@ export default class drift extends driftRest {
             'symbol': market['id'],
         };
         const message = this.extend (request, params);
-        const orderbook = await this.watchPublic (topic, message);
+        const orderbook = await this.watchPublic (topic, topic, message);
         return orderbook.limit ();
     }
 
@@ -220,6 +222,129 @@ export default class drift extends driftRest {
         const snapshot = this.parseOrderBook (levels, symbol, undefined, '0', '1', 0, 1);
         orderbook.reset (snapshot);
         client.resolve (orderbook, messageHash);
+    }
+
+    /**
+     * @method
+     * @name drift#watchTrades
+     * @description watches information on multiple trades made in a market
+     * @param {string} symbol unified market symbol of the market trades were made in
+     * @param {int} [since] the earliest time in ms to fetch trades for
+     * @param {int} [limit] the maximum number of trade structures to retrieve
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object[]} a list of [trade structures]{@link https://docs.ccxt.com/?id=trade-structure}
+     */
+    async watchTrades (symbol: string, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const topic = market['id'] + '@candle' + '_1';
+        const messageHash = market['id'] + '@trades';
+        const request: Dict = {
+            'type': 'subscribe',
+            'channelType': 'candle',
+            'resolution': '1',
+            'symbol': market['id'],
+        };
+        const message = this.extend (request, params);
+        const trades = await this.watchPublic (messageHash, topic, message);
+        if (this.newUpdates) {
+            limit = trades.getLimit (market['symbol'], limit);
+        }
+        return this.filterBySymbolSinceLimit (trades, symbol, since, limit, true);
+    }
+
+    handleTrade (client: Client, message) {
+        const trades = this.safeList (message, 'trades', []);
+        const limit = this.safeInteger (this.options, 'tradesLimit', 1000);
+        for (let i = 0; i < trades.length; i++) {
+            const rawTrade = trades[i];
+            const data = this.safeValue (rawTrade, 'data');
+            const marketId = this.safeString (rawTrade, 'symbol');
+            const market = this.safeMarket (marketId);
+            const symbol = market['symbol'];
+            const messageHash = market['id'] + '@trades';
+            const trade = this.parseWsTrade (rawTrade, market);
+            let tradesArray = this.safeValue (this.trades, symbol);
+            if (tradesArray === undefined) {
+                tradesArray = new ArrayCache (limit);
+            }
+            tradesArray.append (trade);
+            this.trades[symbol] = tradesArray;
+            client.resolve (tradesArray, messageHash);
+        }
+    }
+
+    parseWsTrade (trade, market = undefined) {
+        //
+        // {
+        //     "symbol": "SOL-PERP",
+        //     "fillRecordId": "16251183",
+        //     "slot": 408304474,
+        //     "actionExplanation": "orderFilledWithMatch",
+        //     "makerExistingBaseAssetAmount": null,
+        //     "marketType": "perp",
+        //     "takerOrderDirection": "long",
+        //     "createdAt": 1774260267,
+        //     "makerRebate": -0.000017,
+        //     "quoteAssetAmountSurplus": 0,
+        //     "makerExistingQuoteEntryAmount": null,
+        //     "makerFee": -0.000017,
+        //     "takerOrderCumulativeQuoteAssetAmountFilled": 0.857168,
+        //     "referrerReward": 0,
+        //     "action": "fill",
+        //     "takerExistingQuoteEntryAmount": 0.859088,
+        //     "bitFlags": 0,
+        //     "takerOrderId": 2752,
+        //     "taker": "ELPPn6XZCanRAT6U9xJZg7wnKuvBtPsRdVff1dcTxesU",
+        //     "oraclePrice": 85.781072,
+        //     "takerExistingBaseAssetAmount": null,
+        //     "quoteAssetAmountFilled": 0.857168,
+        //     "makerOrderBaseAssetAmount": 0.5,
+        //     "txSigIndex": 0,
+        //     "takerFee": 0.000301,
+        //     "marketFilter": "perp",
+        //     "makerOrderCumulativeQuoteAssetAmountFilled": 0.857168,
+        //     "spotFulfillmentMethodFee": 0,
+        //     "maker": "3JvYM3FTkPw9AeXMJKmyYgnCtGjKuf9JL46XqhB9aHxe",
+        //     "takerOrderBaseAssetAmount": 0.01,
+        //     "makerOrderId": 4391,
+        //     "makerOrderCumulativeBaseAssetAmountFilled": 0.01,
+        //     "takerOrderCumulativeBaseAssetAmountFilled": 0.01,
+        //     "baseAssetAmountFilled": 0.01,
+        //     "makerOrderDirection": "short",
+        //     "txSig": "3br1qBqK17SqSZDgDMMBpe2myWPq2QY2joVqo19WDxAzYNkHS3vzqpNQosQbUfMWKpNw6ZVgtffcbutuGJNfKuS4",
+        //     "filler": "JE9m89yHHiCGzzL2FAeeZgHKAFwjkW4Qp1GfjegWnojR",
+        //     "marketIndex": 0,
+        //     "entity": "market",
+        //     "fillerReward": 0.00003,
+        //     "ts": 1774260265,
+        //     "price": 85.7168
+        // }
+        //
+        const marketId = this.safeString (trade, 'symbol');
+        market = this.safeMarket (marketId, market);
+        const symbol = market['symbol'];
+        const price = this.safeString (trade, 'price');
+        const amount = this.safeString (trade, 'baseAssetAmountFilled');
+        const timestamp = this.safeInteger (trade, 'ts');
+        return this.safeTrade ({
+            'id': this.safeString (trade, 'fillRecordId'),
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'symbol': symbol,
+            'side': undefined,
+            'price': price,
+            'amount': amount,
+            'cost': undefined,
+            'order': this.safeString (trade, 'orderId'),
+            'takerOrMaker': undefined,
+            'type': undefined,
+            'fee': {
+                'cost': undefined,
+                'currency': undefined,
+            },
+            'info': trade,
+        }, market);
     }
 
     handleErrorMessage (client: Client, message): Bool {
