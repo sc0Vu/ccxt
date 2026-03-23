@@ -157,6 +157,74 @@ export default class drift extends driftRest {
         client.resolve (ohlcvCache, topic);
     }
 
+    /**
+     * @method
+     * @name drift#watchOrderBook
+     * @description watches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
+     * @param {string} symbol unified symbol of the market to fetch the order book for
+     * @param {int} [limit] the maximum amount of order book entries to return.
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/?id=order-book-structure} indexed by market symbols
+     */
+    async watchOrderBook (symbol: string, limit: Int = undefined, params = {}): Promise<OrderBook> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const topic = market['id'] + '@orderbook';
+        const request: Dict = {
+            'type': 'subscribe',
+            'channelType': 'orderbook',
+            'symbol': market['id'],
+        };
+        const message = this.extend (request, params);
+        const orderbook = await this.watchPublic (topic, message);
+        return orderbook.limit ();
+    }
+
+    handleOrderBook (client: Client, message) {
+        //
+        // {
+        //     "type": "update",
+        //     "channelType": "orderbook",
+        //     "channel": "orderbook:SOL-PERP",
+        //     "data": {
+        //         "symbol": "SOL-PERP",
+        //         "levels": [
+        //             [
+        //                 [
+        //                     "85.560000",
+        //                     "2942.366520676"
+        //                 ]
+        //             ],
+        //             [
+        //                 [
+        //                     "85.716800",
+        //                     "2334.774000000"
+        //                 ]
+        //             ]
+        //         ],
+        //         "oraclePrice": "85.689988",
+        //         "markPrice": "85.638400",
+        //         "spreadQuote": "0.156800",
+        //         "spreadPercent": "0.183095"
+        //     }
+        // }
+        //
+        const data = this.safeDict (message, 'data', {});
+        const levels = this.safeList (data, 'levels', []);
+        const marketId = this.safeString (data, 'symbol');
+        const market = this.safeMarket (marketId);
+        const symbol = market['symbol'];
+        const topic = this.safeString (message, 'channelType');
+        const messageHash = market['id'] + '@' + topic;
+        if (!(symbol in this.orderbooks)) {
+            this.orderbooks[symbol] = this.orderBook ();
+        }
+        const orderbook = this.orderbooks[symbol];
+        const snapshot = this.parseOrderBook (levels, symbol, undefined, '0', '1', 0, 1);
+        orderbook.reset (snapshot);
+        client.resolve (orderbook, messageHash);
+    }
+
     handleErrorMessage (client: Client, message): Bool {
         //
         // {"type":"error","message":"Auth is needed."}
@@ -191,7 +259,14 @@ export default class drift extends driftRest {
         const methods: Dict = {
             'subscribe': this.handleSubscribe,
             'candle': this.handleOHLCV,
+            'orderbook': this.handleOrderBook,
         };
+        const channelType = this.safeString (message, 'channelType');
+        const method = this.safeValue (methods, channelType);
+        if (method !== undefined) {
+            method.call (this, client, message);
+            return;
+        }
         if ('candle' in message) {
             this.handleOHLCV (client, message);
             return;
