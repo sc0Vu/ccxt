@@ -21,7 +21,7 @@ export default class drift extends driftRest {
                 'watchTicker': false,
                 'watchTickers': true,
                 'watchBidsAsks': false,
-                'watchTrades': true,
+                'watchTrades': false,
                 'watchTradesForSymbols': false,
                 'watchPositions': false,
             },
