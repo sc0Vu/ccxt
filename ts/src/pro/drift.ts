@@ -2,8 +2,8 @@
 
 import driftRest from '../drift.js';
 import { AuthenticationError } from '../base/errors.js';
-import { ArrayCacheByTimestamp, ArrayCache } from '../base/ws/Cache.js';
-import type { Int, OrderBook, OHLCV, Dict, Bool, Trade } from '../base/types.js';
+import { ArrayCacheByTimestamp, ArrayCache, ArrayCacheBySymbolById } from '../base/ws/Cache.js';
+import type { Int, OrderBook, OHLCV, Dict, Bool, Trade, Str, Order } from '../base/types.js';
 import Client from '../base/ws/Client.js';
 
 // ----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ export default class drift extends driftRest {
                 'watchMyTrades': false,
                 'watchOHLCV': true,
                 'watchOrderBook': true,
-                'watchOrders': false,
+                'watchOrders': true,
                 'watchTicker': false,
                 'watchTickers': true,
                 'watchBidsAsks': false,
@@ -346,6 +346,217 @@ export default class drift extends driftRest {
         }, market);
     }
 
+    /**
+     * @method
+     * @name drift#watchOrders
+     * @description watches information on multiple orders made by the user
+     * @param {string} symbol unified market symbol of the market orders were made in
+     * @param {int} [since] the earliest time in ms to fetch orders for
+     * @param {int} [limit] the maximum number of order structures to retrieve
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
+     */
+    async watchOrders (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Order[]> {
+        await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'watchBalance', 'accountId', 'account_id', this.accountId);
+        const topic = 'user@' + accountId;
+        let messageHash = 'orders';
+        if (symbol !== undefined) {
+            const market = this.market (symbol);
+            symbol = market['symbol'];
+            messageHash += '@' + symbol;
+        }
+        const request: Dict = {
+            'type': 'subscribe',
+            'channelType': 'user',
+            'accountId': accountId,
+        };
+        const message = this.extend (request, params);
+        const orders = await this.watchPublic (messageHash, topic, message);
+        if (this.newUpdates) {
+            limit = orders.getLimit (symbol, limit);
+        }
+        return this.filterBySymbolSinceLimit (orders, symbol, since, limit, true);
+    }
+
+    parseWsOrder (order, market = undefined) {
+        //
+        // {
+        //     "recordType": "OrderRecord",
+        //     "ts": 1711152000,
+        //     "txSig": "<signature>",
+        //     "txSigIndex": 0,
+        //     "slot": 250000000,
+        //     "user": "<pubkey>",
+        //     "status": "open",
+        //     "orderType": "limit",
+        //     "marketType": "perp",
+        //     "marketFilter": "perp_0",
+        //     "orderId": 179,
+        //     "userOrderId": 179,
+        //     "marketIndex": 0,
+        //     "price": "185.500000",
+        //     "baseAssetAmount": "1.000000000",
+        //     "quoteAssetAmount": "185.500000",
+        //     "baseAssetAmountFilled": "0.000000000",
+        //     "quoteAssetAmountFilled": "0.000000",
+        //     "direction": "long",
+        //     "reduceOnly": false,
+        //     "triggerPrice": "0.000000",
+        //     "triggerCondition": "above",
+        //     "existingPositionDirection": "long",
+        //     "postOnly": false,
+        //     "immediateOrCancel": false,
+        //     "oraclePriceOffset": "0.000000",
+        //     "auctionDuration": 0,
+        //     "auctionStartPrice": "0.000000",
+        //     "auctionEndPrice": "0.000000",
+        //     "maxTs": 0,
+        //     "symbol": "SOL-PERP",
+        //     "lastActionStatus": "open",
+        //     "lastActionExplanation": "none",
+        //     "lastUpdatedTs": 1711152000,
+        //     "cumulativeFee": "0.000000"
+        // }
+        //
+        // {
+        //     "recordType": "OrderActionRecord",
+        //     "ts": 1711152059,
+        //     "txSig": "<signature>",
+        //     "txSigIndex": 0,
+        //     "slot": 250000000,
+        //     "action": "fill",
+        //     "actionExplanation": "orderFilledWithMatch",
+        //     "marketIndex": 0,
+        //     "marketType": "perp",
+        //     "marketFilter": "perp_0",
+        //     "filler": "<pubkey>",
+        //     "fillRecordId": "123456",
+        //     "taker": "<pubkey>",
+        //     "takerOrderId": "789",
+        //     "takerOrderDirection": "long",
+        //     "maker": "<pubkey>",
+        //     "makerOrderId": "456",
+        //     "makerOrderDirection": "short",
+        //     "baseAssetAmountFilled": "1.000000000",
+        //     "quoteAssetAmountFilled": "185.500000",
+        //     "takerFee": "0.139000",
+        //     "makerFee": "-0.028000",
+        //     "makerRebate": "0.028000",
+        //     "referrerReward": "0.000000",
+        //     "fillerReward": "0.000000",
+        //     "quoteAssetAmountSurplus": "0.000000",
+        //     "spotFulfillmentMethodFee": "0.000000",
+        //     "oraclePrice": "185.500000",
+        //     "takerOrderBaseAssetAmount": "1.000000000",
+        //     "takerOrderCumulativeBaseAssetAmountFilled": "1.000000000",
+        //     "takerOrderCumulativeQuoteAssetAmountFilled": "185.500000",
+        //     "takerExistingQuoteEntryAmount": "0.000000",
+        //     "takerExistingBaseAssetAmount": "0.000000000",
+        //     "makerOrderBaseAssetAmount": "10.000000000",
+        //     "makerOrderCumulativeBaseAssetAmountFilled": "5.000000000",
+        //     "makerOrderCumulativeQuoteAssetAmountFilled": "927.500000",
+        //     "makerExistingQuoteEntryAmount": "0.000000",
+        //     "makerExistingBaseAssetAmount": "0.000000000",
+        //     "user": "<pubkey>",
+        //     "symbol": "SOL-PERP",
+        //     "bitFlags": 0
+        // }
+        //
+        const orderId = this.safeInteger2 (order, 'orderId', 'makerOrderId');
+        const marketId = this.safeString (order, 'symbol');
+        market = this.market (marketId);
+        const symbol = market['symbol'];
+        const timestamp = this.safeTimestamp (order, 'ts');
+        const price = this.safeString (order, 'price');
+        const amount = this.safeString2 (order, 'baseAssetAmount', 'makerOrderBaseAssetAmount');
+        const direction = this.safeString2 (order, 'direction', 'makerOrderDirection');
+        const side = (direction === 'long') ? 'buy' : 'sell';
+        const type = this.safeStringLower (order, 'orderType');
+        let rawStatus = this.safeString (order, 'status');
+        const action = this.safeString (order, 'action');
+        if (action === 'cancel') {
+            rawStatus = 'cancelled';
+        }
+        const status = this.parseOrderStatus (rawStatus);
+        const triggerPrice = this.safeNumber (order, 'triggerPrice');
+        return this.safeOrder ({
+            'info': order,
+            'symbol': symbol,
+            'id': orderId,
+            'clientOrderId': undefined,
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'lastTradeTimestamp': timestamp,
+            'type': type,
+            'timeInForce': undefined,
+            'postOnly': this.safeBool (order, 'postOnly'),
+            'reduceOnly': this.safeBool (order, 'reduceOnly'),
+            'side': side,
+            'price': price,
+            'stopPrice': triggerPrice,
+            'triggerPrice': triggerPrice,
+            'amount': amount,
+            'cost': undefined,
+            'average': undefined,
+            'filled': undefined,
+            'remaining': undefined,
+            'status': status,
+            'trades': undefined,
+        });
+    }
+
+    handleUser (client: Client, message) {
+        const data = this.safeList (message, 'data', []);
+        for (let i = 0; i < data.length; i++) {
+            const record = data[i];
+            const recordType = this.safeString (record, 'recordType');
+            if (recordType === 'OrderRecord') {
+                this.handleOrder (client, record);
+            } else if (recordType === 'OrderActionRecord') {
+                const action = this.safeString (record, 'action');
+                if (action === 'cancel') {
+                    this.handleOrder (client, record);
+                } else if (action === 'fill') {
+                    // this.handleMyTrade (client, record);
+                }
+            }
+        }
+    }
+
+    handleOrder (client: Client, message) {
+        const parsed = this.parseWsOrder (message);
+        const symbol = this.safeString (parsed, 'symbol');
+        const orderId = this.safeString (parsed, 'id');
+        if (symbol !== undefined) {
+            if (this.orders === undefined) {
+                const limit = this.safeInteger (this.options, 'ordersLimit', 1000);
+                this.orders = new ArrayCacheBySymbolById (limit);
+            }
+            const cachedOrders = this.orders;
+            const orders = this.safeDict (cachedOrders.hashmap, symbol, {});
+            const order = this.safeDict (orders, orderId);
+            if (order !== undefined) {
+                const fee = this.safeValue (order, 'fee');
+                if (fee !== undefined) {
+                    parsed['fee'] = fee;
+                }
+                const fees = this.safeList (order, 'fees');
+                if (fees !== undefined) {
+                    parsed['fees'] = fees;
+                }
+                parsed['trades'] = this.safeList (order, 'trades');
+                parsed['timestamp'] = this.safeInteger (order, 'timestamp');
+                parsed['datetime'] = this.safeString (order, 'datetime');
+            }
+            cachedOrders.append (parsed);
+            client.resolve (this.orders, 'orders');
+            const messageHashSymbol = 'orders@' + symbol;
+            client.resolve (this.orders, messageHashSymbol);
+        }
+    }
+
     handleErrorMessage (client: Client, message): Bool {
         //
         // {"type":"error","message":"Auth is needed."}
@@ -381,6 +592,7 @@ export default class drift extends driftRest {
             'subscribe': this.handleSubscribe,
             'candle': this.handleOHLCV,
             'orderbook': this.handleOrderBook,
+            'user': this.handleUser,
         };
         const type = this.safeString (message, 'type');
         if ((type === 'subscribe') || (type === 'subscription')) {
