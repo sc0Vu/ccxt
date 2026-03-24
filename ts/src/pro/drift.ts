@@ -5,6 +5,7 @@ import { AuthenticationError } from '../base/errors.js';
 import { ArrayCacheByTimestamp, ArrayCache, ArrayCacheBySymbolById } from '../base/ws/Cache.js';
 import type { Int, OrderBook, OHLCV, Dict, Bool, Trade, Str, Order } from '../base/types.js';
 import Client from '../base/ws/Client.js';
+import { Precise } from '../base/Precise.js';
 
 // ----------------------------------------------------------------------------
 
@@ -320,28 +321,95 @@ export default class drift extends driftRest {
         //     "price": 85.7168
         // }
         //
+        // {
+        //     "recordType": "OrderActionRecord",
+        //     "ts": 1711152059,
+        //     "txSig": "<signature>",
+        //     "txSigIndex": 0,
+        //     "slot": 250000000,
+        //     "action": "fill",
+        //     "actionExplanation": "orderFilledWithMatch",
+        //     "marketIndex": 0,
+        //     "marketType": "perp",
+        //     "marketFilter": "perp_0",
+        //     "filler": "<pubkey>",
+        //     "fillRecordId": "123456",
+        //     "taker": "<pubkey>",
+        //     "takerOrderId": "789",
+        //     "takerOrderDirection": "long",
+        //     "maker": "<pubkey>",
+        //     "makerOrderId": "456",
+        //     "makerOrderDirection": "short",
+        //     "baseAssetAmountFilled": "1.000000000",
+        //     "quoteAssetAmountFilled": "185.500000",
+        //     "takerFee": "0.139000",
+        //     "makerFee": "-0.028000",
+        //     "makerRebate": "0.028000",
+        //     "referrerReward": "0.000000",
+        //     "fillerReward": "0.000000",
+        //     "quoteAssetAmountSurplus": "0.000000",
+        //     "spotFulfillmentMethodFee": "0.000000",
+        //     "oraclePrice": "185.500000",
+        //     "takerOrderBaseAssetAmount": "1.000000000",
+        //     "takerOrderCumulativeBaseAssetAmountFilled": "1.000000000",
+        //     "takerOrderCumulativeQuoteAssetAmountFilled": "185.500000",
+        //     "takerExistingQuoteEntryAmount": "0.000000",
+        //     "takerExistingBaseAssetAmount": "0.000000000",
+        //     "makerOrderBaseAssetAmount": "10.000000000",
+        //     "makerOrderCumulativeBaseAssetAmountFilled": "5.000000000",
+        //     "makerOrderCumulativeQuoteAssetAmountFilled": "927.500000",
+        //     "makerExistingQuoteEntryAmount": "0.000000",
+        //     "makerExistingBaseAssetAmount": "0.000000000",
+        //     "user": "<pubkey>",
+        //     "symbol": "SOL-PERP",
+        //     "bitFlags": 0
+        // }
+        //
         const marketId = this.safeString (trade, 'symbol');
         market = this.safeMarket (marketId, market);
         const symbol = market['symbol'];
-        const price = this.safeString (trade, 'price');
-        const amount = this.safeString (trade, 'baseAssetAmountFilled');
-        const timestamp = this.safeInteger (trade, 'ts');
+        const user = this.safeString (trade, 'user');
+        let orderIdKey = 'orderId';
+        let side = undefined;
+        let takerOrMaker = undefined;
+        const fee = {
+            'cost': undefined,
+            'currency': undefined,
+        };
+        let price = undefined;
+        let amount = undefined;
+        if (user !== undefined) {
+            const taker = this.safeString (trade, 'taker');
+            if (user === taker) {
+                takerOrMaker = 'taker';
+            } else {
+                takerOrMaker = 'maker';
+            }
+            orderIdKey = takerOrMaker + 'OrderId';
+            amount = this.safeString (trade, takerOrMaker + 'OrderCumulativeBaseAssetAmountFilled');
+            const quoteAmount = this.safeString (trade, takerOrMaker + 'OrderCumulativeQuoteAssetAmountFilled');
+            price = Precise.stringDiv (quoteAmount, amount);
+            const direction = this.safeString (trade, takerOrMaker + 'OrderDirection');
+            side = (direction === 'long') ? 'buy' : 'sell';
+            fee['cost'] = this.safeString (trade, takerOrMaker + 'Fee');
+        } else {
+            price = this.safeString (trade, 'price');
+            amount = this.safeString (trade, 'baseAssetAmountFilled');
+        }
+        const timestamp = this.safeTimestamp (trade, 'ts');
         return this.safeTrade ({
             'id': this.safeString (trade, 'fillRecordId'),
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
             'symbol': symbol,
-            'side': undefined,
+            'side': side,
             'price': price,
             'amount': amount,
             'cost': undefined,
-            'order': this.safeString (trade, 'orderId'),
-            'takerOrMaker': undefined,
+            'order': this.safeString (trade, orderIdKey),
+            'takerOrMaker': takerOrMaker,
             'type': undefined,
-            'fee': {
-                'cost': undefined,
-                'currency': undefined,
-            },
+            'fee': fee,
             'info': trade,
         }, market);
     }
@@ -378,6 +446,40 @@ export default class drift extends driftRest {
             limit = orders.getLimit (symbol, limit);
         }
         return this.filterBySymbolSinceLimit (orders, symbol, since, limit, true);
+    }
+
+    /**
+     * @method
+     * @name woofipro#watchMyTrades
+     * @description watches information on multiple trades made by the user
+     * @param {string} symbol unified market symbol of the market orders were made in
+     * @param {int} [since] the earliest time in ms to fetch orders for
+     * @param {int} [limit] the maximum number of order structures to retrieve
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
+     */
+    async watchMyTrades (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
+        await this.loadMarkets ();
+        let accountId = undefined;
+        [ accountId, params ] = await this.handleAccountId (params, 'watchBalance', 'accountId', 'account_id', this.accountId);
+        const topic = 'user@' + accountId;
+        let messageHash = 'myTrades';
+        if (symbol !== undefined) {
+            const market = this.market (symbol);
+            symbol = market['symbol'];
+            messageHash += '@' + symbol;
+        }
+        const request: Dict = {
+            'type': 'subscribe',
+            'channelType': 'user',
+            'accountId': accountId,
+        };
+        const message = this.extend (request, params);
+        const trades = await this.watchPublic (messageHash, topic, message);
+        if (this.newUpdates) {
+            limit = trades.getLimit (symbol, limit);
+        }
+        return this.filterBySymbolSinceLimit (trades, symbol, since, limit, true);
     }
 
     parseWsOrder (order, market = undefined) {
@@ -519,7 +621,7 @@ export default class drift extends driftRest {
                 if (action === 'cancel') {
                     this.handleOrder (client, record);
                 } else if (action === 'fill') {
-                    // this.handleMyTrade (client, record);
+                    this.handleMyTrade (client, record);
                 }
             }
         }
@@ -555,6 +657,24 @@ export default class drift extends driftRest {
             const messageHashSymbol = 'orders@' + symbol;
             client.resolve (this.orders, messageHashSymbol);
         }
+    }
+
+    handleMyTrade (client: Client, message) {
+        const messageHash = 'myTrades';
+        const marketId = this.safeString (message, 'symbol');
+        const market = this.safeMarket (marketId);
+        const symbol = market['symbol'];
+        const trade = this.parseWsTrade (message, market);
+        let trades = this.myTrades;
+        if (trades === undefined) {
+            const limit = this.safeInteger (this.options, 'tradesLimit', 1000);
+            trades = new ArrayCacheBySymbolById (limit);
+            this.myTrades = trades;
+        }
+        trades.append (trade);
+        client.resolve (trades, messageHash);
+        const symbolSpecificMessageHash = messageHash + '@' + symbol;
+        client.resolve (trades, symbolSpecificMessageHash);
     }
 
     handleErrorMessage (client: Client, message): Bool {
