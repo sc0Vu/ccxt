@@ -14,7 +14,8 @@ export default class drift extends Exchange {
             'version': 'v1',
             'rateLimit': 250,
             'certified': false,
-            'pro': false,
+            'pro': true,
+            'dex': true,
             'requiredCredentials': {
                 'apiKey': false,
                 'secret': false,
@@ -85,6 +86,7 @@ export default class drift extends Exchange {
                     'https://data.api.drift.trade/playground',
                 ],
                 'fees': 'https://docs.drift.trade/trading/trading-fees',
+                'referral': 'https://app.drift.trade/ref/ccxt',
             },
             'api': {
                 'public': {
@@ -1156,9 +1158,7 @@ export default class drift extends Exchange {
         if (limit !== undefined) {
             request['limit'] = Math.min (limit, 1000);
         }
-        const response = await this.publicGetMarketSymbolCandlesResolution (
-            this.extend (request, params)
-        );
+        const response = await this.publicGetMarketSymbolCandlesResolution (this.extend (request, params));
         //
         // {
         //     "success": true,
@@ -1600,7 +1600,7 @@ export default class drift extends Exchange {
             'symbol': this.safeSymbol (marketId),
             'contracts': contracts,
             'side': side,
-            'notional': (quoteEntryAmountAbs === undefined) ? undefined : this.parseNumber (quoteEntryAmountAbs),
+            'notional': quoteEntryAmountAbs,
             'entryPrice': entryPrice,
             'liquidationPrice': liquidationPrice,
         });

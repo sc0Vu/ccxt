@@ -58,6 +58,7 @@ export default class drift extends driftRest {
     /**
      * @method
      * @name drift#watchOHLCV
+     * @see https://data.api.drift.trade/playground
      * @description watches historical candlestick data containing the open, high, low, and close price, and the volume of a market
      * @param {string} symbol unified symbol of the market to fetch OHLCV data for
      * @param {string} timeframe the length of time each candle represents
@@ -160,6 +161,7 @@ export default class drift extends driftRest {
     /**
      * @method
      * @name drift#watchOrderBook
+     * @see https://data.api.drift.trade/playground
      * @description watches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
      * @param {string} symbol unified symbol of the market to fetch the order book for
      * @param {int} [limit] the maximum amount of order book entries to return.
@@ -228,6 +230,7 @@ export default class drift extends driftRest {
     /**
      * @method
      * @name drift#watchTrades
+     * @see https://data.api.drift.trade/playground
      * @description watches information on multiple trades made in a market
      * @param {string} symbol unified market symbol of the market trades were made in
      * @param {int} [since] the earliest time in ms to fetch trades for
@@ -417,6 +420,7 @@ export default class drift extends driftRest {
     /**
      * @method
      * @name drift#watchOrders
+     * @see https://data.api.drift.trade/playground
      * @description watches information on multiple orders made by the user
      * @param {string} symbol unified market symbol of the market orders were made in
      * @param {int} [since] the earliest time in ms to fetch orders for
@@ -450,7 +454,8 @@ export default class drift extends driftRest {
 
     /**
      * @method
-     * @name woofipro#watchMyTrades
+     * @name drift#watchMyTrades
+     * @see https://data.api.drift.trade/playground
      * @description watches information on multiple trades made by the user
      * @param {string} symbol unified market symbol of the market orders were made in
      * @param {int} [since] the earliest time in ms to fetch orders for
