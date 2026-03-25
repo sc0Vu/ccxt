@@ -441,6 +441,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchMarkets
      * @description retrieves data on all markets for drift
+     * @see https://data.api.drift.trade/playground
      * @returns {object[]} an array of objects representing market data
      */
     async fetchMarkets (params = {}): Promise<Market[]> {
@@ -531,6 +532,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchCurrencies
      * @description fetches all available currencies
+     * @see https://data.api.drift.trade/playground
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {Currencies} an associative dictionary of currencies
      */
@@ -583,6 +585,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchTicker
      * @description fetches a price ticker, a statistical calculation with the information calculated over the past 24 hours for a specific market
+     * @see https://data.api.drift.trade/playground
      * @param {string} symbol unified symbol of the market to fetch the ticker for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/?id=ticker-structure}
@@ -662,6 +665,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchTickers
      * @description fetches a price ticker for a specific symbol
+     * @see https://data.api.drift.trade/playground
      * @param {string} [symbols] unified market symbol of the market the orders were made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
@@ -806,6 +810,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchOrderBook
      * @description fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
+     * @see https://data.api.drift.trade/playground
      * @param {string} symbol unified symbol of the market to fetch the order book for
      * @param {int} [limit] the maximum amount of order book entries to return
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -900,6 +905,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchTrades
      * @description get the list of most recent trades for a particular symbol
+     * @see https://data.api.drift.trade/playground
      * @param {string} symbol unified symbol of the market to fetch trades for
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum amount of trades to fetch
@@ -986,6 +992,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchMyTrades
      * @description fetch all trades made by the user
+     * @see https://data.api.drift.trade/playground
      * @param {string} [symbol] unified market symbol to fetch trades for, required by some exchanges
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum amount of trades to fetch
@@ -1138,6 +1145,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchOHLCV
      * @description fetches historical candlestick data containing the open, high, low, close price, and volume
+     * @see https://data.api.drift.trade/playground
      * @param {string} symbol unified symbol of the market to fetch OHLCV for
      * @param {string} [timeframe] the length of time each candle represents
      * @param {int} [since] timestamp in ms of the earliest candle to fetch
@@ -1198,6 +1206,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchOrder
      * @description fetches information on an order made by the user
+     * @see https://data.api.drift.trade/playground
      * @param {string} id order id
      * @param {string} symbol unified symbol of the market the order was made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1269,6 +1278,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchOrders
      * @description fetches information on multiple orders made by the user
+     * @see https://data.api.drift.trade/playground
      * @param {string} [symbol] unified market symbol of the market the orders were made in
      * @param {int} [since] the earliest time in ms to fetch orders for
      * @param {int} [limit] the maximum amount of orders to retrieve
@@ -1360,6 +1370,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchOpenOrders
      * @description fetch all unfilled currently open orders
+     * @see https://data.api.drift.trade/playground
      * @param {string} [symbol] unified market symbol of the market the orders were made in
      * @param {int} [since] the earliest time in ms to fetch orders for
      * @param {int} [limit] the maximum amount of orders to retrieve
@@ -1476,6 +1487,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchBalance
      * @description query for balance and get the amount of funds available for trading or funds locked in orders
+     * @see https://data.api.drift.trade/playground
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [balance structure]{@link https://docs.ccxt.com/#/?id=balance-structure}
      */
@@ -1534,6 +1546,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchPositions
      * @description fetch all open positions
+     * @see https://data.api.drift.trade/playground
      * @param {string[]} [symbols] list of unified market symbols
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [position structures]{@link https://docs.ccxt.com/#/?id=position-structure}
@@ -1610,6 +1623,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchFundingHistory
      * @description fetches the history of funding payments for swap positions
+     * @see https://data.api.drift.trade/playground
      * @param symbol
      * @param {int} [since] timestamp in ms of the earliest funding rate to fetch
      * @param {int} [limit] the maximum amount of funding payments to retrieve
@@ -1707,6 +1721,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchTransactions
      * @description fetch history of deposits and withdrawals
+     * @see https://data.api.drift.trade/playground
      * @param {string} [code] unified currency code for the currency of the transactions
      * @param {int} [since] timestamp in ms of the earliest ledger entry
      * @param {int} [limit] max number of transactions to return
@@ -1818,6 +1833,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#fetchLedger
      * @description fetch the history of changes in balance
+     * @see https://data.api.drift.trade/playground
      * @param {string} [code] unified currency code for the currency of the transactions
      * @param {int} [since] timestamp in ms of the earliest ledger entry
      * @param {int} [limit] the maximum number of ledger entries to return
@@ -1859,6 +1875,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#createOrder
      * @description create a trade order
+     * @see https://data.api.drift.trade/playground
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {string} type 'market' or 'limit'
      * @param {string} side 'buy' or 'sell'
@@ -1910,6 +1927,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#cancelOrder
      * @description cancels an open order
+     * @see https://data.api.drift.trade/playground
      * @param {string} id order id
      * @param {string} symbol unified symbol of the market the order was made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1947,6 +1965,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#cancelAllOrders
      * @description cancel all open orders in a market
+     * @see https://data.api.drift.trade/playground
      * @param {string} [symbol] unified market symbol of the market to cancel orders in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
@@ -1973,6 +1992,7 @@ export default class drift extends Exchange {
      * @method
      * @name drift#withdraw
      * @description make a withdrawal
+     * @see https://data.api.drift.trade/playground
      * @param {string} code unified currency code
      * @param {float} amount amount to withdraw
      * @param {string} address the address to withdraw to
