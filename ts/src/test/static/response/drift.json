@@ -1096,8 +1096,8 @@
         ],
         "fetchPositions": [
             {
-                "description": "fetchBalance",
-                "method": "fetchBalance",
+                "description": "fetchPositions",
+                "method": "fetchPositions",
                 "input": [],
                 "httpResponse": {
                     "account": {
@@ -1310,7 +1310,7 @@
                 "description": "fetchLedger",
                 "method": "fetchLedger",
                 "input": [
-                    "BTC/USDC:USDC"
+                    "USDC"
                 ],
                 "httpResponse": {
                     "success": true,
