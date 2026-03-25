@@ -1163,7 +1163,7 @@
                         "symbol": "BTC/USDC:USDC",
                         "contracts": -0.05,
                         "side": "short",
-                        "notional": 4.19837,
+                        "notional": "4.19837",
                         "entryPrice": 83.9674,
                         "liquidationPrice": 614.75036,
                         "contractSize": null
