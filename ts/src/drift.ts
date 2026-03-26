@@ -2075,12 +2075,12 @@ export default class drift extends Exchange {
         return [ accountId, params ];
     }
 
-    async createBuilder (builder: string, params = {}) {
+    async createBuilder (builder: string) {
         const request = {
             'builderId': builder,
             'simulate': false,
         };
-        const response = await this.publicPostTxBuilderInit (this.extend (request, params));
+        const response = await this.publicPostTxBuilderInit (request);
         const txResponse = await this.executeTx (response['tx']);
         return txResponse;
     }

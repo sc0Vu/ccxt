@@ -721,7 +721,8 @@ export default class drift extends driftRest {
         };
         const type = this.safeString (message, 'type');
         if ((type === 'subscribe') || (type === 'subscription')) {
-            return this.handleSubscribe (client, message);
+            this.handleSubscribe (client, message);
+            return;
         }
         const channelType = this.safeString (message, 'channelType');
         const method = this.safeValue (methods, channelType);
