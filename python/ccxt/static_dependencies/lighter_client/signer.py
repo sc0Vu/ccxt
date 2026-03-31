@@ -45,7 +45,7 @@ def load_lighter_library(path):
         return lighterSigner
 
     lighterSigner = ctypes.CDLL(path)
-    lighterSigner.GenerateAPIKey.argtypes = [ctypes.c_char_p]
+    lighterSigner.GenerateAPIKey.argtypes = []
     lighterSigner.GenerateAPIKey.restype = ApiKeyResponse
 
     lighterSigner.CreateClient.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_int, ctypes.c_longlong]
@@ -115,6 +115,16 @@ def load_lighter_library(path):
     lighterSigner.SignApproveIntegrator.argtypes = [ctypes.c_longlong, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignApproveIntegrator.restype = SignedTxResponse
     return lighterSigner
+
+def decode_api_key(result: SignedTxResponse) -> Union[Tuple[str, str, None], Tuple[None, None, str]]:
+    if result.err:
+        error = result.err.decode("utf-8")
+        return None, None, error
+    
+    private_key_str = result.privateKey.decode("utf-8") if result.privateKey else None
+    public_key_str = result.publicKey.decode("utf-8") if result.publicKey else None
+
+    return private_key_str, public_key_str, None
 
 def decode_tx_info(result: SignedTxResponse) -> Union[Tuple[str, str, str, None], Tuple[None, None, None, str]]:
     if result.err:

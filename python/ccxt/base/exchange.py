@@ -102,7 +102,8 @@ except ImportError:
 
 # lighter
 import os
-from ccxt.static_dependencies.lighter_client.signer import load_lighter_library, decode_tx_info, decode_auth, CreateOrderTxReq
+from ccxt.static_dependencies.lighter_client.signer import load_lighter_library, decode_tx_info, decode_auth, decode_api_key, CreateOrderTxReq
+# import ctypes
 
 # -----------------------------------------------------------------------------
 
@@ -2253,17 +2254,21 @@ class Exchange(object):
     def is_lighter_library_path_required(self):
         return True
 
-    def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex):
-        return self.load_lighter_library_helper(path, chainId, privateKey, apiKeyIndex, accountIndex)
+    def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient = False):
+        return self.load_lighter_library_helper(path, chainId, privateKey, apiKeyIndex, accountIndex, createClient)
 
-    def load_lighter_library_helper(self, path, chainId, privateKey, apiKeyIndex, accountIndex):
+    def load_lighter_library_helper(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient = False):
         if path is None:
             raise NotSupported(self.id + ' load_lighter_library() requires a path to the lighter library. You can find it here https://github.com/elliottech/lighter-python/tree/main/lighter/signers. Please download the appropriate library for your system and provide the path to it.\nExample: exchange.options["libraryPath"] = "path/to/lighter-signer-linux-arm64.so"')
         if not os.path.isfile(path):
             raise NotSupported(self.id + ' the library path does not exist')
 
         lighterSigner = load_lighter_library(path)
+        if createClient:
+            self.lighter_create_client(lighterSigner, chainId, privateKey, apiKeyIndex, accountIndex)
+        return lighterSigner
 
+    def lighter_create_client(self, lighterSigner, chainId, privateKey, apiKeyIndex, accountIndex):
         url = self.implode_hostname(self.urls['api']['public'])
         res = lighterSigner.CreateClient(
             url.encode("utf-8"),
@@ -2273,8 +2278,7 @@ class Exchange(object):
             accountIndex,
         )
         if res is not None and str(res).find('error'):
-            raise Exception('load_lighter_library(): Failed to create lighter signer: ' + str(res))
-        return lighterSigner
+            raise Exception('lighter_create_client(): Failed to create lighter client: ' + str(res))
 
     def lighter_sign_create_grouped_orders(self, signer, request):
         orders = request['orders']
@@ -2297,13 +2301,13 @@ class Exchange(object):
                 IntegratorMakerFee=order['integrator_maker_fee'],
             ))
         orders_carr = arr_type(*orders_arr)
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignCreateGroupedOrders(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateGroupedOrders(
             request['grouping_type'], orders_carr, len(orders), request['nonce'], request['api_key_index'], request['account_index']
         ))
         return [tx_type, tx_info]
 
     def lighter_sign_create_order(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignCreateOrder(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateOrder(
             int(request['market_index']),
             request['client_order_index'],
             request['base_amount'],
@@ -2326,7 +2330,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_cancel_order(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignCancelOrder(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelOrder(
             request['market_index'],
             request['order_index'],
             request['nonce'],
@@ -2338,7 +2342,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_withdraw(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignWithdraw(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignWithdraw(
             request['asset_index'],
             request['route_type'],
             request['amount'],
@@ -2351,7 +2355,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_create_sub_account(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignCreateSubAccount(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateSubAccount(
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2361,7 +2365,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_cancel_all_orders(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignCancelAllOrders(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelAllOrders(
             request['time_in_force'],
             request['time'],
             request['nonce'],
@@ -2373,7 +2377,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_modify_order(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignModifyOrder(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignModifyOrder(
             request['market_index'],
             request['index'],
             request['base_amount'],
@@ -2391,7 +2395,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_transfer(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignTransfer(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignTransfer(
             request['to_account_index'],
             request['asset_index'],
             request['from_route_type'],
@@ -2408,7 +2412,7 @@ class Exchange(object):
         return [tx_type, tx_info]
 
     def lighter_sign_update_leverage(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignUpdateLeverage(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignUpdateLeverage(
             request['market_index'],
             request['initial_margin_fraction'],
             request['margin_mode'],
@@ -2431,7 +2435,7 @@ class Exchange(object):
         return auth
 
     def lighter_sign_update_margin(self, signer, request):
-        tx_type, tx_info, tx_hash, error = decode_tx_info(signer.SignUpdateMargin(
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignUpdateMargin(
             request['market_index'],
             request['usdc_amount'],
             request['direction'],
@@ -2457,6 +2461,24 @@ class Exchange(object):
         ))
         if error:
             raise Exception('lighter_sign_approve_integrator() failed with error: ' + str(error))
+        return [tx_type, tx_info, message_to_sign]
+
+    def lighter_generate_api_key(self, signer, request):
+        privateKey, publicKey, error = decode_api_key(signer.GenerateAPIKey())
+        if error:
+            raise Exception('lighter_generate_api_key() failed with error: ' + str(error))
+        return [privateKey, publicKey]
+
+    def lighter_sign_change_pubkey(self, signer, request):
+        tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignChangePubKey(
+            # ctypes.c_char_p(request['pubkey']),
+            request['pubkey'],
+            request['nonce'],
+            request['api_key_index'],
+            request['account_index'],
+        ))
+        if error:
+            raise Exception('lighter_sign_change_pubkey() failed with error: ' + str(error))
         return [tx_type, tx_info, message_to_sign]
 
     # ########################################################################

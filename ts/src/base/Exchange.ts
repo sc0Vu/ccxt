@@ -1951,7 +1951,7 @@ export default class Exchange {
         return undefined;  // c# stub
     }
 
-    async loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex) {
+    async loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex, createClient = false) {
         // wasmExecPathExample: '/opt/homebrew/opt/go/libexec/lib/wasm/wasm_exec.js';
         // libraryPath eg: '/Users/cjg/Git/lighter-go/lighter.wasm';
         if (libraryPath === undefined || libraryPath === '') {
@@ -1971,11 +1971,16 @@ export default class Exchange {
         const bytes = new Uint8Array (readFile (libraryPath, null) as Buffer); // it should point to lighter.wasm
         const { instance } = await WebAssembly.instantiate (bytes, go.importObject);
         go.run (instance);
-        // createCLient
+        if (createClient) {
+            this.lighterCreateClient(undefined, chainId, privateKey, apiKeyIndex, accountIndex);
+        }
+        return {}; // empty object we will read it from globalThis
+    }
+
+    lighterCreateClient (signer, chainId, privateKey, apiKeyIndex, accountIndex) {
         const url = this.implodeHostname (this.urls['api']['public']);
         const res = globalThis.CreateClient (url, privateKey, chainId, apiKeyIndex, accountIndex);
         this.checkLighterSignedError (res);
-        return {}; // empty object we will read it from globalThis
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -2165,7 +2170,25 @@ export default class Exchange {
             request['account_index']
         );
         this.checkLighterSignedError (res);
-        return [ res.txType, res.txInfo, res.messageToSign];
+        return [ res.txType, res.txInfo, res.messageToSign ];
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    lighterGenerateApiKey (signer, request): any[] {
+        const res = globalThis.GenerateAPIKey ();
+        this.checkLighterSignedError (res);
+        return [ res.privateKey, res.publicKey ];
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    lighterSignChangePubkey (signer, request): any[] {
+        const res = globalThis.SignChangePubKey (
+            request['pubkey'],
+            request['api_key_index'],
+            request['account_index']
+        );
+        this.checkLighterSignedError (res);
+        return [ res.txType, res.txInfo, res.messageToSign ];
     }
 
     /* eslint-enable */
