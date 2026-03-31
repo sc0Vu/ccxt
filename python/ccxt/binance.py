@@ -1405,16 +1405,74 @@ class binance(Exchange, ImplicitAPI):
                 },
                 'networks': {
                     'ERC20': 'ETH',
+                    'ETH': 'ETH',
                     'TRC20': 'TRX',
+                    'TRX': 'TRX',
                     'BEP2': 'BNB',
+                    'BSC': 'BSC',
                     'BEP20': 'BSC',
-                    'OMNI': 'OMNI',
                     'EOS': 'EOS',
                     'SPL': 'SOL',  # temporarily keep support for SPL(old name)
                     'SOL': 'SOL',  # we shouldn't rename SOL
+                    # 'FIAT': 'FIAT_MONEY',  # not unified atm
+                    # 'LEVERAGE_TOKEN': 'ETF',  # not unified atm
+                    # 'STAKING': 'STAKING',  # not unified atm
+                    'ARBONE': 'ARBITRUM',
+                    'AVAXC': 'AVAXC',
+                    'MATIC': 'MATIC',
+                    'BASE': 'BASE',
+                    'SUI': 'SUI',
+                    'OP': 'OPTIMISM',
+                    'OPTIMISM': 'OPTIMISM',
+                    'NEAR': 'NEAR',
+                    'APT': 'APT',
+                    'SCROLL': 'SCROLL',
+                    'KAVA': 'KAVA',
+                    'XLM': 'XLM',
+                    # BLAST - not supported
+                    # LINEA - not supported
+                    # CRO - not supported
+                    # TAIKO - not supported
+                    'RSK': 'RSK',  # RBTC
+                    'SEI': 'SEI',
+                    # MNT - not supported
+                    'TON': 'TON',
+                    'ADA': 'ADA',
+                    # HYPE - not supported
+                    # CORE - not supported
+                    'ALGO': 'ALGO',
+                    'RUNE': 'RUNE',
+                    'OSMO': 'OSMO',
+                    # XIN - not supported
+                    'CELO': 'CELO',
+                    'HBAR': 'HBAR',
+                    # FTM - renamed
+                    # WEMIX - not supported
+                    'ZKSYNCERA': 'ZKSYNCERA',
+                    'KLAY': 'KLAY',
+                    # HECO - not supported
+                    # FSN - not supported
+                    'ACA': 'ACA',
+                    'STX': 'STX',  # STACKS
+                    'XTZ': 'XTZ',
+                    # 'NEO': 'NEO',  # tbd NEO3
+                    'METIS': 'METIS',
+                    # TLOS - not supported
+                    'EGLD': 'EGLD',
+                    'ASTR': 'ASTR',
+                    'CFX': 'CFX',
+                    # 'GLMR': 'GLMR', GLIMMER vs MOONBEAM
+                    # CANTO - not supported
+                    'SCRT': 'SCRT',
+                    # AUR - not supported
+                    'ONT': 'ONT',  # ontology
                 },
                 'networksById': {
+                    'TRX': 'TRC20',
+                    'BSC': 'BEP20',
+                    'ETH': 'ERC20',
                     'SOL': 'SOL',  # temporary fix for SPL definition
+                    'OPTIMISM': 'OP',
                 },
                 'impliedNetworks': {
                     'ETH': {'ERC20': 'ETH'},
@@ -8354,7 +8412,8 @@ class binance(Exchange, ImplicitAPI):
         internal = None
         if internalInteger is not None:
             internal = True if (internalInteger != 0) else False
-        network = self.safe_string(transaction, 'network')
+        networkId = self.safe_string(transaction, 'network')
+        network = self.network_id_to_code(networkId, code)
         return {
             'info': transaction,
             'id': id,

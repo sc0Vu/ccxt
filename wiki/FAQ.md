@@ -275,8 +275,8 @@ Lighter is available as part of CCXT and it works similarly to any other CCXT ex
 
 Lighter requires the following :
 - `privateKey`: the API key private key (hex) from Lighter’s API keys page, not the l1 privateKey (https://app.lighter.xyz/apikeys)
-- `apiKeyIndex` in `exchange.options`: the index assigned to the API key you generated (typically 0–254) you can get it from the API Keys page as well
-- `accountIndex` in `exchange.options`: — the Lighter internal account index (master account or sub-account). Each internal account has its own API key indices. You can checking by opening this link in the browser using your l1 address https://mainnet.zklighter.elliot.ai/api/v1/accountsByL1Address?l1_address=0xYOUR_ADDRESS_here
+- `apiKeyIndex` (an integer) in `exchange.options`: the index assigned to the API key you generated (typically 0–254) you can get it from the API Keys page as well
+- `accountIndex` (an integer) in `exchange.options`: — the Lighter internal account index (master account or sub-account). Each internal account has its own API key indices. You can checking by opening this link in the browser using your l1 address https://mainnet.zklighter.elliot.ai/api/v1/accountsByL1Address?l1_address=0xYOUR_ADDRESS_here
 
 
 
@@ -289,7 +289,7 @@ lighter = ccxt.lighter({
 	'privateKey': 'XXXXXXX',
 	'options': {
 		'apiKeyIndex': 3,
-		'accountIndex': '715085'
+		'accountIndex': 715085
 	}
 })
 ```
@@ -387,3 +387,22 @@ For example, while orders can be placed normally, cancelling an order on dYdX do
 - subAccountId, ccxt assumes 0 as default
 
 CCXT provides sensible defaults for the most common use cases; however, you may need to override these values (using params or options) depending on your specific requirements.
+
+### How to use the GRVT Exchange in CCXT?
+
+GRVT works similarly to any other CCXT DEX and only requires the l1 private key of the wallet.
+
+An example on how to instantiate the GRVT exchange:
+
+```
+exchange = ccxt.grvt({
+	'privateKey': 'XXXXXXX', // the l1 private key (hex)
+})
+```
+
+CCXT is also a builder on GRVT meaning that by default users will pay 1bps (0.01%) extra for using it through CCXT, however this fee is totally optional and can be disabled by providing the option `builderFee: False` in options. Your contribution is much appreciated.
+
+```
+exchange.options['builderFee'] = False
+```
+
