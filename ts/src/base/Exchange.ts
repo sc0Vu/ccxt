@@ -2002,7 +2002,15 @@ export default class Exchange {
                 'OrderExpiry': order['order_expiry'],
             });
         }
-        const res = globalThis.SignCreateGroupedOrders (request['grouping_type'], ordersArr, orders.length, request['nonce'], request['api_key_index'], request['account_index']);
+        const res = globalThis.SignCreateGroupedOrders (
+            request['grouping_type'],
+            ordersArr,
+            orders.length,
+            true, // skip nonce
+            request['nonce'],
+            request['api_key_index'],
+            request['account_index']
+        );
         this.checkLighterSignedError (res);
         return [ res.txType, res.txInfo ];
     }
@@ -2023,6 +2031,7 @@ export default class Exchange {
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2041,6 +2050,7 @@ export default class Exchange {
         const res = (globalThis.SignCancelOrder (
             request['market_index'],
             request['order_index'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2054,6 +2064,7 @@ export default class Exchange {
             request['asset_index'],
             request['route_type'],
             request['amount'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2065,6 +2076,7 @@ export default class Exchange {
     // eslint-disable-next-line no-unused-vars
     lighterSignCreateSubAccount (signer, request): any[] {
         const res = (globalThis.SignCreateSubAccount (
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2077,6 +2089,7 @@ export default class Exchange {
         const res = (globalThis.SignCancelAllOrders (
             request['time_in_force'],
             request['time'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2095,6 +2108,7 @@ export default class Exchange {
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2112,6 +2126,7 @@ export default class Exchange {
             request['amount'],
             request['usdc_fee'],
             request['memo'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2125,6 +2140,7 @@ export default class Exchange {
             request['market_index'],
             request['initial_margin_fraction'],
             request['margin_mode'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2148,6 +2164,7 @@ export default class Exchange {
             request['market_index'],
             request['usdc_amount'],
             request['direction'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2165,6 +2182,7 @@ export default class Exchange {
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
             request['approval_expiry'],
+            true, // skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2184,6 +2202,8 @@ export default class Exchange {
     lighterSignChangePubkey (signer, request): any[] {
         const res = globalThis.SignChangePubKey (
             request['pubkey'],
+            true, // skip nonce
+            request['nonce'],
             request['api_key_index'],
             request['account_index']
         );
