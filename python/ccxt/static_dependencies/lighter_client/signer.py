@@ -52,55 +52,55 @@ def load_lighter_library(path):
     lighterSigner.CreateClient.restype = ctypes.c_char_p
 
     lighterSigner.CheckClient.argtypes = [ctypes.c_int, ctypes.c_longlong]
-    lighterSigner.CheckClient.restype = ctypes.c_char_p
+    lighterSigner.CheckClient.restype = ctypes.c_void_p
 
-    lighterSigner.SignChangePubKey.argtypes = [ctypes.c_char_p, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignChangePubKey.argtypes = [ctypes.c_char_p, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignChangePubKey.restype = SignedTxResponse
 
     lighterSigner.SignCreateOrder.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                                            ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+                                            ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCreateOrder.restype = SignedTxResponse
 
-    lighterSigner.SignCreateGroupedOrders.argtypes = [ctypes.c_uint8, ctypes.POINTER(CreateOrderTxReq), ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignCreateGroupedOrders.argtypes = [ctypes.c_uint8, ctypes.POINTER(CreateOrderTxReq), ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCreateGroupedOrders.restype = SignedTxResponse
 
-    lighterSigner.SignCancelOrder.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignCancelOrder.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCancelOrder.restype = SignedTxResponse
 
-    lighterSigner.SignWithdraw.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignWithdraw.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignWithdraw.restype = SignedTxResponse
 
-    lighterSigner.SignCreateSubAccount.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignCreateSubAccount.argtypes = [ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCreateSubAccount.restype = SignedTxResponse
 
-    lighterSigner.SignCancelAllOrders.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignCancelAllOrders.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCancelAllOrders.restype = SignedTxResponse
 
-    lighterSigner.SignModifyOrder.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignModifyOrder.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignModifyOrder.restype = SignedTxResponse
 
-    lighterSigner.SignTransfer.argtypes = [ctypes.c_longlong, ctypes.c_int16, ctypes.c_int8, ctypes.c_int8, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_char_p, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignTransfer.argtypes = [ctypes.c_longlong, ctypes.c_int16, ctypes.c_int8, ctypes.c_int8, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_char_p, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignTransfer.restype = SignedTxResponse
 
-    lighterSigner.SignCreatePublicPool.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignCreatePublicPool.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignCreatePublicPool.restype = SignedTxResponse
 
-    lighterSigner.SignUpdatePublicPool.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignUpdatePublicPool.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignUpdatePublicPool.restype = SignedTxResponse
 
-    lighterSigner.SignMintShares.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignMintShares.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignMintShares.restype = SignedTxResponse
 
-    lighterSigner.SignBurnShares.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignBurnShares.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignBurnShares.restype = SignedTxResponse
 
-    lighterSigner.SignStakeAssets.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignStakeAssets.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignStakeAssets.restype = SignedTxResponse
 
-    lighterSigner.SignUnstakeAssets.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignUnstakeAssets.argtypes = [ctypes.c_longlong, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignUnstakeAssets.restype = SignedTxResponse
 
-    lighterSigner.SignUpdateLeverage.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignUpdateLeverage.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignUpdateLeverage.restype = SignedTxResponse
 
     lighterSigner.CreateAuthToken.argtypes = [ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
@@ -109,11 +109,14 @@ def load_lighter_library(path):
     # Note: SwitchAPIKey is no longer exported in the new binary
     # All functions now take api_key_index directly, so switching is handled via parameters
 
-    lighterSigner.SignUpdateMargin.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignUpdateMargin.argtypes = [ctypes.c_int, ctypes.c_longlong, ctypes.c_int, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignUpdateMargin.restype = SignedTxResponse
 
-    lighterSigner.SignApproveIntegrator.argtypes = [ctypes.c_longlong, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_longlong, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
+    lighterSigner.SignApproveIntegrator.argtypes = [ctypes.c_longlong, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_longlong, ctypes.c_uint8, ctypes.c_longlong, ctypes.c_int, ctypes.c_longlong]
     lighterSigner.SignApproveIntegrator.restype = SignedTxResponse
+
+    lighterSigner.Free.argtypes = [ctypes.c_void_p]
+    lighterSigner.Free.restype = None
     return lighterSigner
 
 def decode_api_key(result: SignedTxResponse) -> Union[Tuple[str, str, None], Tuple[None, None, str]]:

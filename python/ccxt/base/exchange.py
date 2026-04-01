@@ -2302,7 +2302,8 @@ class Exchange(object):
             ))
         orders_carr = arr_type(*orders_arr)
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateGroupedOrders(
-            request['grouping_type'], orders_carr, len(orders), request['nonce'], request['api_key_index'], request['account_index']
+            request['grouping_type'], orders_carr, len(orders), True, # skip nonce
+            request['nonce'], request['api_key_index'], request['account_index']
         ))
         return [tx_type, tx_info]
 
@@ -2321,6 +2322,7 @@ class Exchange(object):
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2333,6 +2335,7 @@ class Exchange(object):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelOrder(
             request['market_index'],
             request['order_index'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2346,6 +2349,7 @@ class Exchange(object):
             request['asset_index'],
             request['route_type'],
             request['amount'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2356,6 +2360,7 @@ class Exchange(object):
 
     def lighter_sign_create_sub_account(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateSubAccount(
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2368,6 +2373,7 @@ class Exchange(object):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelAllOrders(
             request['time_in_force'],
             request['time'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2386,6 +2392,7 @@ class Exchange(object):
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2403,6 +2410,7 @@ class Exchange(object):
             request['amount'],
             request['usdc_fee'],
             request['memo'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2416,6 +2424,7 @@ class Exchange(object):
             request['market_index'],
             request['initial_margin_fraction'],
             request['margin_mode'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2439,6 +2448,7 @@ class Exchange(object):
             request['market_index'],
             request['usdc_amount'],
             request['direction'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2455,6 +2465,7 @@ class Exchange(object):
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
             request['approval_expiry'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2471,8 +2482,8 @@ class Exchange(object):
 
     def lighter_sign_change_pubkey(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignChangePubKey(
-            # ctypes.c_char_p(request['pubkey']),
             request['pubkey'],
+            True, # skip nonce
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
