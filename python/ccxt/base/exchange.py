@@ -2296,13 +2296,16 @@ class Exchange(object):
                 ReduceOnly=order['reduce_only'],
                 TriggerPrice=order['trigger_price'],
                 OrderExpiry=order['order_expiry'],
-                IntegratorAccountIndex=order['integrator_account_index'],
-                IntegratorTakerFee=order['integrator_taker_fee'],
-                IntegratorMakerFee=order['integrator_maker_fee'],
             ))
         orders_carr = arr_type(*orders_arr)
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateGroupedOrders(
-            request['grouping_type'], orders_carr, len(orders), True, # skip nonce
+            request['grouping_type'],
+            orders_carr,
+            len(orders),
+            request['integrator_account_index'],
+            request['integrator_taker_fee'],
+            request['integrator_maker_fee'],
+            True, # skip nonce
             request['nonce'], request['api_key_index'], request['account_index']
         ))
         return [tx_type, tx_info]
@@ -2459,11 +2462,11 @@ class Exchange(object):
     
     def lighter_sign_approve_integrator(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignApproveIntegrator(
-            request['integrator_account_index'],
-            request['integrator_taker_fee'],
-            request['integrator_maker_fee'],
-            request['integrator_taker_fee'],
-            request['integrator_maker_fee'],
+            int(request['integrator_account_index']),
+            int(request['integrator_taker_fee']),
+            int(request['integrator_maker_fee']),
+            int(request['integrator_taker_fee']),
+            int(request['integrator_maker_fee']),
             request['approval_expiry'],
             True, # skip nonce
             request['nonce'],

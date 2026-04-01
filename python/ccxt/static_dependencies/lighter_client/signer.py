@@ -17,9 +17,6 @@ class CreateOrderTxReq(ctypes.Structure):
         ("ReduceOnly", ctypes.c_uint8),
         ("TriggerPrice", ctypes.c_uint32),
         ("OrderExpiry", ctypes.c_longlong),
-        ("IntegratorAccountIndex", ctypes.c_int64),
-        ("IntegratorTakerFee", ctypes.c_int64),
-        ("IntegratorMakerFee", ctypes.c_int64),
     ]
 
 

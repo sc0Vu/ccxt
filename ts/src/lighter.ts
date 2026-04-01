@@ -248,6 +248,7 @@ export default class lighter extends Exchange {
             },
             'exceptions': {
                 'exact': {
+                    '21146': ExchangeError, // system account cannot be an integrator
                     '21500': ExchangeError, // transaction not found
                     '21501': ExchangeError, // invalid tx info
                     '21502': ExchangeError, // marshal tx failed
@@ -421,7 +422,7 @@ export default class lighter extends Exchange {
         return false;
     }
 
-    async handleAccountIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined) {
+    async handleAccountIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined): Promise<any[]> {
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
         if (accountIndex === undefined) {
@@ -866,9 +867,12 @@ export default class lighter extends Exchange {
             const signingPayload = {
                 'grouping_type': groupingType,
                 'orders': orderRequests,
-                'nonce': order['nonce'],
+                'nonce': 0,
                 'api_key_index': apiKeyIndex,
                 'account_index': accountIndex,
+                'integrator_account_index': order['integrator_account_index'],
+                'integrator_taker_fee': order['integrator_taker_fee'],
+                'integrator_maker_fee': order['integrator_maker_fee'],
             };
             [ txType, txInfo ] = this.lighterSignCreateGroupedOrders (signer, signingPayload);
         }
