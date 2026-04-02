@@ -555,7 +555,7 @@ export default class lighter extends Exchange {
         return this.json (decTxInfo);
     }
 
-    async handleBuilderFeeApproval () {
+    async handleBuilderFeeApproval (accountIndex: number, apiKeyIndex: number) {
         const buildFee = this.safeBool (this.options, 'builderFee', true);
         if (!buildFee) {
             return false;
@@ -568,7 +568,7 @@ export default class lighter extends Exchange {
             const builder = this.safeNumber (this.options, 'integratorAccountIndex', 0);
             const takerFeeRate = this.safeNumber (this.options, 'integratorTakerFee', 1000);
             const makerFeeRate = this.safeNumber (this.options, 'integratorMakerFee', 1000);
-            await this.approveBuilderFee (builder, takerFeeRate, makerFeeRate);
+            await this.approveBuilderFee (builder, takerFeeRate, makerFeeRate, accountIndex, apiKeyIndex);
             this.options['approvedBuilderFee'] = true;
         } catch (e) {
             this.options['builderFee'] = false;
@@ -576,14 +576,14 @@ export default class lighter extends Exchange {
         return true;
     }
 
-    async approveBuilderFee (builder: number, takerFeeRate: number, makerFeeRate: number, params: object = {}) {
-        let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'approveBuilderFee', 'apiKeyIndex', 'api_key_index');
+    async approveBuilderFee (builder: number, takerFeeRate: number, makerFeeRate: number, accountIndex: number, apiKeyIndex: number, params: object = {}) {
+        // let apiKeyIndex = undefined;
+        // [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'approveBuilderFee', 'apiKeyIndex', 'api_key_index');
         if (apiKeyIndex === undefined) {
             throw new ArgumentsRequired (this.id + ' approveBuilderFee() requires an apiKeyIndex parameter');
         }
-        let accountIndex = undefined;
-        [ accountIndex, params ] = await this.handleAccountIndex (params, 'approveBuilderFee', 'accountIndex', 'account_index');
+        // let accountIndex = undefined;
+        // [ accountIndex, params ] = await this.handleAccountIndex (params, 'approveBuilderFee', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex);
         const expiry = this.milliseconds () + 365 * 864000;
         const signRaw = {
@@ -858,16 +858,18 @@ export default class lighter extends Exchange {
                 order['nonce'] = nonceInOptions;
             }
         }
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         const signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         let txType = undefined;
         let txInfo = undefined;
         if (totalOrderRequests < 2) {
             [ txType, txInfo ] = this.lighterSignCreateOrder (signer, order);
         } else {
+            order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
             const signingPayload = {
                 'grouping_type': groupingType,
                 'orders': orderRequests,
-                'nonce': 0,
+                'nonce': order['nonce'],
                 'api_key_index': apiKeyIndex,
                 'account_index': accountIndex,
                 'integrator_account_index': order['integrator_account_index'],

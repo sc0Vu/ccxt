@@ -2306,7 +2306,9 @@ class Exchange(object):
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
             True, # skip nonce
-            request['nonce'], request['api_key_index'], request['account_index']
+            request['nonce'],
+            request['api_key_index'],
+            request['account_index']
         ))
         return [tx_type, tx_info]
 
