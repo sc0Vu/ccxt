@@ -475,8 +475,9 @@ export default class lighter extends Exchange {
         }
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'createSubAccount', 'accountIndex', 'account_index');
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -584,7 +585,7 @@ export default class lighter extends Exchange {
         }
         // let accountIndex = undefined;
         // [ accountIndex, params ] = await this.handleAccountIndex (params, 'approveBuilderFee', 'accountIndex', 'account_index');
-        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const expiry = this.milliseconds () + 365 * 864000;
         const signRaw = {
             'integrator_account_index': builder,
@@ -617,7 +618,7 @@ export default class lighter extends Exchange {
         }
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'changeApiKey', 'accountIndex', 'account_index');
-        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw = {
             'pubkey': this.encode (publicKey),
             'nonce': nonce,
@@ -854,8 +855,12 @@ export default class lighter extends Exchange {
             order = orderRequests[0];
             apiKeyIndex = order['api_key_index'];
             if (order['nonce'] === undefined) {
-                const nonceInOptions = this.safeInteger (this.options, 'nonce', 0);
-                order['nonce'] = nonceInOptions;
+                const nonceInOptions = this.safeInteger (this.options, 'nonce');
+                if (nonceInOptions !== undefined) {
+                    order['nonce'] = nonceInOptions;
+                } else {
+                    order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
+                }
             }
         }
         await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
@@ -865,7 +870,6 @@ export default class lighter extends Exchange {
         if (totalOrderRequests < 2) {
             [ txType, txInfo ] = this.lighterSignCreateOrder (signer, order);
         } else {
-            order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
             const signingPayload = {
                 'grouping_type': groupingType,
                 'orders': orderRequests,
@@ -933,13 +937,14 @@ export default class lighter extends Exchange {
         } else {
             amountStr = this.amountToPrecision (symbol, amount);
         }
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'market_index': this.parseToInt (market['id']),
             'index': this.parseToInt (id),
             'base_amount': this.parseToInt (Precise.stringMul (amountStr, amountScale)),
             'price': this.parseToInt (Precise.stringMul (priceStr, priceScale)),
             'trigger_price': this.parseToInt (Precise.stringMul (triggerPriceStr, priceScale)),
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
             'integrator_account_index': this.options['integratorAccountIndex'],
@@ -2285,6 +2290,7 @@ export default class lighter extends Exchange {
         const toRouteType = (toAccount === 'perp') ? 0 : 1;
         const memo = this.safeString (params, 'memo', '0x000000000000000000000000000000');
         params = this.omit (params, [ 'memo' ]);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'to_account_index': toAccountIndex,
             'asset_index': this.parseToInt (currency['id']),
@@ -2293,7 +2299,7 @@ export default class lighter extends Exchange {
             'amount': amount,
             'usdc_fee': 0,
             'memo': memo,
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -2639,11 +2645,12 @@ export default class lighter extends Exchange {
         }
         const routeType = this.safeInteger (params, 'routeType', 0); // 0: perp, 1: spot
         params = this.omit (params, 'routeType');
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'asset_index': this.parseToInt (currency['id']),
             'route_type': routeType,
             'amount': amount,
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -2879,11 +2886,12 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'modifyLeverageAndMarginMode', 'accountIndex', 'account_index');
         const market = this.market (symbol);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'market_index': this.parseToInt (market['id']),
             'initial_margin_fraction': this.parseToInt (10000 / leverage),
             'margin_mode': (marginMode === 'cross') ? 0 : 1, // 0: CROSS, 1: ISOLATED
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -2922,9 +2930,10 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelOrder', 'accountIndex', 'account_index');
         const market = this.market (symbol);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'market_index': this.parseToInt (market['id']),
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -2963,10 +2972,11 @@ export default class lighter extends Exchange {
         }
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelAllOrders', 'accountIndex', 'account_index');
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'time_in_force': 0, // 0: IMMEDIATE 1: SCHEDULED 2: ABORT
             'time': 0, // if time_in_force is not IMMEDIATE, set the timestamp_ms here
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -2999,10 +3009,11 @@ export default class lighter extends Exchange {
         }
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelAllOrdersAfter', 'accountIndex', 'account_index');
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'time_in_force': 1, // 0: IMMEDIATE 1: SCHEDULED 2: ABORT
             'time': this.milliseconds () + timeout, // if time_in_force is not IMMEDIATE, set the timestamp_ms here
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
@@ -3079,11 +3090,12 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'setMargin', 'accountIndex', 'account_index');
         const market = this.market (symbol);
+        const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'market_index': this.parseToInt (market['id']),
             'usdc_amount': this.parseToInt (Precise.stringMul (this.pow ('10', '6'), this.currencyToPrecision ('USDC', amount))),
             'direction': direction,
-            'nonce': 0,
+            'nonce': nonce,
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
