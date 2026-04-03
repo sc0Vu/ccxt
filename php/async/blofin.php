@@ -786,6 +786,21 @@ class blofin extends Exchange {
         //       "brokerId" => ""
         //   }
         //
+        // fetchMyTrades spot
+        //     {
+        //         "instId" => "DOGE-USDT",
+        //         "tradeId" => "6000001623870",
+        //         "orderId" => "6000011777113",
+        //         "fillPrice" => "0.091480000000000000",
+        //         "fillSize" => "30.000000000000000000",
+        //         "fillPnl" => null,
+        //         "side" => "buy",
+        //         "fee" => "0.030000000000000000",
+        //         "ts" => "1775213753407",
+        //         "brokerId" => null,
+        //         "feeCurrency" => "base_currency"
+        //     }
+        //
         $id = $this->safe_string($trade, 'tradeId');
         $marketId = $this->safe_string($trade, 'instId');
         $market = $this->safe_market($marketId, $market, '-');
@@ -797,27 +812,60 @@ class blofin extends Exchange {
         $orderId = $this->safe_string($trade, 'orderId');
         $feeCost = $this->safe_string($trade, 'fee');
         $fee = null;
+        $feeCurrency = $this->safe_string($trade, 'feeCurrency');
+        $isSpot = $feeCurrency !== null;
+        if ($feeCurrency === null) {
+            $feeCurrency = $market['settle'];
+        } elseif ($feeCurrency === 'base_currency') {
+            $feeCurrency = $market['base'];
+        } elseif ($feeCurrency === 'quote_currency') {
+            $feeCurrency = $market['quote'];
+        }
         if ($feeCost !== null) {
             $fee = array(
                 'cost' => $feeCost,
-                'currency' => $market['settle'],
+                'currency' => $feeCurrency,
             );
         }
-        return $this->safe_trade(array(
-            'info' => $trade,
-            'timestamp' => $timestamp,
-            'datetime' => $this->iso8601($timestamp),
-            'symbol' => $symbol,
-            'id' => $id,
-            'order' => $orderId,
-            'type' => null,
-            'takerOrMaker' => null,
-            'side' => $side,
-            'price' => $price,
-            'amount' => $amount,
-            'cost' => null,
-            'fee' => $fee,
-        ), $market);
+        if ($isSpot) {
+            $spotSymbol = $market['base'] . '/' . $market['quote'];
+            $cost = $this->parse_number(Precise::string_mul($price, $amount));
+            $result = array(
+                'info' => $trade,
+                'timestamp' => $timestamp,
+                'datetime' => $this->iso8601($timestamp),
+                'symbol' => $spotSymbol,
+                'id' => $id,
+                'order' => $orderId,
+                'type' => null,
+                'takerOrMaker' => null,
+                'side' => $side,
+                'price' => $this->parse_number($price),
+                'amount' => $this->parse_number($amount),
+                'cost' => $cost,
+                'fee' => array(
+                    'cost' => $this->parse_number($feeCost),
+                    'currency' => $feeCurrency,
+                ),
+            );
+            return $result;
+        } else {
+            return $this->safe_trade(array(
+                'info' => $trade,
+                'timestamp' => $timestamp,
+                'datetime' => $this->iso8601($timestamp),
+                'symbol' => $symbol,
+                'id' => $id,
+                'order' => $orderId,
+                'type' => null,
+                'takerOrMaker' => null,
+                'side' => $side,
+                'price' => $price,
+                'amount' => $amount,
+                'cost' => null,
+                'fee' => $fee,
+            ), $market);
+        }
     }
 
     public function fetch_trades(string $symbol, ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
@@ -1651,6 +1699,8 @@ class blofin extends Exchange {
              * @param {int} [$limit] the maximum number of trades structures to retrieve
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {int} [$params->until] Timestamp in ms of the latest time to retrieve trades for
+             * @param {string} [$params->type] 'swap' or 'spot' (defaults to 'swap'), required to fetch spot trade history
+             * @param {string} [$params->instId] *spot markets only* the $market id of the spot $market to fetch the trade history for (e.g. 'BTC-USDT')
              * @param {boolean} [$params->paginate] default false, when true will automatically $paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-$params)
              * @return {Trade[]} a list of ~@link https://docs.ccxt.com/?id=trade-structure trade structures~
              */
@@ -1671,7 +1721,36 @@ class blofin extends Exchange {
             if ($limit !== null) {
                 $request['limit'] = $limit; // default 100, max 100
             }
-            $response = Async\await($this->privateGetTradeFillsHistory ($this->extend($request, $params)));
+            $type = 'swap';
+            list($type, $params) = $this->handle_market_type_and_params('fetchMyTrades', $market, $params, $type);
+            $response = null;
+            if ($type === 'spot') {
+                $request['instType'] = 'SPOT';
+                //
+                //     {
+                //         "code" => "0",
+                //         "msg" => "success",
+                //         "data" => array(
+                //             {
+                //                 "instId" => "DOGE-USDT",
+                //                 "tradeId" => "6000001623870",
+                //                 "orderId" => "6000011777113",
+                //                 "fillPrice" => "0.091480000000000000",
+                //                 "fillSize" => "30.000000000000000000",
+                //                 "fillPnl" => null,
+                //                 "side" => "buy",
+                //                 "fee" => "0.030000000000000000",
+                //                 "ts" => "1775213753407",
+                //                 "brokerId" => null,
+                //                 "feeCurrency" => "base_currency"
+                //             }
+                //         )
+                //     }
+                //
+                $response = Async\await($this->privateGetSpotTradeFillsHistory ($this->extend($request, $params)));
+            } else {
+                $response = Async\await($this->privateGetTradeFillsHistory ($this->extend($request, $params)));
+            }
             $data = $this->safe_list($response, 'data', array());
             return $this->parse_trades($data, $market, $since, $limit);
         }) ();
