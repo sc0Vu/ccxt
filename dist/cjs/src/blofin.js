@@ -767,6 +767,21 @@ class blofin extends blofin$1["default"] {
         //       "brokerId": ""
         //   }
         //
+        // fetchMyTrades spot
+        //     {
+        //         "instId": "DOGE-USDT",
+        //         "tradeId": "6000001623870",
+        //         "orderId": "6000011777113",
+        //         "fillPrice": "0.091480000000000000",
+        //         "fillSize": "30.000000000000000000",
+        //         "fillPnl": null,
+        //         "side": "buy",
+        //         "fee": "0.030000000000000000",
+        //         "ts": "1775213753407",
+        //         "brokerId": null,
+        //         "feeCurrency": "base_currency"
+        //     }
+        //
         const id = this.safeString(trade, 'tradeId');
         const marketId = this.safeString(trade, 'instId');
         market = this.safeMarket(marketId, market, '-');
@@ -778,27 +793,63 @@ class blofin extends blofin$1["default"] {
         const orderId = this.safeString(trade, 'orderId');
         const feeCost = this.safeString(trade, 'fee');
         let fee = undefined;
+        let feeCurrency = this.safeString(trade, 'feeCurrency');
+        const isSpot = feeCurrency !== undefined;
+        if (feeCurrency === undefined) {
+            feeCurrency = market['settle'];
+        }
+        else if (feeCurrency === 'base_currency') {
+            feeCurrency = market['base'];
+        }
+        else if (feeCurrency === 'quote_currency') {
+            feeCurrency = market['quote'];
+        }
         if (feeCost !== undefined) {
             fee = {
                 'cost': feeCost,
-                'currency': market['settle'],
+                'currency': feeCurrency,
             };
         }
-        return this.safeTrade({
-            'info': trade,
-            'timestamp': timestamp,
-            'datetime': this.iso8601(timestamp),
-            'symbol': symbol,
-            'id': id,
-            'order': orderId,
-            'type': undefined,
-            'takerOrMaker': undefined,
-            'side': side,
-            'price': price,
-            'amount': amount,
-            'cost': undefined,
-            'fee': fee,
-        }, market);
+        if (isSpot) {
+            const spotSymbol = market['base'] + '/' + market['quote'];
+            const cost = this.parseNumber(Precise["default"].stringMul(price, amount));
+            const result = {
+                'info': trade,
+                'timestamp': timestamp,
+                'datetime': this.iso8601(timestamp),
+                'symbol': spotSymbol,
+                'id': id,
+                'order': orderId,
+                'type': undefined,
+                'takerOrMaker': undefined,
+                'side': side,
+                'price': this.parseNumber(price),
+                'amount': this.parseNumber(amount),
+                'cost': cost,
+                'fee': {
+                    'cost': this.parseNumber(feeCost),
+                    'currency': feeCurrency,
+                },
+            };
+            return result;
+        }
+        else {
+            return this.safeTrade({
+                'info': trade,
+                'timestamp': timestamp,
+                'datetime': this.iso8601(timestamp),
+                'symbol': symbol,
+                'id': id,
+                'order': orderId,
+                'type': undefined,
+                'takerOrMaker': undefined,
+                'side': side,
+                'price': price,
+                'amount': amount,
+                'cost': undefined,
+                'fee': fee,
+            }, market);
+        }
     }
     /**
      * @method
@@ -1609,6 +1660,8 @@ class blofin extends blofin$1["default"] {
      * @param {int} [limit] the maximum number of trades structures to retrieve
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {int} [params.until] Timestamp in ms of the latest time to retrieve trades for
+     * @param {string} [params.type] 'swap' or 'spot' (defaults to 'swap'), required to fetch spot trade history
+     * @param {string} [params.instId] *spot markets only* the market id of the spot market to fetch the trade history for (e.g. 'BTC-USDT')
      * @param {boolean} [params.paginate] default false, when true will automatically paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
      * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/?id=trade-structure}
      */
@@ -1629,7 +1682,37 @@ class blofin extends blofin$1["default"] {
         if (limit !== undefined) {
             request['limit'] = limit; // default 100, max 100
         }
-        const response = await this.privateGetTradeFillsHistory(this.extend(request, params));
+        let type = 'swap';
+        [type, params] = this.handleMarketTypeAndParams('fetchMyTrades', market, params, type);
+        let response = undefined;
+        if (type === 'spot') {
+            request['instType'] = 'SPOT';
+            //
+            //     {
+            //         "code": "0",
+            //         "msg": "success",
+            //         "data": [
+            //             {
+            //                 "instId": "DOGE-USDT",
+            //                 "tradeId": "6000001623870",
+            //                 "orderId": "6000011777113",
+            //                 "fillPrice": "0.091480000000000000",
+            //                 "fillSize": "30.000000000000000000",
+            //                 "fillPnl": null,
+            //                 "side": "buy",
+            //                 "fee": "0.030000000000000000",
+            //                 "ts": "1775213753407",
+            //                 "brokerId": null,
+            //                 "feeCurrency": "base_currency"
+            //             }
+            //         ]
+            //     }
+            //
+            response = await this.privateGetSpotTradeFillsHistory(this.extend(request, params));
+        }
+        else {
+            response = await this.privateGetTradeFillsHistory(this.extend(request, params));
+        }
         const data = this.safeList(response, 'data', []);
         return this.parseTrades(data, market, since, limit);
     }
