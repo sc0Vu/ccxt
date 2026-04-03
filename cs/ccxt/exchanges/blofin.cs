@@ -778,6 +778,21 @@ public partial class blofin : Exchange
         //       "brokerId": ""
         //   }
         //
+        // fetchMyTrades spot
+        //     {
+        //         "instId": "DOGE-USDT",
+        //         "tradeId": "6000001623870",
+        //         "orderId": "6000011777113",
+        //         "fillPrice": "0.091480000000000000",
+        //         "fillSize": "30.000000000000000000",
+        //         "fillPnl": null,
+        //         "side": "buy",
+        //         "fee": "0.030000000000000000",
+        //         "ts": "1775213753407",
+        //         "brokerId": null,
+        //         "feeCurrency": "base_currency"
+        //     }
+        //
         object id = this.safeString(trade, "tradeId");
         object marketId = this.safeString(trade, "instId");
         market = this.safeMarket(marketId, market, "-");
@@ -789,28 +804,66 @@ public partial class blofin : Exchange
         object orderId = this.safeString(trade, "orderId");
         object feeCost = this.safeString(trade, "fee");
         object fee = null;
+        object feeCurrency = this.safeString(trade, "feeCurrency");
+        object isSpot = !isEqual(feeCurrency, null);
+        if (isTrue(isEqual(feeCurrency, null)))
+        {
+            feeCurrency = getValue(market, "settle");
+        } else if (isTrue(isEqual(feeCurrency, "base_currency")))
+        {
+            feeCurrency = getValue(market, "base");
+        } else if (isTrue(isEqual(feeCurrency, "quote_currency")))
+        {
+            feeCurrency = getValue(market, "quote");
+        }
         if (isTrue(!isEqual(feeCost, null)))
         {
             fee = new Dictionary<string, object>() {
                 { "cost", feeCost },
-                { "currency", getValue(market, "settle") },
+                { "currency", feeCurrency },
             };
         }
-        return this.safeTrade(new Dictionary<string, object>() {
-            { "info", trade },
-            { "timestamp", timestamp },
-            { "datetime", this.iso8601(timestamp) },
-            { "symbol", symbol },
-            { "id", id },
-            { "order", orderId },
-            { "type", null },
-            { "takerOrMaker", null },
-            { "side", side },
-            { "price", price },
-            { "amount", amount },
-            { "cost", null },
-            { "fee", fee },
-        }, market);
+        if (isTrue(isSpot))
+        {
+            object spotSymbol = add(add(getValue(market, "base"), "/"), getValue(market, "quote"));
+            object cost = this.parseNumber(Precise.stringMul(price, amount));
+            object result = new Dictionary<string, object>() {
+                { "info", trade },
+                { "timestamp", timestamp },
+                { "datetime", this.iso8601(timestamp) },
+                { "symbol", spotSymbol },
+                { "id", id },
+                { "order", orderId },
+                { "type", null },
+                { "takerOrMaker", null },
+                { "side", side },
+                { "price", this.parseNumber(price) },
+                { "amount", this.parseNumber(amount) },
+                { "cost", cost },
+                { "fee", new Dictionary<string, object>() {
+                    { "cost", this.parseNumber(feeCost) },
+                    { "currency", feeCurrency },
+                } },
+            };
+            return result;
+        } else
+        {
+            return this.safeTrade(new Dictionary<string, object>() {
+                { "info", trade },
+                { "timestamp", timestamp },
+                { "datetime", this.iso8601(timestamp) },
+                { "symbol", symbol },
+                { "id", id },
+                { "order", orderId },
+                { "type", null },
+                { "takerOrMaker", null },
+                { "side", side },
+                { "price", price },
+                { "amount", amount },
+                { "cost", null },
+                { "fee", fee },
+            }, market);
+        }
     }
 
     /**
@@ -1734,6 +1787,8 @@ public partial class blofin : Exchange
      * @param {int} [limit] the maximum number of trades structures to retrieve
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {int} [params.until] Timestamp in ms of the latest time to retrieve trades for
+     * @param {string} [params.type] 'swap' or 'spot' (defaults to 'swap'), required to fetch spot trade history
+     * @param {string} [params.instId] *spot markets only* the market id of the spot market to fetch the trade history for (e.g. 'BTC-USDT')
      * @param {boolean} [params.paginate] default false, when true will automatically paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
      * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/?id=trade-structure}
      */
@@ -1763,7 +1818,40 @@ public partial class blofin : Exchange
         {
             ((IDictionary<string,object>)request)["limit"] = limit; // default 100, max 100
         }
-        object response = await this.privateGetTradeFillsHistory(this.extend(request, parameters));
+        object type = "swap";
+        var typeparametersVariable = this.handleMarketTypeAndParams("fetchMyTrades", market, parameters, type);
+        type = ((IList<object>)typeparametersVariable)[0];
+        parameters = ((IList<object>)typeparametersVariable)[1];
+        object response = null;
+        if (isTrue(isEqual(type, "spot")))
+        {
+            ((IDictionary<string,object>)request)["instType"] = "SPOT";
+            //
+            //     {
+            //         "code": "0",
+            //         "msg": "success",
+            //         "data": [
+            //             {
+            //                 "instId": "DOGE-USDT",
+            //                 "tradeId": "6000001623870",
+            //                 "orderId": "6000011777113",
+            //                 "fillPrice": "0.091480000000000000",
+            //                 "fillSize": "30.000000000000000000",
+            //                 "fillPnl": null,
+            //                 "side": "buy",
+            //                 "fee": "0.030000000000000000",
+            //                 "ts": "1775213753407",
+            //                 "brokerId": null,
+            //                 "feeCurrency": "base_currency"
+            //             }
+            //         ]
+            //     }
+            //
+            response = await ((Task<object>)callDynamically(this, "privateGetSpotTradeFillsHistory", new object[] { this.extend(request, parameters) }));
+        } else
+        {
+            response = await this.privateGetTradeFillsHistory(this.extend(request, parameters));
+        }
         object data = this.safeList(response, "data", new List<object>() {});
         return this.parseTrades(data, market, since, limit);
     }
