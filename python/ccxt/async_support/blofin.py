@@ -772,6 +772,21 @@ class blofin(Exchange, ImplicitAPI):
         #       "brokerId": ""
         #   }
         #
+        # fetchMyTrades spot
+        #     {
+        #         "instId": "DOGE-USDT",
+        #         "tradeId": "6000001623870",
+        #         "orderId": "6000011777113",
+        #         "fillPrice": "0.091480000000000000",
+        #         "fillSize": "30.000000000000000000",
+        #         "fillPnl": null,
+        #         "side": "buy",
+        #         "fee": "0.030000000000000000",
+        #         "ts": "1775213753407",
+        #         "brokerId": null,
+        #         "feeCurrency": "base_currency"
+        #     }
+        #
         id = self.safe_string(trade, 'tradeId')
         marketId = self.safe_string(trade, 'instId')
         market = self.safe_market(marketId, market, '-')
@@ -783,26 +798,57 @@ class blofin(Exchange, ImplicitAPI):
         orderId = self.safe_string(trade, 'orderId')
         feeCost = self.safe_string(trade, 'fee')
         fee = None
+        feeCurrency = self.safe_string(trade, 'feeCurrency')
+        isSpot = feeCurrency is not None
+        if feeCurrency is None:
+            feeCurrency = market['settle']
+        elif feeCurrency == 'base_currency':
+            feeCurrency = market['base']
+        elif feeCurrency == 'quote_currency':
+            feeCurrency = market['quote']
         if feeCost is not None:
             fee = {
                 'cost': feeCost,
-                'currency': market['settle'],
+                'currency': feeCurrency,
             }
-        return self.safe_trade({
-            'info': trade,
-            'timestamp': timestamp,
-            'datetime': self.iso8601(timestamp),
-            'symbol': symbol,
-            'id': id,
-            'order': orderId,
-            'type': None,
-            'takerOrMaker': None,
-            'side': side,
-            'price': price,
-            'amount': amount,
-            'cost': None,
-            'fee': fee,
-        }, market)
+        if isSpot:
+            spotSymbol = market['base'] + '/' + market['quote']
+            cost = self.parse_number(Precise.string_mul(price, amount))
+            result: dict = {
+                'info': trade,
+                'timestamp': timestamp,
+                'datetime': self.iso8601(timestamp),
+                'symbol': spotSymbol,
+                'id': id,
+                'order': orderId,
+                'type': None,
+                'takerOrMaker': None,
+                'side': side,
+                'price': self.parse_number(price),
+                'amount': self.parse_number(amount),
+                'cost': cost,
+                'fee': {
+                    'cost': self.parse_number(feeCost),
+                    'currency': feeCurrency,
+                },
+            }
+            return result
+        else:
+            return self.safe_trade({
+                'info': trade,
+                'timestamp': timestamp,
+                'datetime': self.iso8601(timestamp),
+                'symbol': symbol,
+                'id': id,
+                'order': orderId,
+                'type': None,
+                'takerOrMaker': None,
+                'side': side,
+                'price': price,
+                'amount': amount,
+                'cost': None,
+                'fee': fee,
+            }, market)
 
     async def fetch_trades(self, symbol: str, since: Int = None, limit: Int = None, params={}) -> List[Trade]:
         """
@@ -1551,6 +1597,8 @@ class blofin(Exchange, ImplicitAPI):
         :param int [limit]: the maximum number of trades structures to retrieve
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param int [params.until]: Timestamp in ms of the latest time to retrieve trades for
+        :param str [params.type]: 'swap' or 'spot'(defaults to 'swap'), required to fetch spot trade history
+        :param str [params.instId]: *spot markets only* the market id of the spot market to fetch the trade history for(e.g. 'BTC-USDT')
         :param boolean [params.paginate]: default False, when True will automatically paginate by calling self endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
         :returns Trade[]: a list of `trade structures <https://docs.ccxt.com/?id=trade-structure>`
         """
@@ -1568,7 +1616,35 @@ class blofin(Exchange, ImplicitAPI):
         request, params = self.handle_until_option('end', request, params)
         if limit is not None:
             request['limit'] = limit  # default 100, max 100
-        response = await self.privateGetTradeFillsHistory(self.extend(request, params))
+        type = 'swap'
+        type, params = self.handle_market_type_and_params('fetchMyTrades', market, params, type)
+        response = None
+        if type == 'spot':
+            request['instType'] = 'SPOT'
+            #
+            #     {
+            #         "code": "0",
+            #         "msg": "success",
+            #         "data": [
+            #             {
+            #                 "instId": "DOGE-USDT",
+            #                 "tradeId": "6000001623870",
+            #                 "orderId": "6000011777113",
+            #                 "fillPrice": "0.091480000000000000",
+            #                 "fillSize": "30.000000000000000000",
+            #                 "fillPnl": null,
+            #                 "side": "buy",
+            #                 "fee": "0.030000000000000000",
+            #                 "ts": "1775213753407",
+            #                 "brokerId": null,
+            #                 "feeCurrency": "base_currency"
+            #             }
+            #         ]
+            #     }
+            #
+            response = await self.privateGetSpotTradeFillsHistory(self.extend(request, params))
+        else:
+            response = await self.privateGetTradeFillsHistory(self.extend(request, params))
         data = self.safe_list(response, 'data', [])
         return self.parse_trades(data, market, since, limit)
 
