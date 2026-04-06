@@ -2,6 +2,8 @@
 
 import testAggregate from './test.aggregate.js';
 import testDecimalToPrecision from './test.decimalToPrecision.js';
+import testBinaryToBase16 from './test.binaryToBase16.js';
+import testBase16ToBinary from './test.base16ToBinary.js';
 import testBinaryToBase64 from './test.binaryToBase64.js';
 import testBase64ToBinary from './test.base64ToBinary.js';
 import testNumberToBE from './test.numberToBE.js';
@@ -65,9 +67,12 @@ async function baseTestsInit () {
     testExtend ();
     testDeepExtend ();
     testCryptography ();
+    testBinaryToBase16 ();
+    testBase16ToBinary ();
     testBinaryToBase64 ();
     testBase64ToBinary ();
-    testNumberToBE ();    testDatetime ();
+    testDatetime ();
+    testNumberToBE ();
     testDecimalToPrecision ();
     testCapitalize ();
     testNumberToString ();
