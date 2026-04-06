@@ -16,6 +16,7 @@ public partial class BaseTest
             testExtend();
             testDeepExtend();
             testCryptography();
+            testBase16ToBinary();
             testBinaryToBase64();
             testBase64ToBinary();
             testNumberToBE();
