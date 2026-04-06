@@ -1862,7 +1862,7 @@ public partial class blofin : Exchange
             //         ]
             //     }
             //
-            response = await ((Task<object>)callDynamically(this, "privateGetSpotTradeFillsHistory", new object[] { this.extend(request, parameters) }));
+            response = await this.privateGetSpotTradeFillsHistory(this.extend(request, parameters));
         } else
         {
             response = await this.privateGetTradeFillsHistory(this.extend(request, parameters));
