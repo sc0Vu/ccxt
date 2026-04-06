@@ -8,6 +8,7 @@ var FunctionsMap = map[string]interface{}{
 	"aggregate":                       TestAggregate,
 	"arrayConcat":                     TestArrayConcat,
 	"arraysConcat":                    TestArraysConcat,
+	"base16ToBinary":                  TestBase16ToBinary,
 	"base58ToBinary":                  TestBase58ToBinary,
 	"base64ToBinary":                  TestBase64ToBinary,
 	"binaryToBase58":                  TestBinaryToBase58,
