@@ -336,7 +336,7 @@ CDEF;
     ): array {
         $len = count($orders);
         if ($len === 0) {
-            throw new InvalidArgumentException('orders must not be empty');
+            throw new \InvalidArgumentException('orders must not be empty');
         }
 
         $cOrders = \FFI::new("CreateOrderTxReq[$len]", false);
@@ -361,6 +361,286 @@ CDEF;
             $integratorAccountIndex,
             $integratorTakerFee,
             $integratorMakerFee,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signCancelOrder(
+        int $marketIndex,
+        int $orderIndex,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignCancelOrder(
+            $marketIndex,
+            $orderIndex,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signWithdraw(
+        int $assetIndex,
+        int $routeType,
+        int $amount,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignWithdraw(
+            $assetIndex,
+            $routeType,
+            $amount,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signCreateSubAccount(
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignCreateSubAccount(
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signCancelAllOrders(
+        int $timeInForce,
+        int $time,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignCancelAllOrders(
+            $timeInForce,
+            $time,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signModifyOrder(
+        int $marketIndex,
+        int $index,
+        int $baseAmount,
+        int $price,
+        int $triggerPrice,
+        int $integratorAccountIndex,
+        int $integratorTakerFee,
+        int $integratorMakerFee,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignModifyOrder(
+            $marketIndex,
+            $index,
+            $baseAmount,
+            $price,
+            $triggerPrice,
+            $integratorAccountIndex,
+            $integratorTakerFee,
+            $integratorMakerFee,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signCreatePublicPool(
+        int $operatorFee,
+        int $initialTotalShares,
+        int $minOperatorShareRate,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignCreatePublicPool(
+            $operatorFee,
+            $initialTotalShares,
+            $minOperatorShareRate,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signUpdatePublicPool(
+        int $publicPoolIndex,
+        int $status,
+        int $operatorFee,
+        int $minOperatorShareRate,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignUpdatePublicPool(
+            $publicPoolIndex,
+            $status,
+            $operatorFee,
+            $minOperatorShareRate,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signMintShares(
+        int $publicPoolIndex,
+        int $shareAmount,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignMintShares(
+            $publicPoolIndex,
+            $shareAmount,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signBurnShares(
+        int $publicPoolIndex,
+        int $shareAmount,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignBurnShares(
+            $publicPoolIndex,
+            $shareAmount,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signUpdateLeverage(
+        int $marketIndex,
+        int $initialMarginFraction,
+        int $marginMode,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignUpdateLeverage(
+            $marketIndex,
+            $initialMarginFraction,
+            $marginMode,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signUpdateMargin(
+        int $marketIndex,
+        int $usdcAmount,
+        int $direction,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignUpdateMargin(
+            $marketIndex,
+            $usdcAmount,
+            $direction,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signStakeAssets(
+        int $stakingPoolIndex,
+        int $shareAmount,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignStakeAssets(
+            $stakingPoolIndex,
+            $shareAmount,
+            $skipNonce,
+            $nonce,
+            $apiKeyIndex,
+            $accountIndex
+        );
+
+        return $this->normalizeSignedTxResponse($res);
+    }
+
+    public function signUnstakeAssets(
+        int $stakingPoolIndex,
+        int $shareAmount,
+        int $skipNonce,
+        int $nonce,
+        int $apiKeyIndex,
+        int $accountIndex
+    ): array {
+        $res = $this->ffi->SignUnstakeAssets(
+            $stakingPoolIndex,
+            $shareAmount,
             $skipNonce,
             $nonce,
             $apiKeyIndex,
