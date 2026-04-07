@@ -365,9 +365,9 @@ class Exchange extends \ccxt\Exchange {
         return $dict;
     }
 
-    public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
-        return Async\async(function () use ($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
-            return $this->load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex);
+    public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient = false) {
+        return Async\async(function () use ($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient) {
+            return $this->load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient);
         }) ();
     }
 
