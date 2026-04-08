@@ -328,7 +328,10 @@ class lighter(ccxt.async_support.lighter):
             'channel': 'market_stats/all',
         }
         messageHashes = []
-        if symbols is None or len(symbols) == 0:
+        symbolsLength = 0
+        if symbols is not None:
+            symbolsLength = len(symbols)
+        if symbolsLength == 0:
             messageHashes.append(self.get_message_hash('ticker'))
         else:
             for i in range(0, len(symbols)):
@@ -501,7 +504,8 @@ class lighter(ccxt.async_support.lighter):
         #     }
         #
         liquidationData = self.safe_list(message, 'liquidation_trades', [])
-        if len(liquidationData) > 0:
+        liquidationDataLength = len(liquidationData)
+        if liquidationDataLength > 0:
             self.handle_liquidation(client, message)
         data = self.safe_list(message, 'trades', [])
         channel = self.safe_string(message, 'channel', '')
@@ -655,7 +659,7 @@ class lighter(ccxt.async_support.lighter):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :returns dict[]: a list of `trade structures <https://docs.ccxt.com/#/?id=public-trades>`
         """
-        accountIndex
+        accountIndex = None
         accountIndex, params = await self.handleAccountIndex(params, 'unWatchMyTrades', 'accountIndex', 'account_index')
         messageHash = self.get_message_hash('unsubscribe', 'myTrades')
         if symbol is not None:
