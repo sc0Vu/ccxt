@@ -588,15 +588,15 @@ class lighter extends \ccxt\async\lighter {
     public function watch_trades(string $symbol, ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
         return Async\async(function () use ($symbol, $since, $limit, $params) {
             /**
-             * get the list of most recent trades for a particular $symbol
+             * get the list of most recent $trades for a particular $symbol
              *
              * @see https://apidocs.lighter.xyz/docs/websocket-reference#trade
              *
-             * @param {string} $symbol unified $symbol of the $market to fetch trades for
+             * @param {string} $symbol unified $symbol of the $market to fetch $trades for
              * @param {int} [$since] timestamp in ms of the earliest trade to fetch
-             * @param {int} [$limit] the maximum amount of trades to fetch
+             * @param {int} [$limit] the maximum amount of $trades to fetch
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=public-trades trade structures~
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=public-$trades trade structures~
              */
             Async\await($this->load_markets());
             $market = $this->market($symbol);
@@ -604,7 +604,8 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'trade/' . $market['id'],
             );
             $messageHash = $this->get_message_hash('trade', $market['symbol']);
-            return Async\await($this->subscribe_public($messageHash, $this->extend($request, $params)));
+            $trades = Async\await($this->subscribe_public($messageHash, $this->extend($request, $params)));
+            return $this->filter_by_since_limit($trades, $since, $limit, 'timestamp', true);
         }) ();
     }
 
