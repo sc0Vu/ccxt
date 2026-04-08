@@ -363,7 +363,11 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'market_stats/all',
             );
             $messageHashes = array();
-            if ($symbols === null || strlen($symbols) === 0) {
+            $symbolsLength = 0;
+            if ($symbols !== null) {
+                $symbolsLength = count($symbols);
+            }
+            if ($symbolsLength === 0) {
                 $messageHashes[] = $this->get_message_hash('ticker');
             } else {
                 for ($i = 0; $i < count($symbols); $i++) {
@@ -557,7 +561,8 @@ class lighter extends \ccxt\async\lighter {
         //     }
         //
         $liquidationData = $this->safe_list($message, 'liquidation_trades', array());
-        if (strlen($liquidationData) > 0) {
+        $liquidationDataLength = count($liquidationData);
+        if ($liquidationDataLength > 0) {
             $this->handle_liquidation($client, $message);
         }
         $data = $this->safe_list($message, 'trades', array());
@@ -733,7 +738,7 @@ class lighter extends \ccxt\async\lighter {
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=public-trades trade structures~
              */
-            $accountIndex;
+            $accountIndex = null;
             list($accountIndex, $params) = Async\await($this->handleAccountIndex ($params, 'unWatchMyTrades', 'accountIndex', 'account_index'));
             $messageHash = $this->get_message_hash('unsubscribe', 'myTrades');
             if ($symbol !== null) {
