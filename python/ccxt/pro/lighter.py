@@ -542,7 +542,8 @@ class lighter(ccxt.async_support.lighter):
             'channel': 'trade/' + market['id'],
         }
         messageHash = self.get_message_hash('trade', market['symbol'])
-        return await self.subscribe_public(messageHash, self.extend(request, params))
+        trades = await self.subscribe_public(messageHash, self.extend(request, params))
+        return self.filter_by_since_limit(trades, since, limit, 'timestamp', True)
 
     async def un_watch_trades(self, symbol: str, params={}) -> Any:
         """
