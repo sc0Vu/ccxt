@@ -1707,7 +1707,7 @@ class Exchange {
         return [ $result['txType'], $result['txInfo'], $result['messageToSign'] ];
     }
 
-    public function lighter_generate_api_key($signer, $request) {
+    public function lighter_generate_api_key($signer) {
         $result = $signer->generateAPIKey();
         return [ $result['privateKey'], $result['publicKey'] ];
     }

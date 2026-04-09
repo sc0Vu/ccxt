@@ -2479,7 +2479,7 @@ class Exchange(object):
             raise Exception('lighter_sign_approve_integrator() failed with error: ' + str(error))
         return [tx_type, tx_info, message_to_sign]
 
-    def lighter_generate_api_key(self, signer, request):
+    def lighter_generate_api_key(self, signer):
         privateKey, publicKey, error = decode_api_key(signer.GenerateAPIKey())
         if error:
             raise Exception('lighter_generate_api_key() failed with error: ' + str(error))

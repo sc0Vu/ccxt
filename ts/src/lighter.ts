@@ -25,6 +25,7 @@ export default class lighter extends Exchange {
             'certified': false,
             'pro': true,
             'dex': true,
+            'quoteJsonNumbers': false,
             'has': {
                 'CORS': undefined,
                 'spot': false,
@@ -549,9 +550,7 @@ export default class lighter extends Exchange {
     signL1AndPrepareTxInfo (txInfo, message, privateKey) {
         const hashMessage = this.hashMessage (message);
         const signature = this.signHash (hashMessage, privateKey);
-        this.quoteJsonNumbers = false; // disable temporarliy
         const decTxInfo = this.parseJson (txInfo);
-        this.quoteJsonNumbers = true;
         decTxInfo['L1Sig'] = signature;
         return this.json (decTxInfo);
     }
@@ -608,9 +607,8 @@ export default class lighter extends Exchange {
     }
 
     async changeApiKey (params: object = {}) {
-        let privateKey = undefined;
-        let publicKey = undefined;
-        [ privateKey, publicKey ] = this.lighter_generate_api_key (this.options['signer'], {});
+        const signerNotLoad = this.options['signer'];
+        const [ privateKey, publicKey ] = this.lighterGenerateApiKey (signerNotLoad);
         let apiKeyIndex = undefined;
         [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'changeApiKey', 'apiKeyIndex', 'api_key_index');
         if (apiKeyIndex === undefined) {

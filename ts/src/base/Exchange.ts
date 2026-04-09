@@ -2192,7 +2192,7 @@ export default class Exchange {
     }
 
     // eslint-disable-next-line no-unused-vars
-    lighterGenerateApiKey (signer, request): any[] {
+    lighterGenerateApiKey (signer): any[] {
         const res = globalThis.GenerateAPIKey ();
         this.checkLighterSignedError (res);
         return [ res.privateKey, res.publicKey ];
