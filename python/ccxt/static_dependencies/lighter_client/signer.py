@@ -1,8 +1,8 @@
 import ctypes
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Union, Tuple, Any
 
 class ApiKeyResponse(ctypes.Structure):
-    _fields_ = [('privateKey', ctypes.c_char_p), ('publicKey', ctypes.c_char_p), ('err', ctypes.c_char_p)]
+    _fields_ = [('privateKey', ctypes.c_void_p), ('publicKey', ctypes.c_void_p), ('err', ctypes.c_void_p)]
 
 
 class CreateOrderTxReq(ctypes.Structure):
@@ -21,16 +21,16 @@ class CreateOrderTxReq(ctypes.Structure):
 
 
 class StrOrErr(ctypes.Structure):
-    _fields_ = [('str', ctypes.c_char_p), ('err', ctypes.c_char_p)]
+    _fields_ = [('str', ctypes.c_void_p), ('err', ctypes.c_void_p)]
 
 
 class SignedTxResponse(ctypes.Structure):
     _fields_ = [
-        ("txType", ctypes.c_uint8),
-        ("txInfo", ctypes.c_char_p),
-        ("txHash", ctypes.c_char_p),
-        ("messageToSign", ctypes.c_char_p),
-        ("err", ctypes.c_char_p),
+        ('txType', ctypes.c_uint8),
+        ('txInfo', ctypes.c_void_p),
+        ('txHash', ctypes.c_void_p),
+        ('messageToSign', ctypes.c_void_p),
+        ('err', ctypes.c_void_p),
     ]
 
 lighterSigner = None
@@ -116,33 +116,37 @@ def load_lighter_library(path):
     lighterSigner.Free.restype = None
     return lighterSigner
 
+def decode_and_free(ptr: Any) -> Optional[str]:
+    if not ptr:
+        return None
+    try:
+        # Read the string from the pointer
+        c_str = ctypes.cast(ptr, ctypes.c_char_p).value
+        if c_str is not None:
+            return c_str.decode('utf-8')
+        return None
+    finally:
+        # Free the memory using the signer's own Free function to ensure
+        # the same C runtime that allocated the memory also frees it.
+        # This is critical on Windows where different CRTs have separate heaps.
+        lighterSigner.Free(ptr)
+
 def decode_api_key(result: SignedTxResponse) -> Union[Tuple[str, str, None], Tuple[None, None, str]]:
-    if result.err:
-        error = result.err.decode("utf-8")
-        return None, None, error
-    
-    private_key_str = result.privateKey.decode("utf-8") if result.privateKey else None
-    public_key_str = result.publicKey.decode("utf-8") if result.publicKey else None
+    private_key_str = decode_and_free(result.privateKey)
+    public_key_str = decode_and_free(result.publicKey)
+    error = decode_and_free(result.err)
+    return private_key_str, public_key_str, error
 
-    return private_key_str, public_key_str, None
-
-def decode_tx_info(result: SignedTxResponse) -> Union[Tuple[str, str, str, None], Tuple[None, None, None, str]]:
-    if result.err:
-        error = result.err.decode("utf-8")
-        return None, None, None, None, error
-    
-    # Use txType from response if available, otherwise use the provided type
+def decode_tx_info(result: SignedTxResponse) -> Union[Tuple[str, str, str, None], Tuple[None, None, None, str]]:    
     tx_type = result.txType
-    tx_info_str = result.txInfo.decode("utf-8") if result.txInfo else None
-    tx_hash_str = result.txHash.decode("utf-8") if result.txHash else None
-    message_to_sign = result.messageToSign.decode("utf-8") if result.messageToSign else None
+    tx_info_str = decode_and_free(result.txInfo)
+    tx_hash_str = decode_and_free(result.txHash)
+    message_to_sign = decode_and_free(result.messageToSign)
+    error = decode_and_free(result.err)
 
-    return tx_type, tx_info_str, tx_hash_str, message_to_sign, None
+    return tx_type, tx_info_str, tx_hash_str, message_to_sign, error
 
 def decode_auth(result: StrOrErr) -> Union[Tuple[str, None], Tuple[None, str]]:
-    if result.err:
-        error = result.err.decode("utf-8")
-        return None, error
-
-    token = result.str.decode('utf-8') if result.str else None
-    return token, None
+    token = decode_and_free(result.str)
+    error = decode_and_free(result.err)
+    return token, error
