@@ -1466,8 +1466,10 @@ public partial class lighter : Exchange
         //         ]
         //     }
         //
-        object data = this.safeList(response, "order_book_details", new List<object>() {});
-        object first = this.safeDict(data, 0, new Dictionary<string, object>() {});
+        object spotTickers = this.safeList(response, "spot_order_book_details", new List<object>() {});
+        object swapTickers = this.safeList(response, "order_book_details", new List<object>() {});
+        object tickers = this.arrayConcat(spotTickers, swapTickers);
+        object first = this.safeDict(tickers, 0, new Dictionary<string, object>() {});
         return this.parseTicker(first, market);
     }
 
