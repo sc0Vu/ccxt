@@ -383,7 +383,7 @@ export default class lighter extends Exchange {
         }
         let libraryPath = undefined;
         [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
-        signer = await this.loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex);
+        signer = await this.loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex, false);
         this.options['signer'] = signer;
         return signer;
     }
@@ -415,7 +415,7 @@ export default class lighter extends Exchange {
         const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
         if (privateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
             // set api key and create lighter
-            signer = await this.loadLighterLibrary (libraryPath, this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex);
+            signer = await this.loadLighterLibrary (libraryPath, this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, false);
             this.options['signer'] = signer;
             await this.changeApiKey ();
             return true;
@@ -623,9 +623,8 @@ export default class lighter extends Exchange {
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
-        const signer = await this.loadAccount (this.options['chainId'], privateKey, apiKeyIndex, accountIndex, params);
         // create lighter client
-        this.lighterCreateClient (signer, this.options['chainId'], privateKey, apiKeyIndex, accountIndex);
+        const signer = this.lighterCreateClient (signerNotLoad, this.options['chainId'], privateKey, apiKeyIndex, accountIndex);
         const [ txType, txInfo, messageToSign ] = this.lighterSignChangePubkey (signer, this.extend (signRaw, params));
         const newTxInfo = this.signL1AndPrepareTxInfo (txInfo, messageToSign, this.privateKey);
         const request = {
@@ -634,6 +633,7 @@ export default class lighter extends Exchange {
         };
         const response = await this.publicPostSendTx (request);
         this.options['lighterPrivateKey'] = privateKey;
+        this.options['signer'] = signer; // reassign signer in go
         return response;
     }
 

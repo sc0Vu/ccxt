@@ -1517,6 +1517,7 @@ class Exchange {
             $apiKeyIndex,
             $accountIndex
         );
+        return $signer;
     }
 
     public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient = false) {

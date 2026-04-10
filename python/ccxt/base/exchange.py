@@ -2279,6 +2279,7 @@ class Exchange(object):
         )
         if res is not None and str(res).find('error'):
             raise Exception('lighter_create_client(): Failed to create lighter client: ' + str(res))
+        return lighterSigner
 
     def lighter_sign_create_grouped_orders(self, signer, request):
         orders = request['orders']

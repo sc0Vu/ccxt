@@ -36,7 +36,7 @@ public partial class Exchange
         return lighterSigner;
     }
 
-    public async Task lighterCreateClient(object signer, object chainId, object privateKey, object apiKeyIndex, object accountIndex)
+    public async Task<LighterSigner.Signer> lighterCreateClient(object signer, object chainId, object privateKey, object apiKeyIndex, object accountIndex)
     {
         string url = (string)this.implodeHostname(getValue(getValue(this.urls, "api"), "public"));
         ((LighterSigner.Signer)signer).CreateClient(
@@ -46,6 +46,7 @@ public partial class Exchange
             Convert.ToInt32(apiKeyIndex),
             (long)accountIndex
         );
+        return (LighterSigner.Signer)signer;
     }
 
     private object formatSignedLighterTx(LighterSigner.Signer.SignedTx signedTx)
