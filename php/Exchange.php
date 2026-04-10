@@ -44,7 +44,7 @@ use BN\BN;
 use Sop\ASN1\Type\UnspecifiedType;
 use Exception;
 
-$version = '4.5.45';
+$version = '4.5.48';
 
 // rounding mode
 const TRUNCATE = 0;
@@ -63,7 +63,7 @@ const PAD_WITH_ZERO = 6;
 
 class Exchange {
 
-    const VERSION = '4.5.45';
+    const VERSION = '4.5.48';
 
     private static $base58_alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
     private static $base58_encoder = null;
@@ -385,7 +385,6 @@ class Exchange {
         'coinbaseadvanced',
         'coinbaseexchange',
         'coinbaseinternational',
-        'coincatch',
         'coincheck',
         'coinex',
         'coinmate',
@@ -436,6 +435,7 @@ class Exchange {
         'onetrading',
         'oxfun',
         'p2b',
+        'pacifica',
         'paradex',
         'paymium',
         'phemex',
@@ -1072,6 +1072,15 @@ class Exchange {
 
     public static function ymdhms($timestamp, $infix = ' ') {
         return gmdate('Y-m-d\\' . $infix . 'H:i:s', (int) round($timestamp / 1000));
+    }
+    public static function string_to_binary(string $buff): string
+    {
+        return mb_convert_encoding($buff, 'UTF-8');
+    }
+
+    public static function binary_to_string(string $buff): string
+    {
+        return mb_convert_encoding($buff, 'UTF-8');
     }
 
     public static function binary_concat() {
@@ -6163,6 +6172,30 @@ class Exchange {
         $results = array();
         for ($i = 0; $i < count($objects); $i++) {
             if ($this->in_array($objects[$i][$key], $values)) {
+                $results[] = $objects[$i];
+            }
+        }
+        // return $indexed ? $this->index_by($results, $key) : $results;
+        if ($indexed) {
+            return $this->index_by($results, $key);
+        }
+        return $results;
+    }
+
+    public function filter_out_by_array($objects, int|string $key, $values = null, $indexed = true) {
+        $objects = $this->to_array($objects);
+        // return all of them if no $values were passed
+        if ($values === null || !$values) {
+            // return $indexed ? $this->index_by($objects, $key) : $objects;
+            if ($indexed) {
+                return $this->index_by($objects, $key);
+            } else {
+                return $objects;
+            }
+        }
+        $results = array();
+        for ($i = 0; $i < count($objects); $i++) {
+            if (!$this->in_array($objects[$i][$key], $values)) {
                 $results[] = $objects[$i];
             }
         }

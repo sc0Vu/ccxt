@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.5.45'
+__version__ = '4.5.48'
 
 # -----------------------------------------------------------------------------
 
@@ -1405,6 +1405,14 @@ class Exchange(object):
         elif digest == 'base64':
             return Exchange.binary_to_base64(binary)
         return binary
+
+    @staticmethod
+    def string_to_binary(buff: str) -> bytes:
+        return buff.encode('utf-8')
+
+    @staticmethod
+    def binary_to_string(buff: bytes) -> str:
+        return buff.decode('utf-8')
 
     @staticmethod
     def binary_concat(*args):
@@ -5361,6 +5369,24 @@ class Exchange(object):
         results = []
         for i in range(0, len(objects)):
             if self.in_array(objects[i][key], values):
+                results.append(objects[i])
+        # return self.index_by(results, key) if indexed else results
+        if indexed:
+            return self.index_by(results, key)
+        return results
+
+    def filter_out_by_array(self, objects, key: IndexType, values=None, indexed=True):
+        objects = self.to_array(objects)
+        # return all of them if no values were passed
+        if values is None or not values:
+            # return self.index_by(objects, key) if indexed else objects
+            if indexed:
+                return self.index_by(objects, key)
+            else:
+                return objects
+        results = []
+        for i in range(0, len(objects)):
+            if not self.in_array(objects[i][key], values):
                 results.append(objects[i])
         # return self.index_by(results, key) if indexed else results
         if indexed:

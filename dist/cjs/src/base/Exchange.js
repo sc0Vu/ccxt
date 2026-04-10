@@ -618,6 +618,13 @@ class Exchange {
     isBinaryMessage(msg) {
         return msg instanceof Uint8Array || msg instanceof ArrayBuffer;
     }
+    stringToBinary(content) {
+        // same as: this.base64ToBinary (this.stringToBase64 (str));
+        return this.encode(content);
+    }
+    binaryToString(binary) {
+        return this.decode(binary);
+    }
     decodeProtoMsg(data) {
         if (!protobufMexc) {
             throw new errors.NotSupported(this.id + ' requires protobuf to decode messages, please install it with `npm install protobufjs`');
@@ -5014,6 +5021,30 @@ class Exchange {
         const results = [];
         for (let i = 0; i < objects.length; i++) {
             if (this.inArray(objects[i][key], values)) {
+                results.push(objects[i]);
+            }
+        }
+        // return indexed ? this.indexBy (results, key) : results;
+        if (indexed) {
+            return this.indexBy(results, key);
+        }
+        return results;
+    }
+    filterOutByArray(objects, key, values = undefined, indexed = true) {
+        objects = this.toArray(objects);
+        // return all of them if no values were passed
+        if (values === undefined || !values) {
+            // return indexed ? this.indexBy (objects, key) : objects;
+            if (indexed) {
+                return this.indexBy(objects, key);
+            }
+            else {
+                return objects;
+            }
+        }
+        const results = [];
+        for (let i = 0; i < objects.length; i++) {
+            if (!this.inArray(objects[i][key], values)) {
                 results.push(objects[i]);
             }
         }
