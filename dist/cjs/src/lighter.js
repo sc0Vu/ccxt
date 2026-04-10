@@ -1349,8 +1349,10 @@ class lighter extends lighter$1["default"] {
         //         ]
         //     }
         //
-        const data = this.safeList(response, 'order_book_details', []);
-        const first = this.safeDict(data, 0, {});
+        const spotTickers = this.safeList(response, 'spot_order_book_details', []);
+        const swapTickers = this.safeList(response, 'order_book_details', []);
+        const tickers = this.arrayConcat(spotTickers, swapTickers);
+        const first = this.safeDict(tickers, 0, {});
         return this.parseTicker(first, market);
     }
     /**
