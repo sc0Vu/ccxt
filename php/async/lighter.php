@@ -1376,8 +1376,10 @@ class lighter extends Exchange {
             //         )
             //     }
             //
-            $data = $this->safe_list($response, 'order_book_details', array());
-            $first = $this->safe_dict($data, 0, array());
+            $spotTickers = $this->safe_list($response, 'spot_order_book_details', array());
+            $swapTickers = $this->safe_list($response, 'order_book_details', array());
+            $tickers = $this->array_concat($spotTickers, $swapTickers);
+            $first = $this->safe_dict($tickers, 0, array());
             return $this->parse_ticker($first, $market);
         }) ();
     }
