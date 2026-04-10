@@ -435,6 +435,7 @@ class Exchange {
         'onetrading',
         'oxfun',
         'p2b',
+        'pacifica',
         'paradex',
         'paymium',
         'phemex',
