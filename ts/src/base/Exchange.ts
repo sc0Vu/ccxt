@@ -1981,7 +1981,7 @@ export default class Exchange {
         const { instance } = await WebAssembly.instantiate (bytes, go.importObject);
         go.run (instance);
         if (createClient) {
-            this.lighterCreateClient(undefined, chainId, privateKey, apiKeyIndex, accountIndex);
+            this.lighterCreateClient (undefined, chainId, privateKey, apiKeyIndex, accountIndex);
         }
         return {}; // empty object we will read it from globalThis
     }
@@ -1990,6 +1990,7 @@ export default class Exchange {
         const url = this.implodeHostname (this.urls['api']['public']);
         const res = globalThis.CreateClient (url, privateKey, chainId, apiKeyIndex, accountIndex);
         this.checkLighterSignedError (res);
+        return signer;
     }
 
     // eslint-disable-next-line no-unused-vars

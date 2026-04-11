@@ -385,8 +385,20 @@ export default class lighter extends Exchange {
         }
         let libraryPath = undefined;
         [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
-        signer = await this.loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex, false);
-        this.options['signer'] = signer;
+        const lighterPrivateKeyIsSet = (privateKey !== undefined) && (privateKey !== '');
+        if (lighterPrivateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
+            // load lighter library, and create lighter client
+            signer = await this.loadLighterLibrary (libraryPath, chainId, privateKey, apiKeyIndex, accountIndex, true);
+            this.options['signer'] = signer;
+            return signer;
+        }
+        const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
+        if (privateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
+            // load lighter library without creating lighter client
+            signer = await this.loadLighterLibrary (libraryPath, chainId, "", apiKeyIndex, accountIndex, false);
+            this.options['signer'] = signer;
+            return await this.changeApiKey ();
+        }
         return signer;
     }
 
@@ -408,21 +420,8 @@ export default class lighter extends Exchange {
         [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'accountIndex', 'account_index');
-        const lighterPrivateKeyIsSet = (this.options['lighterPrivateKey'] !== undefined) && (this.options['lighterPrivateKey'] !== '');
-        if (lighterPrivateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
-            signer = await this.loadLighterLibrary (libraryPath, this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, true);
-            this.options['signer'] = signer;
-            return true;
-        }
-        const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
-        if (privateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
-            // set api key and create lighter
-            signer = await this.loadLighterLibrary (libraryPath, this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, false);
-            this.options['signer'] = signer;
-            await this.changeApiKey ();
-            return true;
-        }
-        return false;
+        signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex);
+        return (signer !== undefined);
     }
 
     async handleAccountIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined): Promise<any[]> {
@@ -658,7 +657,7 @@ export default class lighter extends Exchange {
         const response = await this.publicPostSendTx (request);
         this.options['lighterPrivateKey'] = privateKey;
         this.options['signer'] = signer; // reassign signer in go
-        return response;
+        return signer;
     }
 
     setSandboxMode (enable: boolean) {
