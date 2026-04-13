@@ -1552,6 +1552,7 @@ class lighter extends Exchange {
          * @param {array} [$params] extra parameters specific to the exchange API endpoint
          * @param {string} [$params->by] fetch $balance by 'index' or 'l1_address', defaults to 'index'
          * @param {string} [$params->value] fetch $balance value, $account index or l1 address
+         * @param {string} [$params->type] 'spot', 'swap', default is 'swap'
          * @return {array} a ~@link https://docs.ccxt.com/?id=$balance-structure $balance structure~
          */
         $this->load_markets();
@@ -1624,9 +1625,11 @@ class lighter extends Exchange {
                     $result[$code] = $balance;
                 }
             } else {
-                $perpUSDC = $this->safe_string($account, 'collateral');
-                $perpBalance = $this->safe_dict($result, 'USDC(PERP)', $this->account());
-                $perpBalance['total'] = Precise::string_add($perpBalance['total'], $perpUSDC);
+                $perpBalance = $this->safe_dict($result, 'USDC', $this->account());
+                $perpUSDCTotal = $this->safe_string($account, 'collateral');
+                $perpUSDCFree = $this->safe_string($account, 'available_balance');
+                $perpBalance['total'] = Precise::string_add($perpBalance['total'], $perpUSDCTotal);
+                $perpBalance['free'] = Precise::string_add($perpBalance['free'], $perpUSDCFree);
                 $result['USDC'] = $perpBalance;
             }
         }

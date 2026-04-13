@@ -25,7 +25,7 @@ class lighter extends \ccxt\async\lighter {
                 'watchTrades' => true,
                 'watchTradesForSymbols' => false,
                 'watchOrderBookForSymbols' => false,
-                'watchBalance' => false,
+                'watchBalance' => true,
                 'watchLiquidations' => true,
                 'watchLiquidationsForSymbols' => false,
                 'watchMyLiquidations' => false,
@@ -900,6 +900,126 @@ class lighter extends \ccxt\async\lighter {
         }) ();
     }
 
+    public function watch_balance($params = array ()): PromiseInterface {
+        return Async\async(function () use ($params) {
+            /**
+             * watch balance and get the amount of funds available for trading or funds locked in orders
+             *
+             * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-assets
+             *
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @param {string} [$params->type] 'spot' or 'swap', default is 'swap'
+             * @return {array} a ~@link https://docs.ccxt.com/?id=balance-structure balance structure~
+             */
+            Async\await($this->load_markets());
+            $defaultType = $this->safe_string_2($this->options, 'watchBalance', 'defaultType', 'spot');
+            $type = null;
+            list($type, $params) = $this->handle_param_string($params, 'type', $defaultType);
+            $accountIndex = null;
+            list($accountIndex, $params) = Async\await($this->handleAccountIndex ($params, 'watchBalance', 'accountIndex', 'account_index'));
+            $messageHash = $this->get_message_hash('balances', null, $type);
+            $request = array();
+            if ($type === 'spot') {
+                $request['channel'] = 'account_all_assets/' . $this->number_to_string($accountIndex);
+                return Async\await($this->subscribe_private($messageHash, $this->extend($request, $params)));
+            } else {
+                $request['channel'] = 'user_stats/' . $this->number_to_string($accountIndex);
+                return Async\await($this->subscribe_public($messageHash, $this->extend($request, $params)));
+            }
+        }) ();
+    }
+
+    public function handle_balance(Client $client, $message) {
+        //
+        //    spot $balance
+        //    {
+        //        "assets" => {
+        //              "1" => array(
+        //                    "symbol" => "ETH",
+        //                    "asset_id" => 1,
+        //                    "balance" => "7.1072",
+        //                    "locked_balance" => "0.0000"
+        //              ),
+        //              "3" => array(
+        //                    "symbol" => "USDC",
+        //                    "asset_id" => 3,
+        //                    "balance" => "6343.581906",
+        //                    "locked_balance" => "297.000000"
+        //              }
+        //        ),
+        //        "channel" => "account_all_assets:1234",
+        //        "timestamp" => 1773158679717,
+        //        "type" => "update/account_all_assets"
+        //    }
+        //
+        //    swap $balance
+        //    {
+        //        "channel" => "user_stats:10",
+        //        "stats" => {
+        //            "collateral" => "5000.00",
+        //            "portfolio_value" => "15000.00",
+        //            "leverage" => "3.0",
+        //            "available_balance" => "2000.00",
+        //            "margin_usage" => "0.80",
+        //            "buying_power" => "4000.00",
+        //            "account_trading_mode" => 1,
+        //            "cross_stats":array(
+        //               "collateral":"0.000000",
+        //               "portfolio_value":"0.000000",
+        //               "leverage":"0.00",
+        //               "available_balance":"0.000000",
+        //               "margin_usage":"0.00",
+        //               "buying_power":"0"
+        //            ),
+        //            "total_stats":array(
+        //               "collateral":"0.000000",
+        //               "portfolio_value":"0.000000",
+        //               "leverage":"0.00",
+        //               "available_balance":"0.000000",
+        //               "margin_usage":"0.00",
+        //               "buying_power":"0"
+        //            }
+        //        ),
+        //        "timestamp" => 1773158679717,
+        //        "type" => "update/user_stats"
+        //    }
+        //
+        $channel = $this->safe_string($message, 'channel', '');
+        $type = 'spot';
+        if (mb_strpos($channel, 'user_stats:') !== false) {
+            $type = 'swap';
+        }
+        $balance = $this->safe_dict($this->balance, $type, array());
+        if ($type === 'spot') {
+            $assets = $this->safe_dict($message, 'assets', array());
+            $assetIds = is_array($assets) ? array_keys($assets) : array();
+            for ($i = 0; $i < count($assetIds); $i++) {
+                $assetId = $assetIds[$i];
+                $asset = $assets[$assetId];
+                $codeId = $this->safe_string($asset, 'symbol');
+                $code = $this->safe_currency_code($codeId);
+                $account = $this->account();
+                $account['used'] = $this->safe_string($asset, 'locked_balance');
+                $account['total'] = $this->safe_string($asset, 'balance');
+                $balance[$code] = $account;
+            }
+        } else {
+            $stats = $this->safe_dict($message, 'stats', array());
+            $account = $this->account();
+            $account['free'] = $this->safe_string($stats, 'available_balance');
+            $account['total'] = $this->safe_string($stats, 'collateral');
+            $account['info'] = $stats;
+            $balance['USDC'] = $account;
+        }
+        $timestamp = $this->safe_integer($message, 'timestamp');
+        $balance['timestamp'] = $timestamp;
+        $balance['datetime'] = $this->iso8601($timestamp);
+        $this->balance[$type] = $this->safe_balance($balance);
+        $messageHash = $this->get_message_hash('balances', null, $type);
+        $client->resolve ($this->balance[$type], $messageHash);
+        return true;
+    }
+
     public function watch_orders(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
         return Async\async(function () use ($symbol, $since, $limit, $params) {
             /**
@@ -1060,6 +1180,14 @@ class lighter extends \ccxt\async\lighter {
         }
         if (mb_strpos($channel, 'account_all_trades:') !== false) {
             $this->handle_my_trades($client, $message);
+            return;
+        }
+        if (mb_strpos($channel, 'account_all_assets:') !== false) {
+            $this->handle_balance($client, $message);
+            return;
+        }
+        if (mb_strpos($channel, 'user_stats:') !== false) {
+            $this->handle_balance($client, $message);
             return;
         }
         if (mb_strpos($channel, 'account_orders:') !== false) {
