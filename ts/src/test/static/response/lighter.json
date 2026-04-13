@@ -14,7 +14,10 @@
     "options": {
         "accountIndex": 715085,
         "apiKeyIndex": 0,
-        "nonce": 0
+        "nonce": 0,
+        "integratorAccountIndex": 130303,
+        "integratorMakerFee": 10,
+        "integratorTakerFee": 10
     },
     "methods": {
         "fetchClosedOrders": [
@@ -433,7 +436,10 @@
                         "client_order_index": 489057754,
                         "base_amount": 1000,
                         "avg_execution_price": 40000,
-                        "trigger_price": 0
+                        "trigger_price": 0,
+                        "integrator_account_index": 130303,
+                        "integrator_taker_fee": 10,
+                        "integrator_maker_fee": 10
                     },
                     "id": null,
                     "clientOrderId": "489057754",
@@ -497,7 +503,10 @@
                         "client_order_index": 911280573,
                         "base_amount": 100,
                         "avg_execution_price": 60000,
-                        "trigger_price": 0
+                        "trigger_price": 0,
+                        "integrator_account_index": 130303,
+                        "integrator_taker_fee": 10,
+                        "integrator_maker_fee": 10
                     },
                     "id": null,
                     "clientOrderId": "911280573",
