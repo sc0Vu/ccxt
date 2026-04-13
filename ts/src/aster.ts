@@ -1014,6 +1014,8 @@ export default class aster extends Exchange {
         //
         // fetchTrades
         //
+        //   swap recent trades:
+        //
         //     {
         //         "id": 3913206,
         //         "price": "644.100",
@@ -1023,6 +1025,8 @@ export default class aster extends Exchange {
         //         "isBuyerMaker": true
         //     }
         //
+        //   spot recent trades:
+        //
         //     {
         //         "id": 657,
         //         "price": "1.01000000",
@@ -1030,6 +1034,18 @@ export default class aster extends Exchange {
         //         "baseQty": "4.95049505",
         //         "time": 1755156533943,
         //         "isBuyerMaker": false
+        //     }
+        //
+        //   spot aggrTrades:
+        //
+        //     {
+        //         "a": 26129, // Aggregate tradeId
+        //         "p": "0.01633102", // Price
+        //         "q": "4.70443515", // Quantity
+        //         "f": 27781, // First tradeId
+        //         "l": 27781, // Last tradeId
+        //         "T": 1498793709153, // Timestamp
+        //         "m": true, // Was the buyer the maker?
         //     }
         //
         // fetchMyTrades
@@ -1051,21 +1067,21 @@ export default class aster extends Exchange {
         //         "time": 1569514978020
         //     }
         //
-        const id = this.safeString (trade, 'id');
+        const id = this.safeString2 (trade, 'id', 'a');
         const symbol = market['symbol'];
         const currencyId = this.safeString (trade, 'commissionAsset');
         const currencyCode = this.safeCurrencyCode (currencyId);
-        const amountString = this.safeString (trade, 'qty');
-        const priceString = this.safeString (trade, 'price');
+        const amountString = this.safeString2 (trade, 'qty', 'q');
+        const priceString = this.safeString2 (trade, 'price', 'p');
         const costString = this.safeString2 (trade, 'quoteQty', 'baseQty');
-        const timestamp = this.safeInteger (trade, 'time');
+        const timestamp = this.safeInteger2 (trade, 'time', 'T');
         let side = this.safeStringLower (trade, 'side');
         const isMaker = this.safeBool (trade, 'maker');
         let takerOrMaker = undefined;
         if (isMaker !== undefined) {
             takerOrMaker = isMaker ? 'maker' : 'taker';
         }
-        const isBuyerMaker = this.safeBool (trade, 'isBuyerMaker');
+        const isBuyerMaker = this.safeBool2 (trade, 'isBuyerMaker', 'm');
         if (isBuyerMaker !== undefined) {
             side = isBuyerMaker ? 'sell' : 'buy';
         }
@@ -1093,8 +1109,8 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchTrades
      * @description get the list of most recent trades for a particular symbol
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#recent-trades-list
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#recent-trades-list
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#recent-trades-list
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#recent-trades-aggregated
      * @param {string} symbol unified symbol of the market to fetch trades for
      * @param {int} [since] timestamp in ms of the earliest trade to fetch
      * @param {int} [limit] the maximum amount of trades to fetch
@@ -1102,12 +1118,9 @@ export default class aster extends Exchange {
      * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=public-trades}
      */
     async fetchTrades (symbol: string, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
-        if (symbol === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchTrades() requires a symbol argument');
-        }
         await this.loadMarkets ();
         const market = this.market (symbol);
-        const request: Dict = {
+        let request: Dict = {
             'symbol': market['id'],
         };
         if (limit !== undefined) {
@@ -1132,17 +1145,48 @@ export default class aster extends Exchange {
             //     ]
             //
         } else {
-            response = await this.sapiPublicGetV1Trades (this.extend (request, params));
-            //     [
-            //         {
-            //             "id": 657,
-            //             "price": "1.01000000",
-            //             "qty": "5.00000000",
-            //             "baseQty": "4.95049505",
-            //             "time": 1755156533943,
-            //             "isBuyerMaker": false
-            //         }
-            //     ]
+            const sinceDefined = since !== undefined;
+            const untilDefined = ('until' in params);
+            if (sinceDefined) {
+                request['startTime'] = since;
+                if (!untilDefined) {
+                    request['endTime'] = this.sum (since, 3600000); // add 1 hour window
+                }
+            }
+            else if (untilDefined) {
+                request = this.handleUntilOption ('endTime', request, params);
+                if (!sinceDefined) {
+                    request['startTime'] = this.sum (request['endTime'], -3600000); // subtract 1 hour window
+                }
+            }
+            if ('startTime' in request) {
+                response = await this.sapiPublicGetV1AggrTrades (this.extend (request, params));
+                //
+                // [
+                //     {
+                //         "a": 26129, // Aggregate tradeId
+                //         "p": "0.01633102", // Price
+                //         "q": "4.70443515", // Quantity
+                //         "f": 27781, // First tradeId
+                //         "l": 27781, // Last tradeId
+                //         "T": 1498793709153, // Timestamp
+                //         "m": true, // Was the buyer the maker?
+                //     }
+                // ]
+                //
+            } else {
+                response = await this.sapiPublicGetV1Trades (this.extend (request, params));
+                //     [
+                //         {
+                //             "id": 657,
+                //             "price": "1.01000000",
+                //             "qty": "5.00000000",
+                //             "baseQty": "4.95049505",
+                //             "time": 1755156533943,
+                //             "isBuyerMaker": false
+                //         }
+                //     ]
+            }
         }
         return this.parseTrades (response, market, since, limit);
     }
@@ -1219,9 +1263,6 @@ export default class aster extends Exchange {
      * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/#/?id=order-book-structure} indexed by market symbols
      */
     async fetchOrderBook (symbol: string, limit: Int = undefined, params = {}): Promise<OrderBook> {
-        if (symbol === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchOrderBook() requires a symbol argument');
-        }
         await this.loadMarkets ();
         const market = this.market (symbol);
         const request: Dict = {
