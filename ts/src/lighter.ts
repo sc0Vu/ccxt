@@ -350,7 +350,7 @@ export default class lighter extends Exchange {
                 'lighterPrivateKey': undefined,
                 'wasmExecPath': undefined, // [JS Only] users should set the path to wasm_exec.js. It can be downloaded here https://github.com/ccxt/lighter-wasm
                 'libraryPath': undefined, // users should set the path to the lighter signing library. It can be downloaded here https://github.com/elliottech/lighter-python/tree/main/lighter/signers, GO users don't need it
-                'integratorAccountIndex': 0,
+                'integratorAccountIndex': 718718,
                 'integratorMakerFee': 0,
                 'integratorTakerFee': 0,
                 'authDeadlineExpiry': 28800, // 8h validity for auth tokens
@@ -586,9 +586,9 @@ export default class lighter extends Exchange {
             return true;
         }
         try {
-            const builder = this.safeNumber (this.options, 'integratorAccountIndex', 0);
-            const takerFeeRate = this.safeNumber (this.options, 'integratorTakerFee', 1000);
-            const makerFeeRate = this.safeNumber (this.options, 'integratorMakerFee', 1000);
+            const builder = this.safeInteger (this.options, 'integratorAccountIndex', 718718);
+            const takerFeeRate = this.safeInteger (this.options, 'integratorTakerFee', 1000);
+            const makerFeeRate = this.safeInteger (this.options, 'integratorMakerFee', 1000);
             await this.approveBuilderFee (builder, takerFeeRate, makerFeeRate, accountIndex, apiKeyIndex);
             this.options['approvedBuilderFee'] = true;
         } catch (e) {
