@@ -1674,6 +1674,37 @@ export default class aster extends Exchange {
         };
     }
 
+    /**
+     * @method
+     * @name binance#fetchBidsAsks
+     * @description fetches the bid and ask price and volume for multiple markets
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#current-best-order
+     * @param {string[]|undefined} symbols unified symbols of the markets to fetch the bids and asks for, all markets are returned if not assigned
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} [params.subType] "linear" or "inverse"
+     * @returns {object} a dictionary of [ticker structures]{@link https://docs.ccxt.com/?id=ticker-structure}
+     */
+    async fetchBidsAsks (symbols: Strings = undefined, params = {}) {
+        await this.loadMarkets ();
+        symbols = this.marketSymbols (symbols, undefined, true, true, true);
+        const market = this.getMarketFromSymbols (symbols);
+        let type = undefined;
+        [ type, params ] = this.handleMarketTypeAndParams ('fetchBidsAsks', market, params);
+        let subType = undefined;
+        [ subType, params ] = this.handleSubTypeAndParams ('fetchBidsAsks', market, params);
+        let response = undefined;
+        if (this.isLinear (type, subType)) {
+            response = await this.fapiPublicGetTickerBookTicker (params);
+        } else if (this.isInverse (type, subType)) {
+            response = await this.dapiPublicGetTickerBookTicker (params);
+        } else if (type === 'spot') {
+            response = await this.publicGetTickerBookTicker (params);
+        } else {
+            throw new NotSupported (this.id + ' fetchBidsAsks() does not support ' + type + ' markets yet');
+        }
+        return this.parseTickers (response, symbols);
+    }
+
     parseFundingRate (contract, market: Market = undefined): FundingRate {
         //
         //     {
