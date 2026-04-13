@@ -32,7 +32,7 @@ class lighter extends \ccxt\async\lighter {
                 'watchMyLiquidationsForSymbols' => false,
                 'watchOHLCV' => false,
                 'watchOHLCVForSymbols' => false,
-                'watchOrders' => false,
+                'watchOrders' => true,
                 'watchMyTrades' => true,
                 'watchPositions' => false,
                 'watchFundingRate' => false,
@@ -44,6 +44,7 @@ class lighter extends \ccxt\async\lighter {
                 'unWatchMyTrades' => true,
                 'unWatchMarkPrice' => true,
                 'unWatchMarkPrices' => true,
+                'unWatchOrders' => true,
             ),
             'urls' => array(
                 'api' => array(
@@ -98,7 +99,7 @@ class lighter extends \ccxt\async\lighter {
         }) ();
     }
 
-    public function unsubscribe_public($messageHash, $params = array ()) {
+    public function unsubscribe($messageHash, $params = array ()) {
         return Async\async(function () use ($messageHash, $params) {
             $url = $this->urls['api']['ws'];
             $request = array(
@@ -109,6 +110,13 @@ class lighter extends \ccxt\async\lighter {
                 'params' => $params,
             );
             return Async\await($this->watch($url, $messageHash, $this->extend($request, $params), $messageHash, $subscription));
+        }) ();
+    }
+
+    public function subscribe_private($messageHash, $params = array ()) {
+        return Async\async(function () use ($messageHash, $params) {
+            $params['auth'] = $this->createAuth ($params);
+            return Async\await($this->subscribe_public($messageHash, $params));
         }) ();
     }
 
@@ -224,7 +232,7 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'order_book/' . $market['id'],
             );
             $messageHash = $this->get_message_hash('unsubscribe', $symbol);
-            return Async\await($this->unsubscribe_public($messageHash, $this->extend($request, $params)));
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
         }) ();
     }
 
@@ -341,7 +349,7 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'market_stats/' . $market['id'],
             );
             $messageHash = $this->get_message_hash('unsubscribe', $symbol);
-            return Async\await($this->unsubscribe_public($messageHash, $this->extend($request, $params)));
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
         }) ();
     }
 
@@ -401,7 +409,7 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'market_stats/all',
             );
             $messageHash = $this->get_message_hash('unsubscribe');
-            return Async\await($this->unsubscribe_public($messageHash, $this->extend($request, $params)));
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
         }) ();
     }
 
@@ -628,7 +636,7 @@ class lighter extends \ccxt\async\lighter {
                 'channel' => 'trade/' . $market['id'],
             );
             $messageHash = $this->get_message_hash('unsubscribe', $symbol);
-            return Async\await($this->unsubscribe_public($messageHash, $this->extend($request, $params)));
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
         }) ();
     }
 
@@ -755,7 +763,7 @@ class lighter extends \ccxt\async\lighter {
             $request = array(
                 'channel' => 'account_all_trades/' . $accountIndex,
             );
-            return Async\await($this->unsubscribe_public($messageHash, $this->extend($request, $params)));
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
         }) ();
     }
 
@@ -892,6 +900,118 @@ class lighter extends \ccxt\async\lighter {
         }) ();
     }
 
+    public function watch_orders(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
+        return Async\async(function () use ($symbol, $since, $limit, $params) {
+            /**
+             * watches information on multiple $orders made by the user
+             *
+             * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-$orders
+             *
+             * @param {string} $symbol unified $market $symbol of the $market $orders were made in
+             * @param {int} [$since] the earliest time in ms to fetch $orders for
+             * @param {int} [$limit] the maximum number of order structures to retrieve
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=order-structure order structures~
+             */
+            Async\await($this->load_markets());
+            $accountIndex = null;
+            list($accountIndex, $params) = Async\await($this->handleAccountIndex ($params, 'watchOrders', 'accountIndex', 'account_index'));
+            $messageHash = null;
+            $request = array();
+            if ($symbol !== null) {
+                $market = $this->market($symbol);
+                $messageHash = $this->get_message_hash('orders', $market['symbol']);
+                $request['channel'] = 'account_orders/' . $market['id'] . '/' . $this->number_to_string($accountIndex);
+            } else {
+                $messageHash = $this->get_message_hash('orders');
+                $request['channel'] = 'account_all_orders/' . $this->number_to_string($accountIndex);
+            }
+            $orders = Async\await($this->subscribe_private($messageHash, $this->extend($request, $params)));
+            if ($this->newUpdates) {
+                $limit = $orders->getLimit ($symbol, $limit);
+            }
+            return $this->filter_by_symbol_since_limit($orders, $symbol, $since, $limit, true);
+        }) ();
+    }
+
+    public function un_watch_orders(?string $symbol = null, $params = array ()): PromiseInterface {
+        return Async\async(function () use ($symbol, $params) {
+            /**
+             * unWatches information on multiple orders made by the user
+             *
+             * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-orders
+             *
+             * @param {string} $symbol unified $market $symbol of the $market orders were made in
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=order-structure order structures~
+             */
+            Async\await($this->load_markets());
+            $accountIndex = null;
+            list($accountIndex, $params) = Async\await($this->handleAccountIndex ($params, 'watchOrders', 'accountIndex', 'account_index'));
+            $messageHash = null;
+            $request = array();
+            if ($symbol !== null) {
+                $market = $this->market($symbol);
+                $messageHash = $this->get_message_hash('orders', $market['symbol']);
+                $request['channel'] = 'account_orders/' . $market['id'] . '/' . $this->number_to_string($accountIndex);
+            } else {
+                $messageHash = $this->get_message_hash('orders');
+                $request['channel'] = 'account_all_orders/' . $this->number_to_string($accountIndex);
+            }
+            return Async\await($this->unsubscribe($messageHash, $this->extend($request, $params)));
+        }) ();
+    }
+
+    public function handle_orders(Client $client, $message) {
+        //
+        //    {
+        //        "account" => {ACCOUNT_INDEX},
+        //        "channel" => "account_orders:{MARKET_INDEX}",
+        //        "nonce" => INTEGER,
+        //        "orders" => array(
+        //            "{MARKET_INDEX}" => [Order] // the only present $market index will be the one provided
+        //        ),
+        //        "type" => "update/account_orders"
+        //    }
+        //
+        //    {
+        //        "channel" => "account_all_orders:{ACCOUNT_ID}",
+        //        "orders" => array(
+        //            "{MARKET_INDEX}" => [Order]
+        //        ),
+        //        "type" => "update/account_all_orders"
+        //    }
+        //
+        $data = $this->safe_dict($message, 'orders', array());
+        $marketIds = is_array($data) ? array_keys($data) : array();
+        $idsLength = count($marketIds);
+        if ($idsLength === 0) {
+            return false; // nothing to process
+        }
+        if ($this->orders === null) {
+            $limit = $this->safe_integer($this->options, 'ordersLimit', 1000);
+            $this->orders = new ArrayCache ($limit);
+        }
+        $stored = $this->orders;
+        $messageHash = $this->get_message_hash('orders');
+        for ($i = 0; $i < count($marketIds); $i++) {
+            $marketId = $marketIds[$i];
+            $market = $this->safe_market($marketId);
+            $orders = $this->safe_list($data, $marketId, array());
+            for ($j = 0; $j < count($orders); $j++) {
+                $order = $this->parse_order($orders[$j], $market);
+                $stored->append ($order);
+                $symbol = $order['symbol'];
+                if ($symbol !== null) {
+                    $symbolSpecificMessageHash = $this->get_message_hash('orders', $symbol);
+                    $client->resolve ($stored, $symbolSpecificMessageHash);
+                }
+            }
+        }
+        $client->resolve ($stored, $messageHash);
+        return true;
+    }
+
     public function handle_error_message($client, $message) {
         //
         //     {
@@ -940,6 +1060,14 @@ class lighter extends \ccxt\async\lighter {
         }
         if (mb_strpos($channel, 'account_all_trades:') !== false) {
             $this->handle_my_trades($client, $message);
+            return;
+        }
+        if (mb_strpos($channel, 'account_orders:') !== false) {
+            $this->handle_orders($client, $message);
+            return;
+        }
+        if (mb_strpos($channel, 'account_all_orders:') !== false) {
+            $this->handle_orders($client, $message);
             return;
         }
         if ($channel === '') {
