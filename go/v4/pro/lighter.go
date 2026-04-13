@@ -31,7 +31,7 @@ func  (this *LighterCore) Describe() interface{}  {
             "watchTrades": true,
             "watchTradesForSymbols": false,
             "watchOrderBookForSymbols": false,
-            "watchBalance": false,
+            "watchBalance": true,
             "watchLiquidations": true,
             "watchLiquidationsForSymbols": false,
             "watchMyLiquidations": false,
@@ -1148,6 +1148,144 @@ func  (this *LighterCore) WatchLiquidations(symbol interface{}, optionalArgs ...
         }
 /**
  * @method
+ * @name lighter#watchBalance
+ * @description watch balance and get the amount of funds available for trading or funds locked in orders
+ * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-assets
+ * @param {object} [params] extra parameters specific to the exchange API endpoint
+ * @param {string} [params.type] 'spot' or 'swap', default is 'swap'
+ * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
+ */
+func  (this *LighterCore) WatchBalance(optionalArgs ...interface{}) <- chan interface{} {
+            ch := make(chan interface{})
+            go func() interface{} {
+                defer close(ch)
+                defer ccxt.ReturnPanicError(ch)
+                    params := ccxt.GetArg(optionalArgs, 0, map[string]interface{} {})
+            _ = params
+        
+            retRes8718 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes8718)
+            var defaultType interface{} = this.SafeString2(this.Options, "watchBalance", "defaultType", "spot")
+            var typeVar interface{} = nil
+            typeVarparamsVariable := this.HandleParamString(params, "type", defaultType)
+            typeVar = ccxt.GetValue(typeVarparamsVariable,0)
+            params = ccxt.GetValue(typeVarparamsVariable,1)
+            var accountIndex interface{} = nil
+            accountIndexparamsVariable := (<-this.HandleAccountIndex(params, "watchBalance", "accountIndex", "account_index"))
+            accountIndex = ccxt.GetValue(accountIndexparamsVariable,0)
+            params = ccxt.GetValue(accountIndexparamsVariable,1)
+            var messageHash interface{} = this.GetMessageHash("balances", nil, typeVar)
+            var request interface{} = map[string]interface{} {}
+            if ccxt.IsTrue(ccxt.IsEqual(typeVar, "spot")) {
+                ccxt.AddElementToObject(request, "channel", ccxt.Add("account_all_assets/", this.NumberToString(accountIndex)))
+        
+                    retRes88119 :=  (<-this.SubscribePrivate(messageHash, this.Extend(request, params)))
+                    ccxt.PanicOnError(retRes88119)
+                    ch <- retRes88119
+                    return nil
+            } else {
+                ccxt.AddElementToObject(request, "channel", ccxt.Add("user_stats/", this.NumberToString(accountIndex)))
+        
+                    retRes88419 :=  (<-this.SubscribePublic(messageHash, this.Extend(request, params)))
+                    ccxt.PanicOnError(retRes88419)
+                    ch <- retRes88419
+                    return nil
+            }
+        
+            }()
+            return ch
+        }
+func  (this *LighterCore) HandleBalance(client interface{}, message interface{}) interface{}  {
+    //
+    //    spot balance
+    //    {
+    //        "assets": {
+    //              "1": {
+    //                    "symbol": "ETH",
+    //                    "asset_id": 1,
+    //                    "balance": "7.1072",
+    //                    "locked_balance": "0.0000"
+    //              },
+    //              "3": {
+    //                    "symbol": "USDC",
+    //                    "asset_id": 3,
+    //                    "balance": "6343.581906",
+    //                    "locked_balance": "297.000000"
+    //              }
+    //        },
+    //        "channel": "account_all_assets:1234",
+    //        "timestamp": 1773158679717,
+    //        "type": "update/account_all_assets"
+    //    }
+    //
+    //    swap balance
+    //    {
+    //        "channel": "user_stats:10",
+    //        "stats": {
+    //            "collateral": "5000.00",
+    //            "portfolio_value": "15000.00",
+    //            "leverage": "3.0",
+    //            "available_balance": "2000.00",
+    //            "margin_usage": "0.80",
+    //            "buying_power": "4000.00",
+    //            "account_trading_mode": 1,
+    //            "cross_stats":{
+    //               "collateral":"0.000000",
+    //               "portfolio_value":"0.000000",
+    //               "leverage":"0.00",
+    //               "available_balance":"0.000000",
+    //               "margin_usage":"0.00",
+    //               "buying_power":"0"
+    //            },
+    //            "total_stats":{
+    //               "collateral":"0.000000",
+    //               "portfolio_value":"0.000000",
+    //               "leverage":"0.00",
+    //               "available_balance":"0.000000",
+    //               "margin_usage":"0.00",
+    //               "buying_power":"0"
+    //            }
+    //        },
+    //        "timestamp": 1773158679717,
+    //        "type": "update/user_stats"
+    //    }
+    //
+    var channel interface{} = this.SafeString(message, "channel", "")
+    var typeVar interface{} = "spot"
+    if ccxt.IsTrue(ccxt.IsGreaterThanOrEqual(ccxt.GetIndexOf(channel, "user_stats:"), 0)) {
+        typeVar = "swap"
+    }
+    var balance interface{} = this.SafeDict(this.Balance, typeVar, map[string]interface{} {})
+    if ccxt.IsTrue(ccxt.IsEqual(typeVar, "spot")) {
+        var assets interface{} = this.SafeDict(message, "assets", map[string]interface{} {})
+        var assetIds interface{} = ccxt.ObjectKeys(assets)
+        for i := 0; ccxt.IsLessThan(i, ccxt.GetArrayLength(assetIds)); i++ {
+            var assetId interface{} = ccxt.GetValue(assetIds, i)
+            var asset interface{} = ccxt.GetValue(assets, assetId)
+            var codeId interface{} = this.SafeString(asset, "symbol")
+            var code interface{} = this.SafeCurrencyCode(codeId)
+            var account interface{} = this.Account()
+            ccxt.AddElementToObject(account, "used", this.SafeString(asset, "locked_balance"))
+            ccxt.AddElementToObject(account, "total", this.SafeString(asset, "balance"))
+            ccxt.AddElementToObject(balance, code, account)
+        }
+    } else {
+        var stats interface{} = this.SafeDict(message, "stats", map[string]interface{} {})
+        var account interface{} = this.Account()
+        ccxt.AddElementToObject(account, "free", this.SafeString(stats, "available_balance"))
+        ccxt.AddElementToObject(account, "total", this.SafeString(stats, "collateral"))
+        ccxt.AddElementToObject(account, "info", stats)
+        ccxt.AddElementToObject(balance, "USDC", account)
+    }
+    var timestamp interface{} = this.SafeInteger(message, "timestamp")
+    ccxt.AddElementToObject(balance, "timestamp", timestamp)
+    ccxt.AddElementToObject(balance, "datetime", this.Iso8601(timestamp))
+    ccxt.AddElementToObject(this.Balance, typeVar, this.SafeBalance(balance))
+    var messageHash interface{} = this.GetMessageHash("balances", nil, typeVar)
+    client.(ccxt.ClientInterface).Resolve(ccxt.GetValue(this.Balance, typeVar), messageHash)
+    return true
+}
+/**
  * @name lighter#watchOrders
  * @description watches information on multiple orders made by the user
  * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-orders
@@ -1171,8 +1309,8 @@ func  (this *LighterCore) WatchOrders(optionalArgs ...interface{}) <- chan inter
             params := ccxt.GetArg(optionalArgs, 3, map[string]interface{} {})
             _ = params
         
-            retRes8738 := (<-this.LoadMarkets())
-            ccxt.PanicOnError(retRes8738)
+            retRes9908 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes9908)
             var accountIndex interface{} = nil
             accountIndexparamsVariable := (<-this.HandleAccountIndex(params, "watchOrders", "accountIndex", "account_index"))
             accountIndex = ccxt.GetValue(accountIndexparamsVariable,0)
@@ -1219,8 +1357,8 @@ func  (this *LighterCore) UnWatchOrders(optionalArgs ...interface{}) <- chan int
             params := ccxt.GetArg(optionalArgs, 1, map[string]interface{} {})
             _ = params
         
-            retRes9038 := (<-this.LoadMarkets())
-            ccxt.PanicOnError(retRes9038)
+            retRes10208 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes10208)
             var accountIndex interface{} = nil
             accountIndexparamsVariable := (<-this.HandleAccountIndex(params, "watchOrders", "accountIndex", "account_index"))
             accountIndex = ccxt.GetValue(accountIndexparamsVariable,0)
@@ -1236,9 +1374,9 @@ func  (this *LighterCore) UnWatchOrders(optionalArgs ...interface{}) <- chan int
                 ccxt.AddElementToObject(request, "channel", ccxt.Add("account_all_orders/", this.NumberToString(accountIndex)))
             }
         
-                retRes91615 :=  (<-this.Unsubscribe(messageHash, this.Extend(request, params)))
-                ccxt.PanicOnError(retRes91615)
-                ch <- retRes91615
+                retRes103315 :=  (<-this.Unsubscribe(messageHash, this.Extend(request, params)))
+                ccxt.PanicOnError(retRes103315)
+                ch <- retRes103315
                 return nil
         
             }()
@@ -1358,6 +1496,14 @@ func  (this *LighterCore) HandleMessage(client interface{}, message interface{})
         this.HandleMyTrades(client, message)
         return
     }
+    if ccxt.IsTrue(ccxt.IsGreaterThanOrEqual(ccxt.GetIndexOf(channel, "account_all_assets:"), 0)) {
+        this.HandleBalance(client, message)
+        return
+    }
+    if ccxt.IsTrue(ccxt.IsGreaterThanOrEqual(ccxt.GetIndexOf(channel, "user_stats:"), 0)) {
+        this.HandleBalance(client, message)
+        return
+    }
     if ccxt.IsTrue(ccxt.IsGreaterThanOrEqual(ccxt.GetIndexOf(channel, "account_orders:"), 0)) {
         this.HandleOrders(client, message)
         return
@@ -1416,8 +1562,8 @@ func  (this *LighterCore) Pong(client interface{}, message interface{}) <- chan 
                 "type": "pong",
             }
         
-            retRes10768 := (<-client.(ccxt.ClientInterface).Send(request))
-            ccxt.PanicOnError(retRes10768)
+            retRes12018 := (<-client.(ccxt.ClientInterface).Send(request))
+            ccxt.PanicOnError(retRes12018)
                 return nil
             }()
             return ch
