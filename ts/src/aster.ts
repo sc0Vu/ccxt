@@ -880,7 +880,7 @@ export default class aster extends Exchange {
                     'max': this.safeNumber (filterMarketLotSize, 'maxQty'),
                 },
             },
-            'created': this.safeInteger (market, 'listingTime'),
+            'created': this.safeInteger2 (market, 'listingTime', 'createTime'),
             'info': market,
         });
     }
@@ -1212,8 +1212,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchOrderBook
      * @description fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#depth-information
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#order-book
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#depth-information
      * @param {string} symbol unified symbol of the market to fetch the order book for
      * @param {int} [limit] the maximum amount of order book entries to return
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1228,17 +1227,20 @@ export default class aster extends Exchange {
         const request: Dict = {
             'symbol': market['id'],
         };
-        if (limit !== undefined) {
-            // limit: [5, 10, 20, 50, 100, 500, 1000]. Default: 500
-            if (limit > 1000) {
-                limit = 1000; // Default 500; max 1000.
-            }
-            request['limit'] = limit;
-        }
         let response = undefined;
         if (market['swap']) {
+            if (limit !== undefined) {
+                // limit: [5, 10, 20, 50, 100, 500, 1000]. Default: 500
+                if (limit > 1000) {
+                    limit = 1000; // Default 500; max 1000.
+                }
+                request['limit'] = limit;
+            }
             response = await this.fapiPublicGetV1Depth (this.extend (request, params));
         } else {
+            if (limit !== undefined) {
+                request['limit'] = this.findNearestCeiling ([ 5, 10, 20, 50, 100, 500, 1000 ], limit);
+            }
             response = await this.sapiPublicGetV1Depth (this.extend (request, params));
         }
         //
