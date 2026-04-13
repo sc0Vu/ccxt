@@ -308,21 +308,41 @@ export default class aster extends Exchange {
                         'v3/listenKey',
                     ],
                 },
+                'sapiPublicV3': {
+                    'get': {
+                    },
+                    'post': {
+                        'noop': 1,
+                    },
+                },
                 'sapiPublic': {
-                    'get': [
-                        'v1/ping',
-                        'v1/time',
-                        'v1/exchangeInfo',
-                        'v1/depth',
-                        'v1/trades',
-                        'v1/historicalTrades',
-                        'v1/aggTrades',
-                        'v1/klines',
-                        'v1/ticker/24hr',
-                        'v1/ticker/price',
-                        'v1/ticker/bookTicker',
-                        'v1/aster/withdraw/estimateFee',
-                    ],
+                    'get': {
+                        'v1/ping': 1,
+                        'v1/time': 1,
+                        'v1/exchangeInfo': 1,
+                        'v1/depth': 1,
+                        'v1/trades': 1,
+                        'v1/historicalTrades': 1,
+                        'v1/aggTrades': 1,
+                        'v1/klines': 1,
+                        'v1/ticker/24hr': 1,
+                        'v1/ticker/price': 1,
+                        'v1/ticker/bookTicker': 1,
+                        'v1/aster/withdraw/estimateFee': 1,
+                        // v3
+                        'v3/ping': 1,
+                        'v3/time': 1,
+                        'v3/exchangeInfo': 1,
+                        'v3/depth': { 'cost': 2, 'byLimit': [ [ 50, 2 ], [ 100, 5 ], [ 500, 10 ], [ 1000, 20 ] ] },
+                        'v3/trades': 1,
+                        'v3/historicalTrades': 20,
+                        'v3/aggTrades': 20,
+                        'v3/klines': { 'cost': 1, 'byLimit': [ [ 99, 1 ], [ 499, 2 ], [ 1000, 5 ], [ 10000, 10 ] ] }, // todo: not specified in docs
+                        'v3/ticker/24hr': { 'cost': 1, 'noSymbol': 40 },
+                        'v3/ticker/price': { 'cost': 1, 'noSymbol': 2 },
+                        'v3/ticker/bookTicker': { 'cost': 1, 'noSymbol': 2 },
+                        'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
+                    },
                 },
                 'sapiPrivate': {
                     'get': [
@@ -891,17 +911,24 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchTime
      * @description fetches the current integer timestamp in milliseconds from the exchange server
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#check-server-time
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#get-server-time
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {int} the current integer timestamp in milliseconds from the exchange server
      */
     async fetchTime (params = {}): Promise<Int> {
-        const response = await this.fapiPublicGetV1Time (params);
-        //
-        //     {
-        //         "serverTime": 1499827319559
-        //     }
-        //
+        const defaultType = this.safeString2 (this.options, 'fetchTime', 'defaultType', 'spot');
+        const type = this.safeString (params, 'type', defaultType);
+        const query = this.omit (params, 'type');
+        let subType = undefined;
+        [ subType, params ] = this.handleSubTypeAndParams ('fetchTime', undefined, params);
+        let response = undefined;
+        if (this.isLinear (type, subType)) {
+            response = await this.fapiPublicGetTime (query);
+        } else if (this.isInverse (type, subType)) {
+            response = await this.dapiPublicGetTime (query);
+        } else {
+            response = await this.sapiPublicGetV3Time (query);
+        }
         return this.safeInteger (response, 'serverTime');
     }
 
