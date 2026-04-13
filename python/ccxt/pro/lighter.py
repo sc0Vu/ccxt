@@ -448,10 +448,7 @@ class lighter(ccxt.async_support.lighter):
         priceString = self.safe_string(trade, 'price')
         amountString = self.safe_string(trade, 'size')
         isMakerAsk = self.safe_bool(trade, 'is_maker_ask')
-        side = 'sell' if (isMakerAsk is True) else 'buy'
-        makerFeeRate = self.safe_string(market, 'maker_fee')
-        maker = Precise.string_div(makerFeeRate, '100')
-        feeAmount = Precise.string_mul(maker, makerFeeRate)
+        side = 'buy' if isMakerAsk else 'sell'
         return self.safe_trade({
             'info': trade,
             'id': tradeId,
@@ -461,14 +458,11 @@ class lighter(ccxt.async_support.lighter):
             'symbol': self.safe_symbol(None, market),
             'type': None,
             'side': side,
-            'takerOrMaker': 'maker',
+            'takerOrMaker': 'taker',
             'price': priceString,
             'amount': amountString,
             'cost': self.safe_string(trade, 'usd_amount'),
-            'fee': {
-                'cost': feeAmount,
-                'currency': 'USDC',
-            },
+            'fee': None,
         }, market)
 
     def handle_trades(self, client: Client, message):
@@ -570,6 +564,78 @@ class lighter(ccxt.async_support.lighter):
         messageHash = self.get_message_hash('unsubscribe', symbol)
         return await self.unsubscribe(messageHash, self.extend(request, params))
 
+    def parse_ws_order_trade(self, trade, market=None):
+        #
+        #     {
+        #         "trade_id": 526801155,
+        #         "tx_hash": "1998d9df580acb7540aa141cc369d6ef926d003b3062196d2007bca15f978ab208e0caae4ac5872b",
+        #         "type": "trade",
+        #         "market_id": 0,
+        #         "size": "0.0346",
+        #         "price": "3028.85",
+        #         "usd_amount": "104.798210",
+        #         "ask_id": 281475673670566,
+        #         "bid_id": 562949291740362,
+        #         "ask_client_id": 76303170,
+        #         "bid_client_id": 27601,
+        #         "ask_account_id": 99349,
+        #         "bid_account_id": 243008,
+        #         "is_maker_ask": False,
+        #         "block_height": 102322769,
+        #         "timestamp": 1763623734215,
+        #         "taker_position_size_before": "0.0346",
+        #         "taker_entry_quote_before": "104.359926",
+        #         "taker_initial_margin_fraction_before": 500,
+        #         "taker_position_sign_changed": True,
+        #         "maker_fee": 20,
+        #         "maker_position_size_before": "2.1277",
+        #         "maker_entry_quote_before": "6444.179555",
+        #         "maker_initial_margin_fraction_before": 200
+        #     }
+        #
+        timestamp = self.safe_integer(trade, 'timestamp')
+        tradeId = self.safe_string(trade, 'trade_id')
+        priceString = self.safe_string(trade, 'price')
+        amountString = self.safe_string(trade, 'size')
+        costString = self.safe_string(trade, 'usd_amount')
+        isMakerAsk = self.safe_bool(trade, 'is_maker_ask')
+        side = 'buy' if isMakerAsk else 'sell'
+        accountIndex = self.safe_integer(trade, 'accountIndex')
+        order = None
+        takerOrMaker = None
+        if accountIndex is not None:
+            if self.safe_integer(trade, 'bid_account_id') == accountIndex:
+                order = self.safe_string(trade, 'bid_id')
+                takerOrMaker = 'taker' if isMakerAsk else 'maker'
+            elif self.safe_integer(trade, 'ask_account_id') == accountIndex:
+                order = self.safe_string(trade, 'ask_id')
+                takerOrMaker = 'maker' if isMakerAsk else 'taker'
+        fee = None
+        if takerOrMaker is not None:
+            feeRateRaw = self.safe_string(trade, 'maker_fee') if (takerOrMaker == 'maker') else self.safe_string(trade, 'taker_fee')
+            feeRate = Precise.string_div(feeRateRaw, '1000000') if (feeRateRaw is not None) else '0'
+            feeAmount = Precise.string_mul(costString, feeRate)
+            fee = {
+                'cost': feeAmount,
+                'currency': 'USDC',
+                'rate': feeRate,
+            }
+        return self.safe_trade({
+            'info': trade,
+            'id': tradeId,
+            'order': order,
+            'timestamp': timestamp,
+            'datetime': self.iso8601(timestamp),
+            'symbol': self.safe_symbol(None, market),
+            'type': None,
+            'side': side,
+            'takerOrMaker': takerOrMaker,
+            'price': priceString,
+            'amount': amountString,
+            'cost': costString,
+            'fee': fee,
+        }, market)
+
     def handle_my_trades(self, client: Client, message):
         #
         #     {
@@ -605,6 +671,9 @@ class lighter(ccxt.async_support.lighter):
         #         "type": "update/account_all_trades"
         #     }
         #
+        channel = self.safe_string(message, 'channel', '')
+        parts = channel.split(':')
+        accountIndex = parts[1]
         data = self.safe_dict(message, 'trades', {})
         marketIds = list(data.keys())
         idsLength = len(marketIds)
@@ -622,7 +691,9 @@ class lighter(ccxt.async_support.lighter):
             tradesLength = len(trades)
             for j in range(0, tradesLength):
                 jReversed = tradesLength - 1 - j
-                trade = self.parse_ws_trade(trades[jReversed], market)
+                tradeRaw = trades[jReversed]
+                tradeRaw['accountIndex'] = accountIndex
+                trade = self.parse_ws_order_trade(tradeRaw, market)
                 stored.append(trade)
                 symbol = trade['symbol']
                 if symbol is not None:
