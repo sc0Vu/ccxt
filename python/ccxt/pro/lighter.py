@@ -5,7 +5,7 @@
 
 import ccxt.async_support
 from ccxt.async_support.base.ws.cache import ArrayCache
-from ccxt.base.types import Any, Int, Liquidation, Order, OrderBook, Str, Strings, Ticker, Tickers, Trade
+from ccxt.base.types import Any, Balances, Int, Liquidation, Order, OrderBook, Str, Strings, Ticker, Tickers, Trade
 from ccxt.async_support.base.ws.client import Client
 from typing import List
 from ccxt.base.precise import Precise
@@ -26,7 +26,7 @@ class lighter(ccxt.async_support.lighter):
                 'watchTrades': True,
                 'watchTradesForSymbols': False,
                 'watchOrderBookForSymbols': False,
-                'watchBalance': False,
+                'watchBalance': True,
                 'watchLiquidations': True,
                 'watchLiquidationsForSymbols': False,
                 'watchMyLiquidations': False,
@@ -808,6 +808,118 @@ class lighter(ccxt.async_support.lighter):
         messageHash = self.get_message_hash('liquidations', symbol)
         return await self.subscribe_public(messageHash, self.extend(request, params))
 
+    async def watch_balance(self, params={}) -> Balances:
+        """
+        watch balance and get the amount of funds available for trading or funds locked in orders
+
+        https://apidocs.lighter.xyz/docs/websocket-reference#account-all-assets
+
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param str [params.type]: 'spot' or 'swap', default is 'swap'
+        :returns dict: a `balance structure <https://docs.ccxt.com/?id=balance-structure>`
+        """
+        await self.load_markets()
+        defaultType = self.safe_string_2(self.options, 'watchBalance', 'defaultType', 'spot')
+        type = None
+        type, params = self.handle_param_string(params, 'type', defaultType)
+        accountIndex = None
+        accountIndex, params = await self.handleAccountIndex(params, 'watchBalance', 'accountIndex', 'account_index')
+        messageHash = self.get_message_hash('balances', None, type)
+        request = {}
+        if type == 'spot':
+            request['channel'] = 'account_all_assets/' + self.number_to_string(accountIndex)
+            return await self.subscribe_private(messageHash, self.extend(request, params))
+        else:
+            request['channel'] = 'user_stats/' + self.number_to_string(accountIndex)
+            return await self.subscribe_public(messageHash, self.extend(request, params))
+
+    def handle_balance(self, client: Client, message):
+        #
+        #    spot balance
+        #    {
+        #        "assets": {
+        #              "1": {
+        #                    "symbol": "ETH",
+        #                    "asset_id": 1,
+        #                    "balance": "7.1072",
+        #                    "locked_balance": "0.0000"
+        #              },
+        #              "3": {
+        #                    "symbol": "USDC",
+        #                    "asset_id": 3,
+        #                    "balance": "6343.581906",
+        #                    "locked_balance": "297.000000"
+        #              }
+        #        },
+        #        "channel": "account_all_assets:1234",
+        #        "timestamp": 1773158679717,
+        #        "type": "update/account_all_assets"
+        #    }
+        #
+        #    swap balance
+        #    {
+        #        "channel": "user_stats:10",
+        #        "stats": {
+        #            "collateral": "5000.00",
+        #            "portfolio_value": "15000.00",
+        #            "leverage": "3.0",
+        #            "available_balance": "2000.00",
+        #            "margin_usage": "0.80",
+        #            "buying_power": "4000.00",
+        #            "account_trading_mode": 1,
+        #            "cross_stats":{
+        #               "collateral":"0.000000",
+        #               "portfolio_value":"0.000000",
+        #               "leverage":"0.00",
+        #               "available_balance":"0.000000",
+        #               "margin_usage":"0.00",
+        #               "buying_power":"0"
+        #            },
+        #            "total_stats":{
+        #               "collateral":"0.000000",
+        #               "portfolio_value":"0.000000",
+        #               "leverage":"0.00",
+        #               "available_balance":"0.000000",
+        #               "margin_usage":"0.00",
+        #               "buying_power":"0"
+        #            }
+        #        },
+        #        "timestamp": 1773158679717,
+        #        "type": "update/user_stats"
+        #    }
+        #
+        channel = self.safe_string(message, 'channel', '')
+        type = 'spot'
+        if channel.find('user_stats:') >= 0:
+            type = 'swap'
+        balance = self.safe_dict(self.balance, type, {})
+        if type == 'spot':
+            assets = self.safe_dict(message, 'assets', {})
+            assetIds = list(assets.keys())
+            for i in range(0, len(assetIds)):
+                assetId = assetIds[i]
+                asset = assets[assetId]
+                codeId = self.safe_string(asset, 'symbol')
+                code = self.safe_currency_code(codeId)
+                account = self.account()
+                account['used'] = self.safe_string(asset, 'locked_balance')
+                account['total'] = self.safe_string(asset, 'balance')
+                balance[code] = account
+        else:
+            stats = self.safe_dict(message, 'stats', {})
+            account = self.account()
+            account['free'] = self.safe_string(stats, 'available_balance')
+            account['total'] = self.safe_string(stats, 'collateral')
+            account['info'] = stats
+            balance['USDC'] = account
+        timestamp = self.safe_integer(message, 'timestamp')
+        balance['timestamp'] = timestamp
+        balance['datetime'] = self.iso8601(timestamp)
+        self.balance[type] = self.safe_balance(balance)
+        messageHash = self.get_message_hash('balances', None, type)
+        client.resolve(self.balance[type], messageHash)
+        return True
+
     async def watch_orders(self, symbol: Str = None, since: Int = None, limit: Int = None, params={}) -> List[Order]:
         """
         watches information on multiple orders made by the user
@@ -944,6 +1056,12 @@ class lighter(ccxt.async_support.lighter):
             return
         if channel.find('account_all_trades:') >= 0:
             self.handle_my_trades(client, message)
+            return
+        if channel.find('account_all_assets:') >= 0:
+            self.handle_balance(client, message)
+            return
+        if channel.find('user_stats:') >= 0:
+            self.handle_balance(client, message)
             return
         if channel.find('account_orders:') >= 0:
             self.handle_orders(client, message)
