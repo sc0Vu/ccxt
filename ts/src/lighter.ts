@@ -395,7 +395,7 @@ export default class lighter extends Exchange {
         const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
         if (privateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
             // load lighter library without creating lighter client
-            signer = await this.loadLighterLibrary (libraryPath, chainId, "", apiKeyIndex, accountIndex, false);
+            signer = await this.loadLighterLibrary (libraryPath, chainId, '', apiKeyIndex, accountIndex, false);
             this.options['signer'] = signer;
             return await this.changeApiKey ();
         }
@@ -414,8 +414,6 @@ export default class lighter extends Exchange {
         if (signer !== undefined) {
             return true;
         }
-        let libraryPath = undefined;
-        [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
         let apiKeyIndex = undefined;
         [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
@@ -654,7 +652,7 @@ export default class lighter extends Exchange {
             'tx_type': txType,
             'tx_info': newTxInfo,
         };
-        const response = await this.publicPostSendTx (request);
+        await this.publicPostSendTx (request);
         this.options['lighterPrivateKey'] = privateKey;
         this.options['signer'] = signer; // reassign signer in go
         return signer;
