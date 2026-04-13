@@ -1480,6 +1480,7 @@ class lighter(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.by]: fetch balance by 'index' or 'l1_address', defaults to 'index'
         :param str [params.value]: fetch balance value, account index or l1 address
+        :param str [params.type]: 'spot', 'swap', default is 'swap'
         :returns dict: a `balance structure <https://docs.ccxt.com/?id=balance-structure>`
         """
         self.load_markets()
@@ -1551,9 +1552,11 @@ class lighter(Exchange, ImplicitAPI):
                     balance['used'] = Precise.string_add(balance['used'], self.safe_string(asset, 'locked_balance'))
                     result[code] = balance
             else:
-                perpUSDC = self.safe_string(account, 'collateral')
-                perpBalance = self.safe_dict(result, 'USDC(PERP)', self.account())
-                perpBalance['total'] = Precise.string_add(perpBalance['total'], perpUSDC)
+                perpBalance = self.safe_dict(result, 'USDC', self.account())
+                perpUSDCTotal = self.safe_string(account, 'collateral')
+                perpUSDCFree = self.safe_string(account, 'available_balance')
+                perpBalance['total'] = Precise.string_add(perpBalance['total'], perpUSDCTotal)
+                perpBalance['free'] = Precise.string_add(perpBalance['free'], perpUSDCFree)
                 result['USDC'] = perpBalance
         return self.safe_balance(result)
 
