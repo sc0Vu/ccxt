@@ -1359,30 +1359,32 @@ export default class aster extends Exchange {
     parseTicker (ticker: Dict, market: Market = undefined): Ticker {
         //
         // spot
+        //
         //     {
         //         "symbol": "BTCUSDT",
-        //         "priceChange": "-2274.38",
-        //         "priceChangePercent": "-2.049",
-        //         "weightedAvgPrice": "109524.37084136",
-        //         "lastPrice": "108738.78",
-        //         "lastQty": "0.00034",
-        //         "openPrice": "111013.16",
-        //         "highPrice": "111975.81",
-        //         "lowPrice": "107459.25",
-        //         "volume": "28.67876",
-        //         "quoteVolume": "3141023.14551030",
-        //         "openTime": "1760578800000",
-        //         "closeTime": "1760665024749",
-        //         "firstId": "37447",
-        //         "lastId": "39698",
-        //         "count": "2252",
+        //         "priceChange": "238.00",
+        //         "priceChangePercent": "0.336",
+        //         "weightedAvgPrice": "70946.12052580",
+        //         "lastPrice": "71160.00",
+        //         "lastQty": "0.01000",
+        //         "openPrice": "70922.00",
+        //         "highPrice": "71429.27",
+        //         "lowPrice": "70500.00",
+        //         "volume": "12.67491",
+        //         "quoteVolume": "899235.69251370",
+        //         "openTime": "1775998920000",
+        //         "closeTime": "1776085367531",
+        //         "firstId": "4146804",
+        //         "lastId": "4147868",
+        //         "count": "1065",
         //         "baseAsset": "BTC",
         //         "quoteAsset": "USDT",
-        //         "bidPrice": "108705.11",
-        //         "bidQty": "0.03351",
-        //         "askPrice": "108725.99",
-        //         "askQty": "0.08724"
+        //         "bidPrice": "71125.98",
+        //         "bidQty": "0.00737",
+        //         "askPrice": "71152.10",
+        //         "askQty": "0.32399"
         //     }
+        //
         // swap
         //     {
         //         "symbol": "BTCUSDT",
@@ -1451,16 +1453,12 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchTicker
      * @description fetches a price ticker, a statistical calculation with the information calculated over the past 24 hours for a specific market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#24h-price-change
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#24hr-ticker-price-change-statistics
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#24h-price-change
      * @param {string} symbol unified symbol of the market to fetch the ticker for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
      */
     async fetchTicker (symbol: string, params = {}): Promise<Ticker> {
-        if (symbol === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchTicker() requires a symbol argument');
-        }
         await this.loadMarkets ();
         const market = this.market (symbol);
         const request: Dict = {
@@ -1490,31 +1488,33 @@ export default class aster extends Exchange {
             //     }
             //
         } else {
-            response = await this.sapiPublicGetV1Ticker24hr (this.extend (request, params));
-            //     {
-            //         "symbol": "BTCUSDT",
-            //         "priceChange": "-2274.38",
-            //         "priceChangePercent": "-2.049",
-            //         "weightedAvgPrice": "109524.37084136",
-            //         "lastPrice": "108738.78",
-            //         "lastQty": "0.00034",
-            //         "openPrice": "111013.16",
-            //         "highPrice": "111975.81",
-            //         "lowPrice": "107459.25",
-            //         "volume": "28.67876",
-            //         "quoteVolume": "3141023.14551030",
-            //         "openTime": "1760578800000",
-            //         "closeTime": "1760665024749",
-            //         "firstId": "37447",
-            //         "lastId": "39698",
-            //         "count": "2252",
-            //         "baseAsset": "BTC",
-            //         "quoteAsset": "USDT",
-            //         "bidPrice": "108705.11",
-            //         "bidQty": "0.03351",
-            //         "askPrice": "108725.99",
-            //         "askQty": "0.08724"
-            //     }
+            response = await this.sapiPublicGetV3Ticker24hr (this.extend (request, params));
+            //
+            //    {
+            //        "symbol": "BTCUSDT",
+            //        "priceChange": "238.00",
+            //        "priceChangePercent": "0.336",
+            //        "weightedAvgPrice": "70946.12052580",
+            //        "lastPrice": "71160.00",
+            //        "lastQty": "0.01000",
+            //        "openPrice": "70922.00",
+            //        "highPrice": "71429.27",
+            //        "lowPrice": "70500.00",
+            //        "volume": "12.67491",
+            //        "quoteVolume": "899235.69251370",
+            //        "openTime": "1775998920000",
+            //        "closeTime": "1776085367531",
+            //        "firstId": "4146804",
+            //        "lastId": "4147868",
+            //        "count": "1065",
+            //        "baseAsset": "BTC",
+            //        "quoteAsset": "USDT",
+            //        "bidPrice": "71125.98",
+            //        "bidQty": "0.00737",
+            //        "askPrice": "71152.10",
+            //        "askQty": "0.32399"
+            //    }
+            //
         }
         return this.parseTicker (response, market);
     }
@@ -1523,8 +1523,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchTickers
      * @description fetches price tickers for multiple markets, statistical information calculated over the past 24 hours for each market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#24h-price-change
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#24hr-ticker-price-change-statistics
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#24h-price-change
      * @param {string[]} symbols unified symbols of the markets to fetch the ticker for, all market tickers are returned if not assigned
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
