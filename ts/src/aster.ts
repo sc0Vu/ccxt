@@ -334,19 +334,19 @@ export default class aster extends Exchange {
                         'v3/ticker/24hr': { 'cost': 1, 'noSymbol': 40 },
                         'v3/ticker/price': { 'cost': 1, 'noSymbol': 2 },
                         'v3/ticker/bookTicker': { 'cost': 1, 'noSymbol': 2 },
-                        'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
                     },
                 },
                 'sapiPrivate': {
-                    'get': [
-                        'v1/commissionRate',
-                        'v1/order',
-                        'v1/openOrders',
-                        'v1/allOrders',
-                        'v1/transactionHistory',
-                        'v1/account',
-                        'v1/userTrades',
-                    ],
+                    'get': {
+                        'v1/commissionRate': 1,
+                        'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
+                        'v1/order': 1,
+                        'v1/openOrders': 1,
+                        'v1/allOrders': 1,
+                        'v1/transactionHistory': 1,
+                        'v1/account': 1,
+                        'v1/userTrades': 1,
+                    },
                     'post': [
                         'v1/order',
                         'v1/asset/wallet/transfer',
@@ -1698,7 +1698,7 @@ export default class aster extends Exchange {
         } else if (this.isInverse (type, subType)) {
             response = await this.dapiPublicGetTickerBookTicker (params);
         } else if (type === 'spot') {
-            response = await this.publicGetTickerBookTicker (params);
+            response = await this.sapiPublicGetV3TickerBookTicker (params);
         } else {
             throw new NotSupported (this.id + ' fetchBidsAsks() does not support ' + type + ' markets yet');
         }
@@ -2342,8 +2342,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#createOrder
      * @description create a trade order
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#place-order-trade
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#new-order--trade
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#place-order-trade
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {string} type 'market' or 'limit' or 'STOP' or 'STOP_MARKET' or 'TAKE_PROFIT' or 'TAKE_PROFIT_MARKET' or 'TRAILING_STOP_MARKET'
      * @param {string} side 'buy' or 'sell'
@@ -2371,7 +2370,7 @@ export default class aster extends Exchange {
             if (test) {
                 response = await this.fapiPrivatePostV1OrderTest (request);
             } else {
-                response = await this.fapiPrivatePostV1Order (request);
+                response = await this.fapiPrivatePostV3Order (request);
             }
         } else {
             response = await this.sapiPrivatePostV1Order (request);
