@@ -2262,10 +2262,10 @@ class Exchange(object):
     def is_lighter_library_path_required(self):
         return True
 
-    def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient = False):
+    def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient):
         return self.load_lighter_library_helper(path, chainId, privateKey, apiKeyIndex, accountIndex, createClient)
 
-    def load_lighter_library_helper(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient = False):
+    def load_lighter_library_helper(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient):
         if path is None:
             raise NotSupported(self.id + ' load_lighter_library() requires a path to the lighter library. You can find it here https://github.com/elliottech/lighter-python/tree/main/lighter/signers. Please download the appropriate library for your system and provide the path to it.\nExample: exchange.options["libraryPath"] = "path/to/lighter-signer-linux-arm64.so"')
         if not os.path.isfile(path):
@@ -2314,7 +2314,7 @@ class Exchange(object):
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index']
@@ -2336,7 +2336,7 @@ class Exchange(object):
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2349,7 +2349,7 @@ class Exchange(object):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelOrder(
             request['market_index'],
             request['order_index'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2363,7 +2363,7 @@ class Exchange(object):
             request['asset_index'],
             request['route_type'],
             request['amount'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2374,7 +2374,7 @@ class Exchange(object):
 
     def lighter_sign_create_sub_account(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCreateSubAccount(
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2387,7 +2387,7 @@ class Exchange(object):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignCancelAllOrders(
             request['time_in_force'],
             request['time'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2406,7 +2406,7 @@ class Exchange(object):
             request['integrator_account_index'],
             request['integrator_taker_fee'],
             request['integrator_maker_fee'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2424,7 +2424,7 @@ class Exchange(object):
             request['amount'],
             request['usdc_fee'],
             request['memo'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2438,7 +2438,7 @@ class Exchange(object):
             request['market_index'],
             request['initial_margin_fraction'],
             request['margin_mode'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2462,7 +2462,7 @@ class Exchange(object):
             request['market_index'],
             request['usdc_amount'],
             request['direction'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2470,7 +2470,7 @@ class Exchange(object):
         if error:
             raise Exception('lighter_sign_update_margin() failed with error: ' + str(error))
         return [tx_type, tx_info]
-    
+
     def lighter_sign_approve_integrator(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignApproveIntegrator(
             int(request['integrator_account_index']),
@@ -2479,7 +2479,7 @@ class Exchange(object):
             int(request['integrator_taker_fee']),
             int(request['integrator_maker_fee']),
             request['approval_expiry'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],
@@ -2497,7 +2497,7 @@ class Exchange(object):
     def lighter_sign_change_pubkey(self, signer, request):
         tx_type, tx_info, tx_hash, message_to_sign, error = decode_tx_info(signer.SignChangePubKey(
             request['pubkey'],
-            True, # skip nonce
+            True,
             request['nonce'],
             request['api_key_index'],
             request['account_index'],

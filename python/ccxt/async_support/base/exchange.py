@@ -88,7 +88,7 @@ class Exchange(BaseExchange):
         self.markets_loading = None
         self.reloading_markets = False
 
-    async def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient = False):
+    async def load_lighter_library(self, path, chainId, privateKey, apiKeyIndex, accountIndex, createClient):
         return self.load_lighter_library_helper(path, chainId, privateKey, apiKeyIndex, accountIndex, createClient)
 
     def get_event_loop(self):
