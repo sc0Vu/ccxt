@@ -1,4 +1,4 @@
-import type { Dict, Int, Liquidation, Order, OrderBook, Str, Strings, Ticker, Tickers, Trade } from '../base/types.js';
+import type { Balances, Dict, Int, Liquidation, Order, OrderBook, Str, Strings, Ticker, Tickers, Trade } from '../base/types.js';
 import Client from '../base/ws/Client.js';
 import lighterRest from '../lighter.js';
 export default class lighter extends lighterRest {
@@ -178,6 +178,16 @@ export default class lighter extends lighterRest {
     watchLiquidations(symbol: string, since?: Int, limit?: Int, params?: {}): Promise<Liquidation[]>;
     /**
      * @method
+     * @name lighter#watchBalance
+     * @description watch balance and get the amount of funds available for trading or funds locked in orders
+     * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-assets
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} [params.type] 'spot' or 'swap', default is 'swap'
+     * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
+     */
+    watchBalance(params?: {}): Promise<Balances>;
+    handleBalance(client: Client, message: any): boolean;
+    /**
      * @name lighter#watchOrders
      * @description watches information on multiple orders made by the user
      * @see https://apidocs.lighter.xyz/docs/websocket-reference#account-all-orders
