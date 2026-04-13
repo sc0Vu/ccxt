@@ -308,13 +308,6 @@ export default class aster extends Exchange {
                         'v3/listenKey',
                     ],
                 },
-                'sapiPublicV3': {
-                    'get': {
-                    },
-                    'post': {
-                        'noop': 1,
-                    },
-                },
                 'sapiPublic': {
                     'get': {
                         'v1/ping': 1,
@@ -682,14 +675,13 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchMarkets
      * @description retrieves data on all markets for bigone
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#trading-specification-information
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#exchange-information
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#trading-specification-information
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} an array of objects representing market data
      */
     async fetchMarkets (params = {}): Promise<Market[]> {
         const promises = [
-            this.sapiPublicGetV1ExchangeInfo (params),
+            this.sapiPublicGetV3ExchangeInfo (params),
             this.fapiPublicGetV1ExchangeInfo (params),
         ];
         const results = await Promise.all (promises);
@@ -697,214 +689,200 @@ export default class aster extends Exchange {
         const sapiRows = this.safeList (sapiResult, 'symbols', []);
         const fapiResult = this.safeDict (results, 1, {});
         const fapiRows = this.safeList (fapiResult, 'symbols', []);
-        const rows = this.arrayConcat (sapiRows, fapiRows);
         //
         //     [
-        //         {
-        //             "symbol": "BTCUSDT",
-        //             "pair": "BTCUSDT",
-        //             "contractType": "PERPETUAL",
-        //             "deliveryDate": 4133404800000,
-        //             "onboardDate": 1627628400000,
-        //             "status": "TRADING",
-        //             "maintMarginPercent": "2.5000",
-        //             "requiredMarginPercent": "5.0000",
-        //             "baseAsset": "BTC",
-        //             "quoteAsset": "USDT",
-        //             "marginAsset": "USDT",
-        //             "pricePrecision": 1,
-        //             "quantityPrecision": 3,
-        //             "baseAssetPrecision": 8,
-        //             "quotePrecision": 8,
-        //             "underlyingType": "COIN",
-        //             "underlyingSubType": [],
-        //             "settlePlan": 0,
-        //             "triggerProtect": "0.0200",
-        //             "liquidationFee": "0.025000",
-        //             "marketTakeBound": "0.02",
-        //             "filters": [
-        //                 {
-        //                     "minPrice": "1",
-        //                     "maxPrice": "1000000",
-        //                     "filterType": "PRICE_FILTER",
-        //                     "tickSize": "0.1"
-        //                 },
-        //                 {
-        //                     "stepSize": "0.001",
-        //                     "filterType": "LOT_SIZE",
-        //                     "maxQty": "100",
-        //                     "minQty": "0.001"
-        //                 },
-        //                 {
-        //                     "stepSize": "0.001",
-        //                     "filterType": "MARKET_LOT_SIZE",
-        //                     "maxQty": "10",
-        //                     "minQty": "0.001"
-        //                 },
-        //                 {
-        //                     "limit": 200,
-        //                     "filterType": "MAX_NUM_ORDERS"
-        //                 },
-        //                 {
-        //                     "limit": 10,
-        //                     "filterType": "MAX_NUM_ALGO_ORDERS"
-        //                 },
-        //                 {
-        //                     "notional": "5",
-        //                     "filterType": "MIN_NOTIONAL"
-        //                 },
-        //                 {
-        //                     "multiplierDown": "0.9800",
-        //                     "multiplierUp": "1.0200",
-        //                     "multiplierDecimal": "4",
-        //                     "filterType": "PERCENT_PRICE"
-        //                 }
-        //             ],
-        //             "orderTypes": [
-        //                 "LIMIT",
-        //                 "MARKET",
-        //                 "STOP",
-        //                 "STOP_MARKET",
-        //                 "TAKE_PROFIT",
-        //                 "TAKE_PROFIT_MARKET",
-        //                 "TRAILING_STOP_MARKET"
-        //             ],
-        //             "timeInForce": [
-        //                 "GTC",
-        //                 "IOC",
-        //                 "FOK",
-        //                 "GTX",
-        //                 "RPI"
-        //             ]
-        //         }
+        //       {
+        //         symbol: "TESTUSDT",
+        //         status: "TRADING",
+        //         baseAsset: "TEST",
+        //         quoteAsset: "USDT",
+        //         pricePrecision: "2",
+        //         quantityPrecision: "5",
+        //         baseAssetPrecision: "8",
+        //         quotePrecision: "8",
+        //         listingTime: "1756289680210",      // only in SPOT
+        //         baseAssetAddress: null,            // only in SPOT
+        //         ocoAllowed: false,                 // only in SPOT
+        //         pair: "ASTERUSDT",                 // only in PERP
+        //         contractType: "PERPETUAL",         // only in PERP
+        //         deliveryDate: "4133404800000",     // only in PERP
+        //         onboardDate: "1758178800000",      // only in PERP
+        //         maintMarginPercent: "12.5000",     // only in PERP
+        //         requiredMarginPercent: "25.0000",  // only in PERP
+        //         marginAsset: "USDT",               // only in PERP
+        //         underlyingType: "COIN",            // only in PERP
+        //         underlyingSubType: [ "Top", ],     // only in PERP
+        //         symbolType: "0",                   // only in PERP
+        //         tradingMode: "0",                  // only in PERP
+        //         name: "",                          // only in PERP
+        //         channel: "{}",                     // only in PERP
+        //         sequenceNo: "100",                 // only in PERP
+        //         twapMinNotional: "1000",           // only in PERP
+        //         imn: "4000.00",                    // only in PERP
+        //         tags: [],                          // only in PERP
+        //         settlePlan: "0",                   // only in PERP
+        //         triggerProtect: "0.1500",          // only in PERP
+        //         liquidationFee: "0.025000",        // only in PERP
+        //         marketTakeBound: "0.05",           // only in PERP
+        //         createTime: "1758215451058",       // only in PERP
+        //         filters: [
+        //           {
+        //             minPrice: "0.01",
+        //             maxPrice: "1000000",
+        //             filterType: "PRICE_FILTER",
+        //             tickSize: "0.01",
+        //           },
+        //           {
+        //             stepSize: "0.00001",
+        //             filterType: "LOT_SIZE",
+        //             maxQty: "9000",
+        //             minQty: "0.00001",
+        //           },
+        //           {
+        //             stepSize: "0.00001",
+        //             filterType: "MARKET_LOT_SIZE",
+        //             maxQty: "9000",
+        //             minQty: "0.00001",
+        //           },
+        //           {
+        //             limit: "200",
+        //             filterType: "MAX_NUM_ORDERS",
+        //           },
+        //           {
+        //             minNotional: "5",
+        //             filterType: "MIN_NOTIONAL",
+        //           },
+        //           {
+        //             minNotional: "5",
+        //             avgPriceMins: "5",
+        //             applyMinToMarket: true,
+        //             filterType: "NOTIONAL",            // only in SPOT
+        //             applyMaxToMarket: true,
+        //           },
+        //           {
+        //             multiplierDown: "0.2",
+        //             multiplierUp: "5",
+        //             multiplierDecimal: "1",
+        //             filterType: "PERCENT_PRICE",
+        //           },
+        //           {
+        //             bidMultiplierUp: "5",
+        //             askMultiplierUp: "5",
+        //             bidMultiplierDown: "0.2",
+        //             avgPriceMins: "5",
+        //             multiplierDecimal: "1",
+        //             filterType: "PERCENT_PRICE_BY_SIDE",  // only in SPOT
+        //             askMultiplierDown: "0.2",
+        //           },
+        //         ],
+        //         orderTypes: [ "LIMIT", "MARKET", "STOP", "STOP_MARKET", "TAKE_PROFIT", "TAKE_PROFIT_MARKET", "TRAILING_STOP_MARKET", ],
+        //         timeInForce: [ "GTC", "IOC", "FOK", "GTX", "HIDDEN", ],
+        //       }
         //     ]
         //
-        const fees = this.fees;
-        const result = [];
-        for (let i = 0; i < rows.length; i++) {
-            let swap = false;
-            const market = rows[i];
-            const id = this.safeString (market, 'symbol');
-            const baseId = this.safeString (market, 'baseAsset');
-            const quoteId = this.safeString (market, 'quoteAsset');
-            const base = this.safeCurrencyCode (baseId);
-            const quote = this.safeCurrencyCode (quoteId);
-            const contractType = this.safeString (market, 'contractType');
-            const contract = contractType !== undefined;
-            let spot = true;
-            if (contractType === 'PERPETUAL') {
-                swap = true;
-                spot = false;
-            }
-            let contractSize = undefined;
-            let linear = undefined;
-            let inverse = undefined;
-            let symbol = base + '/' + quote;
-            let settle = undefined;
-            let settleId = undefined;
-            if (contract) {
-                settleId = this.safeString (market, 'marginAsset');
-                settle = this.safeCurrencyCode (settleId);
-                if (swap) {
-                    symbol = symbol + ':' + settle;
-                }
-                linear = settle === quote;
-                inverse = settle === base;
-                contractSize = this.safeNumber2 (market, 'contractSize', 'unit', this.parseNumber ('1'));
-            }
-            let unifiedType = undefined;
-            if (spot) {
-                unifiedType = 'spot';
-            } else if (swap) {
-                unifiedType = 'swap';
-            }
-            const status = this.safeString (market, 'status');
-            const active = status === 'TRADING';
-            const filters = this.safeList (market, 'filters', []);
-            const filtersByType = this.indexBy (filters, 'filterType');
-            const entry = this.safeMarketStructure ({
-                'id': id,
-                'symbol': symbol,
-                'base': base,
-                'quote': quote,
-                'settle': settle,
-                'baseId': baseId,
-                'quoteId': quoteId,
-                'settleId': settleId,
-                'type': unifiedType,
-                'spot': spot,
-                'margin': false,
-                'swap': swap,
-                'future': false,
-                'option': false,
-                'active': active,
-                'contract': contract,
-                'linear': linear,
-                'inverse': inverse,
-                'taker': fees['trading']['taker'],
-                'maker': fees['trading']['maker'],
-                'contractSize': contractSize,
-                'expiry': undefined,
-                'expiryDatetime': undefined,
-                'strike': undefined,
-                'optionType': undefined,
-                'precision': {
-                    'amount': this.parseNumber (this.parsePrecision (this.safeString (market, 'quantityPrecision'))),
-                    'price': this.parseNumber (this.parsePrecision (this.safeString (market, 'pricePrecision'))),
-                    'base': this.parseNumber (this.parsePrecision (this.safeString (market, 'baseAssetPrecision'))),
-                    'quote': this.parseNumber (this.parsePrecision (this.safeString (market, 'quotePrecision'))),
-                },
-                'limits': {
-                    'leverage': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                    'amount': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                    'price': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                    'cost': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                },
-                'created': this.safeInteger (market, 'onboardDate'),
-                'info': market,
-            });
-            if ('PRICE_FILTER' in filtersByType) {
-                const filter = this.safeDict (filtersByType, 'PRICE_FILTER', {});
-                entry['limits']['price'] = {
-                    'min': this.safeNumber (filter, 'minPrice'),
-                    'max': this.safeNumber (filter, 'maxPrice'),
-                };
-                entry['precision']['price'] = this.safeNumber (filter, 'tickSize');
-            }
-            if ('LOT_SIZE' in filtersByType) {
-                const filter = this.safeDict (filtersByType, 'LOT_SIZE', {});
-                entry['precision']['amount'] = this.safeNumber (filter, 'stepSize');
-                entry['limits']['amount'] = {
-                    'min': this.safeNumber (filter, 'minQty'),
-                    'max': this.safeNumber (filter, 'maxQty'),
-                };
-            }
-            if ('MARKET_LOT_SIZE' in filtersByType) {
-                const filter = this.safeDict (filtersByType, 'MARKET_LOT_SIZE', {});
-                entry['limits']['market'] = {
-                    'min': this.safeNumber (filter, 'minQty'),
-                    'max': this.safeNumber (filter, 'maxQty'),
-                };
-            }
-            if (('MIN_NOTIONAL' in filtersByType) || ('NOTIONAL' in filtersByType)) {
-                const filter = this.safeDict2 (filtersByType, 'MIN_NOTIONAL', 'NOTIONAL', {});
-                entry['limits']['cost']['min'] = this.safeNumber (filter, 'notional');
-            }
-            result.push (entry);
+        //
+        const rows = this.arrayConcat (sapiRows, fapiRows);
+        return this.parseMarkets (rows);
+    }
+
+    parseMarket (market: Dict): Market {
+        const id = this.safeString (market, 'symbol');
+        const baseId = this.safeString (market, 'baseAsset');
+        const quoteId = this.safeString (market, 'quoteAsset');
+        const base = this.safeCurrencyCode (baseId);
+        const quote = this.safeCurrencyCode (quoteId);
+        const active = this.safeString (market, 'status') === 'TRADING';
+        let spot = undefined;
+        let symbol: Str = undefined;
+        let settle = undefined;
+        let settleId = undefined;
+        let swap = undefined;
+        let linear = undefined;
+        let inverse = undefined;
+        let contractSize = undefined;
+        const contractType = this.safeString (market, 'contractType');
+        const isContract = contractType !== undefined;
+        if (isContract) {
+            // currently, there is only perpetuals, not futures
+            spot = false;
+            swap = true;
+            settleId = this.safeString (market, 'marginAsset');
+            settle = this.safeCurrencyCode (settleId);
+            symbol = base + '/' + quote + ':' + settle;
+            linear = settle === quote;
+            inverse = settle === base;
+            contractSize = this.safeNumber2 (market, 'contractSize', 'unit', this.parseNumber ('1'));
+        } else {
+            spot = true;
+            swap = false;
+            symbol = base + '/' + quote;
         }
-        return result;
+        // filters
+        const filters = this.safeList (market, 'filters', []);
+        const filtersByType = this.indexBy (filters, 'filterType');
+        const filterNotional = this.safeDict2 (filtersByType, 'MIN_NOTIONAL', 'NOTIONAL');
+        const filterPrice = this.safeDict (filtersByType, 'PRICE_FILTER');
+        const filterLotSize = this.safeDict (filtersByType, 'LOT_SIZE');
+        const filterMarketLotSize = this.safeDict (filtersByType, 'MARKET_LOT_SIZE', {});
+        const pricePrecision = (filterPrice !== undefined) ? this.safeNumber (filterPrice, 'tickSize') : this.parseNumber (this.parsePrecision (this.safeString (market, 'pricePrecision')));
+        const amountPrecision = (filterLotSize !== undefined) ? this.safeNumber (filterLotSize, 'stepSize') : this.parseNumber (this.parsePrecision (this.safeString (market, 'quantityPrecision')));
+        return this.safeMarketStructure ({
+            'id': id,
+            'symbol': symbol,
+            'base': base,
+            'quote': quote,
+            'settle': settle,
+            'baseId': baseId,
+            'quoteId': quoteId,
+            'settleId': settleId,
+            'type': isContract ? 'swap' : 'spot',
+            'spot': spot,
+            'margin': false,
+            'swap': swap,
+            'future': false,
+            'option': false,
+            'active': active,
+            'contract': isContract,
+            'linear': linear,
+            'inverse': inverse,
+            'taker': this.fees['trading']['taker'],
+            'maker': this.fees['trading']['maker'],
+            'contractSize': contractSize,
+            'expiry': undefined,
+            'expiryDatetime': undefined,
+            'strike': undefined,
+            'optionType': undefined,
+            'precision': {
+                'amount': amountPrecision,
+                'price': pricePrecision,
+                'base': this.parseNumber (this.parsePrecision (this.safeString (market, 'baseAssetPrecision'))),
+                'quote': this.parseNumber (this.parsePrecision (this.safeString (market, 'quotePrecision'))),
+            },
+            'limits': {
+                'leverage': {
+                    'min': undefined,
+                    'max': undefined,
+                },
+                'amount': {
+                    'min': this.safeNumber (filterLotSize, 'minQty'),
+                    'max': this.safeNumber (filterLotSize, 'maxQty'),
+                },
+                'price': {
+                    'min': this.safeNumber (filterPrice, 'minPrice'),
+                    'max': this.safeNumber (filterPrice, 'maxPrice'),
+                },
+                'cost': {
+                    'min': this.safeNumber2 (filterNotional, 'notional', 'minNotional'),
+                    'max': undefined,
+                },
+                'market': {
+                    'min': this.safeNumber (filterMarketLotSize, 'minQty'),
+                    'max': this.safeNumber (filterMarketLotSize, 'maxQty'),
+                },
+            },
+            'created': this.safeInteger (market, 'listingTime'),
+            'info': market,
+        });
     }
 
     /**
