@@ -460,10 +460,7 @@ export default class lighter extends lighterRest {
         const priceString = this.safeString(trade, 'price');
         const amountString = this.safeString(trade, 'size');
         const isMakerAsk = this.safeBool(trade, 'is_maker_ask');
-        const side = (isMakerAsk === true) ? 'sell' : 'buy';
-        const makerFeeRate = this.safeString(market, 'maker_fee');
-        const maker = Precise.stringDiv(makerFeeRate, '100');
-        const feeAmount = Precise.stringMul(maker, makerFeeRate);
+        const side = isMakerAsk ? 'buy' : 'sell';
         return this.safeTrade({
             'info': trade,
             'id': tradeId,
@@ -473,14 +470,11 @@ export default class lighter extends lighterRest {
             'symbol': this.safeSymbol(undefined, market),
             'type': undefined,
             'side': side,
-            'takerOrMaker': 'maker',
+            'takerOrMaker': 'taker',
             'price': priceString,
             'amount': amountString,
             'cost': this.safeString(trade, 'usd_amount'),
-            'fee': {
-                'cost': feeAmount,
-                'currency': 'USDC',
-            },
+            'fee': undefined,
         }, market);
     }
     handleTrades(client, message) {
@@ -585,6 +579,82 @@ export default class lighter extends lighterRest {
         const messageHash = this.getMessageHash('unsubscribe', symbol);
         return await this.unsubscribe(messageHash, this.extend(request, params));
     }
+    parseWsOrderTrade(trade, market = undefined) {
+        //
+        //     {
+        //         "trade_id": 526801155,
+        //         "tx_hash": "1998d9df580acb7540aa141cc369d6ef926d003b3062196d2007bca15f978ab208e0caae4ac5872b",
+        //         "type": "trade",
+        //         "market_id": 0,
+        //         "size": "0.0346",
+        //         "price": "3028.85",
+        //         "usd_amount": "104.798210",
+        //         "ask_id": 281475673670566,
+        //         "bid_id": 562949291740362,
+        //         "ask_client_id": 76303170,
+        //         "bid_client_id": 27601,
+        //         "ask_account_id": 99349,
+        //         "bid_account_id": 243008,
+        //         "is_maker_ask": false,
+        //         "block_height": 102322769,
+        //         "timestamp": 1763623734215,
+        //         "taker_position_size_before": "0.0346",
+        //         "taker_entry_quote_before": "104.359926",
+        //         "taker_initial_margin_fraction_before": 500,
+        //         "taker_position_sign_changed": true,
+        //         "maker_fee": 20,
+        //         "maker_position_size_before": "2.1277",
+        //         "maker_entry_quote_before": "6444.179555",
+        //         "maker_initial_margin_fraction_before": 200
+        //     }
+        //
+        const timestamp = this.safeInteger(trade, 'timestamp');
+        const tradeId = this.safeString(trade, 'trade_id');
+        const priceString = this.safeString(trade, 'price');
+        const amountString = this.safeString(trade, 'size');
+        const costString = this.safeString(trade, 'usd_amount');
+        const isMakerAsk = this.safeBool(trade, 'is_maker_ask');
+        const side = isMakerAsk ? 'buy' : 'sell';
+        const accountIndex = this.safeInteger(trade, 'accountIndex');
+        let order = undefined;
+        let takerOrMaker = undefined;
+        if (accountIndex !== undefined) {
+            if (this.safeInteger(trade, 'bid_account_id') === accountIndex) {
+                order = this.safeString(trade, 'bid_id');
+                takerOrMaker = isMakerAsk ? 'taker' : 'maker';
+            }
+            else if (this.safeInteger(trade, 'ask_account_id') === accountIndex) {
+                order = this.safeString(trade, 'ask_id');
+                takerOrMaker = isMakerAsk ? 'maker' : 'taker';
+            }
+        }
+        let fee = undefined;
+        if (takerOrMaker !== undefined) {
+            const feeRateRaw = (takerOrMaker === 'maker') ? this.safeString(trade, 'maker_fee') : this.safeString(trade, 'taker_fee');
+            const feeRate = (feeRateRaw !== undefined) ? Precise.stringDiv(feeRateRaw, '1000000') : '0';
+            const feeAmount = Precise.stringMul(costString, feeRate);
+            fee = {
+                'cost': feeAmount,
+                'currency': 'USDC',
+                'rate': feeRate,
+            };
+        }
+        return this.safeTrade({
+            'info': trade,
+            'id': tradeId,
+            'order': order,
+            'timestamp': timestamp,
+            'datetime': this.iso8601(timestamp),
+            'symbol': this.safeSymbol(undefined, market),
+            'type': undefined,
+            'side': side,
+            'takerOrMaker': takerOrMaker,
+            'price': priceString,
+            'amount': amountString,
+            'cost': costString,
+            'fee': fee,
+        }, market);
+    }
     handleMyTrades(client, message) {
         //
         //     {
@@ -620,6 +690,9 @@ export default class lighter extends lighterRest {
         //         "type": "update/account_all_trades"
         //     }
         //
+        const channel = this.safeString(message, 'channel', '');
+        const parts = channel.split(':');
+        const accountIndex = parts[1];
         const data = this.safeDict(message, 'trades', {});
         const marketIds = Object.keys(data);
         const idsLength = marketIds.length;
@@ -639,7 +712,9 @@ export default class lighter extends lighterRest {
             const tradesLength = trades.length;
             for (let j = 0; j < tradesLength; j++) {
                 const jReversed = tradesLength - 1 - j;
-                const trade = this.parseWsTrade(trades[jReversed], market);
+                const tradeRaw = trades[jReversed];
+                tradeRaw['accountIndex'] = accountIndex;
+                const trade = this.parseWsOrderTrade(tradeRaw, market);
                 stored.append(trade);
                 const symbol = trade['symbol'];
                 if (symbol !== undefined) {
