@@ -507,10 +507,7 @@ class lighter extends \ccxt\async\lighter {
         $priceString = $this->safe_string($trade, 'price');
         $amountString = $this->safe_string($trade, 'size');
         $isMakerAsk = $this->safe_bool($trade, 'is_maker_ask');
-        $side = ($isMakerAsk === true) ? 'sell' : 'buy';
-        $makerFeeRate = $this->safe_string($market, 'maker_fee');
-        $maker = Precise::string_div($makerFeeRate, '100');
-        $feeAmount = Precise::string_mul($maker, $makerFeeRate);
+        $side = $isMakerAsk ? 'buy' : 'sell';
         return $this->safe_trade(array(
             'info' => $trade,
             'id' => $tradeId,
@@ -520,14 +517,11 @@ class lighter extends \ccxt\async\lighter {
             'symbol' => $this->safe_symbol(null, $market),
             'type' => null,
             'side' => $side,
-            'takerOrMaker' => 'maker',
+            'takerOrMaker' => 'taker',
             'price' => $priceString,
             'amount' => $amountString,
             'cost' => $this->safe_string($trade, 'usd_amount'),
-            'fee' => array(
-                'cost' => $feeAmount,
-                'currency' => 'USDC',
-            ),
+            'fee' => null,
         ), $market);
     }
 
@@ -640,6 +634,82 @@ class lighter extends \ccxt\async\lighter {
         }) ();
     }
 
+    public function parse_ws_order_trade($trade, $market = null) {
+        //
+        //     {
+        //         "trade_id" => 526801155,
+        //         "tx_hash" => "1998d9df580acb7540aa141cc369d6ef926d003b3062196d2007bca15f978ab208e0caae4ac5872b",
+        //         "type" => "trade",
+        //         "market_id" => 0,
+        //         "size" => "0.0346",
+        //         "price" => "3028.85",
+        //         "usd_amount" => "104.798210",
+        //         "ask_id" => 281475673670566,
+        //         "bid_id" => 562949291740362,
+        //         "ask_client_id" => 76303170,
+        //         "bid_client_id" => 27601,
+        //         "ask_account_id" => 99349,
+        //         "bid_account_id" => 243008,
+        //         "is_maker_ask" => false,
+        //         "block_height" => 102322769,
+        //         "timestamp" => 1763623734215,
+        //         "taker_position_size_before" => "0.0346",
+        //         "taker_entry_quote_before" => "104.359926",
+        //         "taker_initial_margin_fraction_before" => 500,
+        //         "taker_position_sign_changed" => true,
+        //         "maker_fee" => 20,
+        //         "maker_position_size_before" => "2.1277",
+        //         "maker_entry_quote_before" => "6444.179555",
+        //         "maker_initial_margin_fraction_before" => 200
+        //     }
+        //
+        $timestamp = $this->safe_integer($trade, 'timestamp');
+        $tradeId = $this->safe_string($trade, 'trade_id');
+        $priceString = $this->safe_string($trade, 'price');
+        $amountString = $this->safe_string($trade, 'size');
+        $costString = $this->safe_string($trade, 'usd_amount');
+        $isMakerAsk = $this->safe_bool($trade, 'is_maker_ask');
+        $side = $isMakerAsk ? 'buy' : 'sell';
+        $accountIndex = $this->safe_integer($trade, 'accountIndex');
+        $order = null;
+        $takerOrMaker = null;
+        if ($accountIndex !== null) {
+            if ($this->safe_integer($trade, 'bid_account_id') === $accountIndex) {
+                $order = $this->safe_string($trade, 'bid_id');
+                $takerOrMaker = $isMakerAsk ? 'taker' : 'maker';
+            } elseif ($this->safe_integer($trade, 'ask_account_id') === $accountIndex) {
+                $order = $this->safe_string($trade, 'ask_id');
+                $takerOrMaker = $isMakerAsk ? 'maker' : 'taker';
+            }
+        }
+        $fee = null;
+        if ($takerOrMaker !== null) {
+            $feeRateRaw = ($takerOrMaker === 'maker') ? $this->safe_string($trade, 'maker_fee') : $this->safe_string($trade, 'taker_fee');
+            $feeRate = ($feeRateRaw !== null) ? Precise::string_div($feeRateRaw, '1000000') : '0';
+            $feeAmount = Precise::string_mul($costString, $feeRate);
+            $fee = array(
+                'cost' => $feeAmount,
+                'currency' => 'USDC',
+                'rate' => $feeRate,
+            );
+        }
+        return $this->safe_trade(array(
+            'info' => $trade,
+            'id' => $tradeId,
+            'order' => $order,
+            'timestamp' => $timestamp,
+            'datetime' => $this->iso8601($timestamp),
+            'symbol' => $this->safe_symbol(null, $market),
+            'type' => null,
+            'side' => $side,
+            'takerOrMaker' => $takerOrMaker,
+            'price' => $priceString,
+            'amount' => $amountString,
+            'cost' => $costString,
+            'fee' => $fee,
+        ), $market);
+    }
+
     public function handle_my_trades(Client $client, $message) {
         //
         //     {
@@ -675,6 +745,9 @@ class lighter extends \ccxt\async\lighter {
         //         "type" => "update/account_all_trades"
         //     }
         //
+        $channel = $this->safe_string($message, 'channel', '');
+        $parts = explode(':', $channel);
+        $accountIndex = $parts[1];
         $data = $this->safe_dict($message, 'trades', array());
         $marketIds = is_array($data) ? array_keys($data) : array();
         $idsLength = count($marketIds);
@@ -694,7 +767,9 @@ class lighter extends \ccxt\async\lighter {
             $tradesLength = count($trades);
             for ($j = 0; $j < $tradesLength; $j++) {
                 $jReversed = $tradesLength - 1 - $j;
-                $trade = $this->parse_ws_trade($trades[$jReversed], $market);
+                $tradeRaw = $trades[$jReversed];
+                $tradeRaw['accountIndex'] = $accountIndex;
+                $trade = $this->parse_ws_order_trade($tradeRaw, $market);
                 $stored->append ($trade);
                 $symbol = $trade['symbol'];
                 if ($symbol !== null) {
