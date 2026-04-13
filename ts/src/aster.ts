@@ -1573,7 +1573,7 @@ export default class aster extends Exchange {
 
     /**
      * @method
-     * @name binance#fetchLastPrices
+     * @name aster#fetchLastPrices
      * @description fetches the last price for multiple markets
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#latest-price
      * @param {string[]|undefined} symbols unified symbols of the markets to fetch the last prices
@@ -1676,7 +1676,7 @@ export default class aster extends Exchange {
 
     /**
      * @method
-     * @name binance#fetchBidsAsks
+     * @name aster#fetchBidsAsks
      * @description fetches the bid and ask price and volume for multiple markets
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#current-best-order
      * @param {string[]|undefined} symbols unified symbols of the markets to fetch the bids and asks for, all markets are returned if not assigned
@@ -2027,8 +2027,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchTradingFee
      * @description fetch the trading fees for a market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#get-symbol-fees
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#user-commission-rate-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#get-symbol-fees
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [fee structure]{@link https://docs.ccxt.com/#/?id=fee-structure}
@@ -2043,7 +2042,7 @@ export default class aster extends Exchange {
         if (market['swap']) {
             response = await this.fapiPrivateGetV1CommissionRate (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateGetV1CommissionRate (this.extend (request, params));
+            response = await this.sapiPrivateGetV3CommissionRate (this.extend (request, params));
         }
         //
         //     {
