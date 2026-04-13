@@ -7758,6 +7758,7 @@ unWatches information on multiple orders made by the user
 * [bitmart](/exchanges/bitmart.md#unwatchorders)
 * [bybit](/exchanges/bybit.md#unwatchorders)
 * [hyperliquid](/exchanges/hyperliquid.md#unwatchorders)
+* [lighter](/exchanges/lighter.md#unwatchorders)
 * [pacifica](/exchanges/pacifica.md#unwatchorders)
 
 ---
@@ -8575,6 +8576,7 @@ watches information on multiple orders made by the user
 * [hyperliquid](/exchanges/hyperliquid.md#watchorders)
 * [kucoin](/exchanges/kucoin.md#watchorders)
 * [lbank](/exchanges/lbank.md#watchorders)
+* [lighter](/exchanges/lighter.md#watchorders)
 * [mexc](/exchanges/mexc.md#watchorders)
 * [modetrade](/exchanges/modetrade.md#watchorders)
 * [okx](/exchanges/okx.md#watchorders)
