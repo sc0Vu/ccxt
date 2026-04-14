@@ -252,7 +252,7 @@ func  (this *BinanceCore) GetWsUrl(typeVar interface{}, category interface{}) in
     return baseUrl
 }
 func  (this *BinanceCore) GetFutureWsCategory(channel interface{}) interface{}  {
-    if ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(ccxt.IsEqual(channel, "depth")) || ccxt.IsTrue(ccxt.IsEqual(channel, "rpiDepth"))) || ccxt.IsTrue(ccxt.IsEqual(channel, "bookTicker"))) || ccxt.IsTrue(ccxt.IsEqual(channel, "trade"))) || ccxt.IsTrue(ccxt.IsEqual(channel, "aggTrade"))) {
+    if ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(ccxt.IsEqual(channel, "depth")) || ccxt.IsTrue(ccxt.IsEqual(channel, "rpiDepth"))) || ccxt.IsTrue(ccxt.IsEqual(channel, "bookTicker"))) || ccxt.IsTrue(ccxt.IsEqual(channel, "trade"))) {
         return "public"
     }
     return "market"
