@@ -605,6 +605,7 @@ export default class lighter extends Exchange {
     }
 
     async approveBuilderFee (builder: number, takerFeeRate: number, makerFeeRate: number, accountIndex: number, apiKeyIndex: number, params: object = {}) {
+        const signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const expiry = this.milliseconds () + 365 * 864000;
         const signRaw = {
@@ -616,7 +617,6 @@ export default class lighter extends Exchange {
             'api_key_index': apiKeyIndex,
             'account_index': accountIndex,
         };
-        const signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         const [ txType, txInfo, messageToSign ] = this.lighterSignApproveIntegrator (signer, this.extend (signRaw, params));
         const newTxInfo = this.signL1AndPrepareTxInfo (txInfo, messageToSign, this.privateKey);
         const request = {
