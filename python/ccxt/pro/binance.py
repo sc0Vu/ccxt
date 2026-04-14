@@ -247,7 +247,7 @@ class binance(ccxt.async_support.binance):
         return baseUrl
 
     def get_future_ws_category(self, channel):
-        if channel == 'depth' or channel == 'rpiDepth' or channel == 'bookTicker' or channel == 'trade' or channel == 'aggTrade':
+        if channel == 'depth' or channel == 'rpiDepth' or channel == 'bookTicker' or channel == 'trade':
             return 'public'
         return 'market'
 
