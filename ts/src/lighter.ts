@@ -383,10 +383,6 @@ export default class lighter extends Exchange {
         if (signer !== undefined) {
             return signer;
         }
-        if ((apiKeyIndex === undefined) || (apiKeyIndex < 4) || (apiKeyIndex > 254)) {
-            apiKeyIndex = this.randNumber (2);
-            this.options['apiKeyIndex'] = apiKeyIndex;
-        }
         let libraryPath = undefined;
         [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
         const lighterPrivateKeyIsSet = (privateKey !== undefined) && (privateKey !== '');
@@ -419,11 +415,21 @@ export default class lighter extends Exchange {
             return true;
         }
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'accountIndex', 'account_index');
         signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex);
         return (signer !== undefined);
+    }
+
+    handleApiKeyIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined): any[] {
+        let apiKeyIndex = undefined;
+        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
+        if ((apiKeyIndex === undefined) || (apiKeyIndex < 4) || (apiKeyIndex > 254)) {
+            apiKeyIndex = this.randNumber (2);
+            this.options['apiKeyIndex'] = apiKeyIndex;
+        }
+        return [ this.parseToInt (apiKeyIndex), params ];
     }
 
     async handleAccountIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined): Promise<any[]> {
@@ -473,10 +479,7 @@ export default class lighter extends Exchange {
 
     async createSubAccount (name: string, params = {}) {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'createSubAccount', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' createSubAccount() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'createSubAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'createSubAccount', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
@@ -602,13 +605,6 @@ export default class lighter extends Exchange {
     }
 
     async approveBuilderFee (builder: number, takerFeeRate: number, makerFeeRate: number, accountIndex: number, apiKeyIndex: number, params: object = {}) {
-        // let apiKeyIndex = undefined;
-        // [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'approveBuilderFee', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' approveBuilderFee() requires an apiKeyIndex parameter');
-        }
-        // let accountIndex = undefined;
-        // [ accountIndex, params ] = await this.handleAccountIndex (params, 'approveBuilderFee', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const expiry = this.milliseconds () + 365 * 864000;
         const signRaw = {
@@ -635,10 +631,7 @@ export default class lighter extends Exchange {
         const signerNotLoad = this.options['signer'];
         const [ privateKey, publicKey ] = this.lighterGenerateApiKey (signerNotLoad);
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'changeApiKey', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' changeApiKey() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'changeApiKey', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'changeApiKey', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
@@ -700,10 +693,7 @@ export default class lighter extends Exchange {
         let apiKeyIndex = undefined;
         let accountIndex = undefined;
         let orderExpiry = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams (params, 'createOrder', 'apiKeyIndex', 255);
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' createOrder() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'createOrder', 'apiKeyIndex', 'api_key_index');
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'createOrder', 'accountIndex', 'account_index');
         [ nonce, params ] = this.handleOptionAndParams (params, 'createOrder', 'nonce');
         [ orderExpiry, params ] = this.handleOptionAndParams (params, 'createOrder', 'orderExpiry', 0);
@@ -934,10 +924,7 @@ export default class lighter extends Exchange {
      */
     async editOrder (id: string, symbol: string, type: OrderType, side: OrderSide, amount: Num = undefined, price: Num = undefined, params = {}): Promise<Order> {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'editOrder', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' editOrder() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'editOrder', 'apiKeyIndex', 'api_key_index');
         await this.loadMarkets ();
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'editOrder', 'accountIndex', 'account_index');
@@ -2048,10 +2035,7 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'fetchOpenOrders', 'accountIndex', 'account_index');
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchOpenOrders', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchOpenOrders() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchOpenOrders', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         const market = this.market (symbol);
         const request: Dict = {
@@ -2125,10 +2109,7 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'fetchClosedOrders', 'accountIndex', 'account_index');
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchClosedOrders', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchClosedOrders() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchClosedOrders', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         const market = this.market (symbol);
         const request: Dict = {
@@ -2390,10 +2371,7 @@ export default class lighter extends Exchange {
      */
     async transfer (code: string, amount: number, fromAccount: string, toAccount: string, params = {}): Promise<TransferEntry> {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'transfer', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' transfer() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'transfer', 'apiKeyIndex', 'api_key_index');
         await this.loadMarkets ();
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'transfer', 'accountIndex', 'account_index');
@@ -2459,10 +2437,7 @@ export default class lighter extends Exchange {
             'account_index': accountIndex,
         };
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchTransfers', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchTransfers() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchTransfers', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         let currency = undefined;
         if (code !== undefined) {
@@ -2570,10 +2545,7 @@ export default class lighter extends Exchange {
             'l1_address': address,
         };
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchDeposits', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchDeposits() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchDeposits', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         let currency = undefined;
         if (code !== undefined) {
@@ -2632,10 +2604,7 @@ export default class lighter extends Exchange {
             'account_index': accountIndex,
         };
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchWithdrawals', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchWithdrawals() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchWithdrawals', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         let currency = undefined;
         if (code !== undefined) {
@@ -2749,10 +2718,7 @@ export default class lighter extends Exchange {
      */
     async withdraw (code: string, amount: number, address: string, tag: Str = undefined, params = {}): Promise<Transaction> {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'withdraw', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' withdraw() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'withdraw', 'apiKeyIndex', 'api_key_index');
         await this.loadMarkets ();
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'withdraw', 'accountIndex', 'account_index');
@@ -2809,10 +2775,7 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'fetchMyTrades', 'accountIndex', 'account_index');
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'fetchMyTrades', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchMyTrades() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'fetchMyTrades', 'apiKeyIndex', 'api_key_index');
         await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         const request: Dict = {
             'sort_by': 'timestamp',
@@ -2996,10 +2959,7 @@ export default class lighter extends Exchange {
             throw new BadRequest (this.id + ' modifyLeverageAndMarginMode() requires a marginMode parameter that must be either cross or isolated');
         }
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'modifyLeverageAndMarginMode', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' modifyLeverageAndMarginMode() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'modifyLeverageAndMarginMode', 'apiKeyIndex', 'api_key_index');
         if (symbol === undefined) {
             throw new ArgumentsRequired (this.id + ' modifyLeverageAndMarginMode() requires a symbol argument');
         }
@@ -3038,10 +2998,7 @@ export default class lighter extends Exchange {
      */
     async cancelOrder (id: string, symbol: Str = undefined, params = {}) {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'cancelOrder', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' cancelOrder() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'cancelOrder', 'apiKeyIndex', 'api_key_index');
         if (symbol === undefined) {
             throw new ArgumentsRequired (this.id + ' cancelOrder() requires a symbol argument');
         }
@@ -3087,10 +3044,7 @@ export default class lighter extends Exchange {
      */
     async cancelAllOrders (symbol: Str = undefined, params = {}) {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'cancelAllOrders', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' cancelAllOrders() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'cancelAllOrders', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelAllOrders', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
@@ -3124,10 +3078,7 @@ export default class lighter extends Exchange {
             throw new BadRequest (this.id + ' timeout should be between 5 minutes and 15 days.');
         }
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'cancelOrder', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' cancelAllOrdersAfter() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'cancelOrder', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelAllOrdersAfter', 'accountIndex', 'account_index');
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
@@ -3193,10 +3144,7 @@ export default class lighter extends Exchange {
      */
     async setMargin (symbol: string, amount: number, params = {}): Promise<MarginModification> {
         let apiKeyIndex = undefined;
-        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'setMargin', 'apiKeyIndex', 'api_key_index');
-        if (apiKeyIndex === undefined) {
-            throw new ArgumentsRequired (this.id + ' setMargin() requires an apiKeyIndex parameter');
-        }
+        [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'setMargin', 'apiKeyIndex', 'api_key_index');
         const direction = this.safeInteger (params, 'direction'); // 1 increase margin 0 decrease margin
         if (direction === undefined) {
             throw new ArgumentsRequired (this.id + ' setMargin() requires a direction parameter either 1 (increase margin) or 0 (decrease margin)');
