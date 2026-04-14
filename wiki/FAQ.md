@@ -286,9 +286,9 @@ Example
 
 ```Python
 lighter = ccxt.lighter({
-	'privateKey': 'XXXXXXX',
+	'privateKey': 'XXXXXXX', # l1 private key
 	'options': {
-		'apiKeyIndex': 3,
+		'apiKeyIndex': 3, # optional, make sure the value is between 4 and 254 if provided
 		'accountIndex': 715085
 	}
 })
