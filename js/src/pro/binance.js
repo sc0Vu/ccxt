@@ -250,7 +250,7 @@ export default class binance extends binanceRest {
         return baseUrl;
     }
     getFutureWsCategory(channel) {
-        if (channel === 'depth' || channel === 'rpiDepth' || channel === 'bookTicker' || channel === 'trade' || channel === 'aggTrade') {
+        if (channel === 'depth' || channel === 'rpiDepth' || channel === 'bookTicker' || channel === 'trade') {
             return 'public';
         }
         return 'market';
