@@ -2211,7 +2211,7 @@ export default class Exchange {
     // eslint-disable-next-line no-unused-vars
     lighterSignChangePubkey (signer, request): any[] {
         const res = globalThis.SignChangePubKey (
-            request['pubkey'],
+            Buffer.from (request['pubkey']).toString (),
             0, // skip nonce
             request['nonce'],
             request['api_key_index'],
