@@ -436,9 +436,12 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
         if (accountIndex === undefined) {
-            const walletAddress = this.walletAddress;
+            let walletAddress = this.walletAddress;
+            if (this.privateKey !== undefined) {
+                walletAddress = this.ethGetAddressFromPrivateKey (this.privateKey);
+            }
             if (walletAddress === undefined || walletAddress === '') {
-                throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + '/' + optionName2 + ' parameter or walletAddress to fetch accountIndex');
+                throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + '/' + optionName2 + ' parameter or walletAddress to fetch accountIndex. Alternatively set privateKey in credentials to enable automatic walletAddress detection.');
             }
             const res = await this.publicGetAccountsByL1Address ({ 'l1_address': walletAddress });
             //
