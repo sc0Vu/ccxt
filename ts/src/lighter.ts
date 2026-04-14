@@ -775,9 +775,11 @@ export default class lighter extends Exchange {
         request['base_amount'] = this.parseToInt (Precise.stringMul (amountStr, amountScale));
         request['avg_execution_price'] = this.parseToInt (Precise.stringMul (priceStr, priceScale));
         request['trigger_price'] = this.parseToInt (Precise.stringMul (triggerPriceStr, priceScale));
-        request['integrator_account_index'] = this.options['integratorAccountIndex'];
-        request['integrator_taker_fee'] = this.options['integratorTakerFee'];
-        request['integrator_maker_fee'] = this.options['integratorMakerFee'];
+        if (this.safeBool (this.options, 'builderFee', true)) {
+            request['integrator_account_index'] = this.options['integratorAccountIndex'];
+            request['integrator_taker_fee'] = this.options['integratorTakerFee'];
+            request['integrator_maker_fee'] = this.options['integratorMakerFee'];
+        }
         const orders = [];
         orders.push (this.extend (request, params));
         if (hasStopLoss || hasTakeProfit) {
@@ -885,10 +887,12 @@ export default class lighter extends Exchange {
                 'nonce': order['nonce'],
                 'api_key_index': apiKeyIndex,
                 'account_index': accountIndex,
-                'integrator_account_index': order['integrator_account_index'],
-                'integrator_taker_fee': order['integrator_taker_fee'],
-                'integrator_maker_fee': order['integrator_maker_fee'],
             };
+            if (this.safeBool (this.options, 'builderFee', true)) {
+                signingPayload['integrator_account_index'] = order['integrator_account_index'];
+                signingPayload['integrator_taker_fee'] = order['integrator_taker_fee'];
+                signingPayload['integrator_maker_fee'] = order['integrator_maker_fee'];
+            }
             [ txType, txInfo ] = this.lighterSignCreateGroupedOrders (signer, signingPayload);
         }
         const request = {
