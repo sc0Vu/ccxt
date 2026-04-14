@@ -257,7 +257,7 @@ class binance extends \ccxt\async\binance {
     }
 
     public function get_future_ws_category($channel) {
-        if ($channel === 'depth' || $channel === 'rpiDepth' || $channel === 'bookTicker' || $channel === 'trade' || $channel === 'aggTrade') {
+        if ($channel === 'depth' || $channel === 'rpiDepth' || $channel === 'bookTicker' || $channel === 'trade') {
             return 'public';
         }
         return 'market';
