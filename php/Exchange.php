@@ -1556,7 +1556,7 @@ class Exchange {
             $request['integrator_account_index'],
             $request['integrator_taker_fee'],
             $request['integrator_maker_fee'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1579,7 +1579,7 @@ class Exchange {
             $request['integrator_account_index'],
             $request['integrator_taker_fee'],
             $request['integrator_maker_fee'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1591,7 +1591,7 @@ class Exchange {
         $result = $signer->signCancelOrder(
             $request['market_index'],
             $request['order_index'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1604,7 +1604,7 @@ class Exchange {
             $request['asset_index'],
             $request['route_type'],
             $request['amount'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1614,7 +1614,7 @@ class Exchange {
 
     public function lighter_sign_create_sub_account($signer, $request) {
         $result = $signer->signCreateSubAccount(
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1626,7 +1626,7 @@ class Exchange {
         $result = $signer->signCancelAllOrders(
             $request['time_in_force'],
             $request['time'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1641,7 +1641,7 @@ class Exchange {
             $request['base_amount'],
             $request['price'],
             $request['trigger_price'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1658,7 +1658,7 @@ class Exchange {
             $request['amount'],
             $request['usdc_fee'],
             $request['memo'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1671,7 +1671,7 @@ class Exchange {
             $request['market_index'],
             $request['initial_margin_fraction'],
             $request['margin_mode'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1693,7 +1693,7 @@ class Exchange {
             $request['market_index'],
             $request['usdc_amount'],
             $request['direction'],
-            true, // skip nonce
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']

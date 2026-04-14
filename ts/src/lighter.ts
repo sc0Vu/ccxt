@@ -383,6 +383,10 @@ export default class lighter extends Exchange {
         if (signer !== undefined) {
             return signer;
         }
+        if ((apiKeyIndex === undefined) || (apiKeyIndex < 4) || (apiKeyIndex > 254)) {
+            apiKeyIndex = this.randNumber (2);
+            this.options['apiKeyIndex'] = apiKeyIndex;
+        }
         let libraryPath = undefined;
         [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
         const lighterPrivateKeyIsSet = (privateKey !== undefined) && (privateKey !== '');
@@ -873,16 +877,12 @@ export default class lighter extends Exchange {
         if (totalOrderRequests > 0) {
             order = orderRequests[0];
             apiKeyIndex = order['api_key_index'];
-            if (order['nonce'] === undefined) {
-                const nonceInOptions = this.safeInteger (this.options, 'nonce');
-                if (nonceInOptions !== undefined) {
-                    order['nonce'] = nonceInOptions;
-                } else {
-                    order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
-                }
-            }
         }
         await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
+        // the nonce could be updated
+        if (order['nonce'] === undefined) {
+            order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
+        }
         const signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
         let txType = undefined;
         let txInfo = undefined;
