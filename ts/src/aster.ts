@@ -340,7 +340,6 @@ export default class aster extends Exchange {
                 'sapiPrivate': {
                     'get': {
                         'v1/commissionRate': 1,
-                        'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
                         'v1/order': 1,
                         'v1/openOrders': 1,
                         'v1/allOrders': 1,
@@ -348,6 +347,7 @@ export default class aster extends Exchange {
                         'v1/account': 1,
                         'v1/userTrades': 1,
                         //
+                        'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
                         'v3/order': 1,
                         'v3/account': 5,
                         'v3/userTrades': 5,
@@ -2124,7 +2124,7 @@ export default class aster extends Exchange {
         //
         // spot
         //
-        //   fetchOrders, fetchOpenOrders, fetchOpenOrder
+        //   fetchOrders, fetchOpenOrders, fetchOpenOrder, fetchOrder
         //
         //        {
         //            "orderId": "417594542",
@@ -2186,8 +2186,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchOrder
      * @description fetches information on an order made by the user
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#query-order-user_data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#query-order-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#query-order-user_data
      * @param {string} id the order id
      * @param {string} symbol unified symbol of the market the order was made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2214,7 +2213,28 @@ export default class aster extends Exchange {
         if (market['swap']) {
             response = await this.fapiPrivateGetV1Order (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateGetV1Order (this.extend (request, params));
+            response = await this.sapiPrivateGetV3Order (this.extend (request, params));
+            //
+            //    {
+            //        "orderId": "417663664",
+            //        "symbol": "ETHUSDT",
+            //        "status": "NEW",
+            //        "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
+            //        "price": "2111.75",
+            //        "avgPrice": "0.000000",
+            //        "origQty": "0.0049",
+            //        "executedQty": "0",
+            //        "cumQuote": "0",
+            //        "timeInForce": "GTC",
+            //        "type": "LIMIT",
+            //        "side": "BUY",
+            //        "stopPrice": "0",
+            //        "origType": "LIMIT",
+            //        "time": "1776281810637",
+            //        "updateTime": "1776281810637",
+            //        "orderListId": "-1"
+            //    }
+            //
         }
         return this.parseOrder (response, market);
     }
