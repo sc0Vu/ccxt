@@ -353,6 +353,7 @@ export default class aster extends Exchange {
                         'v3/userTrades': 5,
                         'v3/allOrders': 5,
                         'v3/openOrders': 1, // with symbol 1, otherwise 40
+                        'v3/openOrder': 1,
                     },
                     'post': {
                         'v1/order': 1,
@@ -2123,7 +2124,7 @@ export default class aster extends Exchange {
         //
         // spot
         //
-        // fetchOrders, fetchOpenOrders
+        //   fetchOrders, fetchOpenOrders, fetchOpenOrder
         //
         //        {
         //            "orderId": "417594542",
@@ -2222,7 +2223,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchOpenOrder
      * @description fetch an open order by the id
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#query-current-open-order-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#query-current-open-order-user_data
      * @param {string} id order id
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2244,7 +2245,28 @@ export default class aster extends Exchange {
         } else {
             request['orderId'] = id;
         }
-        const response = await this.fapiPrivateGetV1OpenOrder (this.extend (request, params));
+        const response = await this.sapiPrivateGetV3OpenOrder (this.extend (request, params));
+        //
+        //    {
+        //        "orderId": "417663664",
+        //        "symbol": "ETHUSDT",
+        //        "status": "NEW",
+        //        "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
+        //        "price": "2111.75",
+        //        "avgPrice": "0.000000",
+        //        "origQty": "0.0049",
+        //        "executedQty": "0",
+        //        "cumQuote": "0",
+        //        "timeInForce": "GTC",
+        //        "type": "LIMIT",
+        //        "side": "BUY",
+        //        "stopPrice": "0",
+        //        "origType": "LIMIT",
+        //        "time": "1776281810637",
+        //        "updateTime": "1776281810637",
+        //        "orderListId": "-1"
+        //    }
+        //
         return this.parseOrder (response, market);
     }
 
