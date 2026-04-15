@@ -2471,6 +2471,7 @@ class mexc(Exchange, ImplicitAPI):
         else:
             if reduceOnly:
                 sideInteger = 2 if (side == 'buy') else 4
+                params = self.omit(params, 'reduceOnly')
             else:
                 sideInteger = 1 if (side == 'buy') else 3
         request['side'] = sideInteger
