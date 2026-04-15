@@ -492,11 +492,6 @@ class mexc(Exchange, ImplicitAPI):
             'options': {
                 'adjustForTimeDifference': False,
                 'timeDifference': 0,
-                'unavailableContracts': {
-                    'BTC/USDT:USDT': True,
-                    'LTC/USDT:USDT': True,
-                    'ETH/USDT:USDT': True,
-                },
                 'fetchMarkets': {
                     'types': {
                         'spot': True,
@@ -2413,10 +2408,6 @@ class mexc(Exchange, ImplicitAPI):
         """
         await self.load_markets()
         symbol = market['symbol']
-        unavailableContracts = self.safe_value(self.options, 'unavailableContracts', {})
-        isContractUnavaiable = self.safe_bool(unavailableContracts, symbol, False)
-        if isContractUnavaiable:
-            raise NotSupported(self.id + ' createSwapOrder() does not support yet self symbol:' + symbol)
         openType = None
         if marginMode is not None:
             if marginMode == 'cross':
