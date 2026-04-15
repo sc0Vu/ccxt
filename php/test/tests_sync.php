@@ -1492,7 +1492,7 @@ class testMainClass {
         //  -----------------------------------------------------------------------------
         //  --- Init of brokerId tests functions-----------------------------------------
         //  -----------------------------------------------------------------------------
-        $promises = [$this->test_binance(), $this->test_okx(), $this->test_cryptocom(), $this->test_bybit(), $this->test_kucoin(), $this->test_kucoinfutures(), $this->test_bitget(), $this->test_mexc(), $this->test_htx(), $this->test_woo(), $this->test_bitmart(), $this->test_coinex(), $this->test_bingx(), $this->test_phemex(), $this->test_blofin(), $this->test_coinbaseinternational(), $this->test_coinbase_advanced(), $this->test_woofi_pro(), $this->test_oxfun(), $this->test_xt(), $this->test_paradex(), $this->test_hashkey(), $this->test_cryptomus(), $this->test_derive(), $this->test_mode_trade(), $this->test_backpack(), $this->test_toobit()];
+        $promises = [$this->test_binance(), $this->test_okx(), $this->test_cryptocom(), $this->test_bybit(), $this->test_kucoin(), $this->test_kucoinfutures(), $this->test_bitget(), $this->test_mexc(), $this->test_htx(), $this->test_woo(), $this->test_bitmart(), $this->test_coinex(), $this->test_bingx(), $this->test_phemex(), $this->test_blofin(), $this->test_coinbaseinternational(), $this->test_coinbase_advanced(), $this->test_woofi_pro(), $this->test_oxfun(), $this->test_xt(), $this->test_paradex(), $this->test_hashkey(), $this->test_cryptomus(), $this->test_derive(), $this->test_mode_trade(), $this->test_backpack(), $this->test_toobit(), $this->test_weex()];
         ($promises);
         $success_message = '[' . $this->lang . '][TEST_SUCCESS] brokerId tests passed.';
         dump('[INFO]' . $success_message);
@@ -2183,5 +2183,26 @@ class testMainClass {
             close($exchange);
         }
         return true;
+    }
+
+    public function test_weex() {
+        $exchange = $this->init_offline_exchange('weex');
+        $id = 'b-WEEX111125';
+        assert($exchange->options['partner'] === $id, 'weex - id: ' . $id . ' not in options');
+        $request = null;
+        try {
+            $exchange->create_order('BTC/USDT', 'limit', 'buy', 1, 20000);
+        } catch(\Throwable $e) {
+            $request = json_parse($exchange->last_request_body);
+        }
+        $client_order_id = $request['newClientOrderId'];
+        assert(str_starts_with($client_order_id, $id), 'weex - newClientOrderId: ' . $client_order_id . ' for spot order does not start with id: ' . $id);
+        try {
+            $exchange->create_order('BTC/USDT:USDT', 'limit', 'buy', 1, 20000);
+        } catch(\Throwable $e) {
+            $request = json_parse($exchange->last_request_body);
+        }
+        $client_order_id = $request['newClientOrderId'];
+        assert(str_starts_with($client_order_id, $id), 'weex - newClientOrderId: ' . $client_order_id . ' for swap order does not start with id: ' . $id);
     }
 }

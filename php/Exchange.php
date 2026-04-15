@@ -444,6 +444,7 @@ class Exchange {
         'toobit',
         'upbit',
         'wavesexchange',
+        'weex',
         'whitebit',
         'woo',
         'woofipro',
