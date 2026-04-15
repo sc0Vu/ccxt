@@ -2548,6 +2548,7 @@ class mexc extends Exchange {
         } else {
             if ($reduceOnly) {
                 $sideInteger = ($side === 'buy') ? 2 : 4;
+                $params = $this->omit($params, 'reduceOnly');
             } else {
                 $sideInteger = ($side === 'buy') ? 1 : 3;
             }
