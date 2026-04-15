@@ -348,6 +348,7 @@ export default class aster extends Exchange {
                         'v1/userTrades': 1,
                         'v3/order': 1,
                         'v3/account': 1,
+                        'v3/userTrades': 1,
                     },
                     'post': {
                         'v1/order': 1,
@@ -1059,11 +1060,13 @@ export default class aster extends Exchange {
         //         "price": "7819.01",
         //         "qty": "0.002",
         //         "quoteQty": "15.63802",
-        //         "realizedPnl": "-0.91539999",
         //         "side": "SELL",
-        //         "positionSide": "SHORT",
         //         "symbol": "BTCUSDT",
         //         "time": 1569514978020
+        //         "realizedPnl": "-0.91539999",       // in PERP
+        //         "positionSide": "SHORT",            // in PERP
+        //         "counterpartyId": "5143150",        // in SPOT
+        //         "createUpdateId": null,             // in SPOT
         //     }
         //
         const id = this.safeString2 (trade, 'id', 'a');
@@ -1194,8 +1197,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchMyTrades
      * @description fetch all trades made by the user
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#account-trade-history-user_data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#account-trade-list-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#account-trade-history-user_data
      * @param {string} [symbol] unified market symbol
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum number of trades structures to retrieve
@@ -1204,50 +1206,48 @@ export default class aster extends Exchange {
      * @returns {object[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=trade-structure}
      */
     async fetchMyTrades (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}) {
-        if (symbol === undefined) {
-            throw new ArgumentsRequired (this.id + ' fetchMyTrades() requires a symbol argument');
-        }
         await this.loadMarkets ();
-        const market = this.market (symbol);
-        let request: Dict = {
-            'symbol': market['id'],
-        };
+        let request: Dict = {};
+        let market = undefined;
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+            request['symbol'] = market['id'];
+        }
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchTickers', market, params);
         if (since !== undefined) {
             request['startTime'] = since;
         }
         if (limit !== undefined) {
-            if (limit > 1000) {
-                limit = 1000; // Default 500; max 1000.
-            }
-            request['limit'] = limit;
+            request['limit'] = Math.min (limit, 1000);
         }
         [ request, params ] = this.handleUntilOption ('endTime', request, params);
         let response = undefined;
-        if (market['swap']) {
+        if (marketType === 'swap') {
             response = await this.fapiPrivateGetV1UserTrades (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateGetV1UserTrades (this.extend (request, params));
+            response = await this.sapiPrivateGetV3UserTrades (this.extend (request, params));
+            //
+            //    [
+            //        {
+            //            "symbol": "ETHUSDT",
+            //            "id": "2579600",
+            //            "orderId": "417594542",
+            //            "side": "SELL",
+            //            "price": "2351.58",
+            //            "qty": "0.0054",
+            //            "quoteQty": "12.69000000",
+            //            "commission": "0.00507941",
+            //            "commissionAsset": "USDT",
+            //            "time": "1776274219582",
+            //            "counterpartyId": "5143150",
+            //            "createUpdateId": null,
+            //            "maker": false,
+            //            "buyer": false
+            //        }
+            //    ]
+            //
         }
-        //
-        //     [
-        //         {
-        //             "buyer": false,
-        //             "commission": "-0.07819010",
-        //             "commissionAsset": "USDT",
-        //             "id": 698759,
-        //             "maker": false,
-        //             "orderId": 25851813,
-        //             "price": "7819.01",
-        //             "qty": "0.002",
-        //             "quoteQty": "15.63802",
-        //             "realizedPnl": "-0.91539999",
-        //             "side": "SELL",
-        //             "positionSide": "SHORT",
-        //             "symbol": "BTCUSDT",
-        //             "time": 1569514978020
-        //         }
-        //     ]
-        //
         return this.parseTrades (response, market, since, limit, params);
     }
 
