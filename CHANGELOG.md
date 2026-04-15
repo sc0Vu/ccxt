@@ -1,3 +1,37 @@
+<a id="v4.5.49"></a>
+# [v4.5.49](https://github.com/ccxt/ccxt/releases/tag/v4.5.49) - 2026-04-15
+
+## What's Changed
+* build(deps): bump next from 16.1.7 to 16.2.3 in /examples/ts/nextjs-page-router by [@dependabot](https://github.com/dependabot)[bot] in [#28386](https://github.com/ccxt/ccxt/pull/28386)
+* feat(kucoin): fetchPoisition(s) docs updated with new params by [@yzh-pelle](https://github.com/yzh-pelle) in [#28388](https://github.com/ccxt/ccxt/pull/28388)
+* fix(coinbase): use correct loop index in handleTrade websocket handler by [@claygeo](https://github.com/claygeo) in [#28384](https://github.com/ccxt/ccxt/pull/28384)
+* feat(lighter) add watchOrders by [@PimRijkers](https://github.com/PimRijkers) in [#28336](https://github.com/ccxt/ccxt/pull/28336)
+* feat(lighter): add watchBalance by [@PimRijkers](https://github.com/PimRijkers) in [#28358](https://github.com/ccxt/ccxt/pull/28358)
+* feat(lighter): websocket order trades parsing by [@PimRijkers](https://github.com/PimRijkers) in [#28342](https://github.com/ccxt/ccxt/pull/28342)
+* kraken error mapping by [@ndubel](https://github.com/ndubel) in [#28393](https://github.com/ccxt/ccxt/pull/28393)
+* fix(binance): aggTrade use market/ url by [@carlosmiei](https://github.com/carlosmiei) in [#28397](https://github.com/ccxt/ccxt/pull/28397)
+* chore(cex): skip timestamp sort by [@ttodua](https://github.com/ttodua) in [#28398](https://github.com/ccxt/ccxt/pull/28398)
+* test(watchTradesForSymbols): fix sort skip by [@ttodua](https://github.com/ttodua) in [#28399](https://github.com/ccxt/ccxt/pull/28399)
+* fix(paradex): markets by [@ttodua](https://github.com/ttodua) in [#28401](https://github.com/ccxt/ccxt/pull/28401)
+* fix(krakenfutures): fetchClosedOrders fixed by [@yzh-pelle](https://github.com/yzh-pelle) in [#28409](https://github.com/ccxt/ccxt/pull/28409)
+* WEEX exchange by [@yzh-pelle](https://github.com/yzh-pelle) in [#28362](https://github.com/ccxt/ccxt/pull/28362)
+* chore(btcbox): test skip by [@ttodua](https://github.com/ttodua) in [#28404](https://github.com/ccxt/ccxt/pull/28404)
+* check proxy setting for watch_multitple by [@jeffgoku](https://github.com/jeffgoku) in [#28389](https://github.com/ccxt/ccxt/pull/28389)
+* fix(mexc): rm unavailable contracts from perps API by [@carlosmiei](https://github.com/carlosmiei) in [#28411](https://github.com/ccxt/ccxt/pull/28411)
+* fix(mexc): omit reduceOnly in non-hedged swap order branch by [@ToRvaLDz](https://github.com/ToRvaLDz) in [#28414](https://github.com/ccxt/ccxt/pull/28414)
+* fix(mexc): hedged reduceOnly order side by [@carlosmiei](https://github.com/carlosmiei) in [#28415](https://github.com/ccxt/ccxt/pull/28415)
+* fix(bullish): options markets by [@ttodua](https://github.com/ttodua) in [#28402](https://github.com/ccxt/ccxt/pull/28402)
+
+## New Contributors
+* [@claygeo](https://github.com/claygeo) made their first contribution in [#28384](https://github.com/ccxt/ccxt/pull/28384)
+* [@jeffgoku](https://github.com/jeffgoku) made their first contribution in [#28389](https://github.com/ccxt/ccxt/pull/28389)
+* [@ToRvaLDz](https://github.com/ToRvaLDz) made their first contribution in [#28414](https://github.com/ccxt/ccxt/pull/28414)
+
+**Full Changelog**: https://github.com/ccxt/ccxt/compare/go/v4.5.48...v4.5.49
+
+[Changes][v4.5.49]
+
+
 <a id="v4.5.48"></a>
 # [v4.5.48](https://github.com/ccxt/ccxt/releases/tag/v4.5.48) - 2026-04-10
 
@@ -12884,6 +12918,7 @@ We highly recommend downloading and installing the most recent release of CCXT v
 [Changes][4.0.3]
 
 
+[v4.5.49]: https://github.com/ccxt/ccxt/compare/v4.5.48...v4.5.49
 [v4.5.48]: https://github.com/ccxt/ccxt/compare/v4.5.47...v4.5.48
 [v4.5.47]: https://github.com/ccxt/ccxt/compare/v4.5.46...v4.5.47
 [v4.5.46]: https://github.com/ccxt/ccxt/compare/v4.5.45...v4.5.46
