@@ -346,14 +346,18 @@ export default class aster extends Exchange {
                         'v1/transactionHistory': 1,
                         'v1/account': 1,
                         'v1/userTrades': 1,
+                        'v3/order': 1,
+                        'v3/account': 1,
                     },
-                    'post': [
-                        'v1/order',
-                        'v1/asset/wallet/transfer',
-                        'v1/asset/sendToAddress',
-                        'v1/aster/user-withdraw',
-                        'v1/listenKey',
-                    ],
+                    'post': {
+                        'v1/order': 1,
+                        'v1/asset/wallet/transfer': 1,
+                        'v1/asset/sendToAddress': 1,
+                        'v1/aster/user-withdraw': 1,
+                        'v1/listenKey': 1,
+                        //
+                        'v3/order': 1,
+                    },
                     'put': [
                         'v1/listenKey',
                     ],
@@ -383,8 +387,8 @@ export default class aster extends Exchange {
             },
             'precisionMode': TICK_SIZE,
             'requiredCredentials': {
-                'apiKey': true,
-                'secret': true,
+                'apiKey': false,
+                'secret': false,
             },
             'fees': {
                 'trading': {
@@ -399,6 +403,7 @@ export default class aster extends Exchange {
                 'recvWindow': 10 * 1000, // 10 sec
                 'defaultTimeInForce': 'GTC', // 'GTC' = Good To Cancel (default), 'IOC' = Immediate Or Cancel
                 'zeroAddress': '0x0000000000000000000000000000000000000000',
+                'v3ChainId': 1666, // Aster chain ID used for EIP-712 v3 signing
                 'quoteOrderQty': true, // whether market orders support amounts in quote currency
                 'accountsByType': {
                     'spot': 'SPOT',
@@ -1869,8 +1874,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchBalance
      * @description query for balance and get the amount of funds available for trading or funds locked in orders
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#account-information-v4-user_data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#account-information-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#account-trade-history-user_data
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
      * @param {string} [params.type] 'spot', 'option', use params["subType"] for swap and future markets
@@ -1907,7 +1911,7 @@ export default class aster extends Exchange {
             //     ]
             //
         } else if (type === 'spot') {
-            response = await this.sapiPrivateGetV1Account (params);
+            response = await this.sapiPrivateGetV3Account (params);
             data = this.safeList (response, 'balances', []);
             //
             //     [
@@ -2373,7 +2377,7 @@ export default class aster extends Exchange {
                 response = await this.fapiPrivatePostV3Order (request);
             }
         } else {
-            response = await this.sapiPrivatePostV1Order (request);
+            response = await this.sapiPrivatePostV3Order (request);
         }
         return this.parseOrder (response, market);
     }
@@ -3929,71 +3933,81 @@ export default class aster extends Exchange {
             }
         } else if (api === 'fapiPrivate' || api === 'sapiPrivate') {
             this.checkRequiredCredentials ();
-            headers = {
-                'X-MBX-APIKEY': this.apiKey,
-            };
             const timestamp = this.milliseconds ();
             // Nonce is in microseconds
-            const nonce = this.microseconds ();
-            const defaultRecvWindow = this.safeInteger (this.options, 'recvWindow');
-            let extendedParams = this.extend ({
-                'timestamp': timestamp,
-            }, params);
-            if (defaultRecvWindow !== undefined) {
-                extendedParams['recvWindow'] = defaultRecvWindow;
-            }
-            const recvWindow = this.safeInteger (params, 'recvWindow');
-            if (recvWindow !== undefined) {
-                extendedParams['recvWindow'] = recvWindow;
-            }
-            let query = undefined;
-            if ((method === 'DELETE') && (path === 'v1/batchOrders')) {
-                const orderidlist = this.safeList (extendedParams, 'orderIdList', []);
-                const origclientorderidlist = this.safeList (extendedParams, 'origClientOrderIdList', []);
-                extendedParams = this.omit (extendedParams, [ 'orderIdList', 'origClientOrderIdList' ]);
-                query = this.rawencode (extendedParams);
-                const orderidlistLength = orderidlist.length;
-                const origclientorderidlistLength = origclientorderidlist.length;
-                if (orderidlistLength > 0) {
-                    query = query + '&' + 'orderidlist=%5B' + orderidlist.join ('%2C') + '%5D';
-                }
-                if (origclientorderidlistLength > 0) {
-                    query = query + '&' + 'origclientorderidlist=%5B' + origclientorderidlist.join ('%2C') + '%5D';
-                }
-            } else {
-                query = this.rawencode (extendedParams);
-            }
             let signature = '';
-            if (path.indexOf ('v3') >= 0) {
-                const signerAddress = this.options['signerAddress'];
+            let query = undefined;
+            if (api === 'fapiPrivate') {
+                const nonce = this.microseconds ();
+                headers = {
+                    'X-MBX-APIKEY': this.apiKey,
+                };
+                const defaultRecvWindow = this.safeInteger (this.options, 'recvWindow');
+                let extendedParams = this.extend ({
+                    'timestamp': timestamp,
+                }, params);
+                if (defaultRecvWindow !== undefined) {
+                    extendedParams['recvWindow'] = defaultRecvWindow;
+                }
+                const recvWindow = this.safeInteger (params, 'recvWindow');
+                if (recvWindow !== undefined) {
+                    extendedParams['recvWindow'] = recvWindow;
+                }
+                if ((method === 'DELETE') && (path === 'v1/batchOrders')) {
+                    const orderidlist = this.safeList (extendedParams, 'orderIdList', []);
+                    const origclientorderidlist = this.safeList (extendedParams, 'origClientOrderIdList', []);
+                    extendedParams = this.omit (extendedParams, [ 'orderIdList', 'origClientOrderIdList' ]);
+                    query = this.rawencode (extendedParams);
+                    const orderidlistLength = orderidlist.length;
+                    const origclientorderidlistLength = origclientorderidlist.length;
+                    if (orderidlistLength > 0) {
+                        query = query + '&' + 'orderidlist=%5B' + orderidlist.join ('%2C') + '%5D';
+                    }
+                    if (origclientorderidlistLength > 0) {
+                        query = query + '&' + 'origclientorderidlist=%5B' + origclientorderidlist.join ('%2C') + '%5D';
+                    }
+                } else {
+                    query = this.rawencode (extendedParams);
+                }
+            } else if (api === 'sapiPrivate') {
+                const nonce = this.milliseconds () * 1000; // milliseconds
+                const signerAddress = this.safeString (this.options, 'oea_signerAddress');
                 if (signerAddress === undefined) {
                     throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
                 }
-                // the keys order matter
-                const keys = Object.keys (extendedParams);
-                const sortedKeys = this.sort (keys);
-                const signingPayload = {};
-                for (let i = 0; i < sortedKeys.length; i++) {
-                    const key = sortedKeys[i];
-                    signingPayload[key] = extendedParams[key].toString ();
-                }
-                const signingHash = this.hashMessage (this.hash (this.ethAbiEncode ([
-                    'string', 'address', 'address', 'uint256',
-                ], [ this.json (signingPayload), this.walletAddress, signerAddress, nonce ]), keccak, 'binary'));
-                signature = this.signHash (signingHash, this.privateKey);
-                extendedParams['user'] = this.walletAddress;
-                extendedParams['signer'] = signerAddress;
-                extendedParams['nonce'] = nonce;
-                query = this.rawencode (extendedParams);
-            } else {
-                signature = this.hmac (this.encode (query), this.encode (this.secret), sha256);
+                // Build v3 params: original endpoint params + nonce (milliseconds) + user + signer
+                // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
+                const v3Params = this.extend ({}, params, {
+                    'nonce': nonce,
+                    'user': this.walletAddress,
+                    'signer': signerAddress,
+                });
+                const paramString = this.rawencode (v3Params);
+                // Sign using EIP-712 typed data per the AsterSignTransaction spec
+                const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
+                const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
+                const domain = {
+                    'name': 'AsterSignTransaction',
+                    'version': '1',
+                    'chainId': v3ChainId,
+                    'verifyingContract': zeroAddress,
+                };
+                const messageTypes = {
+                    'Message': [
+                        { 'name': 'msg', 'type': 'string' },
+                    ],
+                };
+                const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
+                signature = this.signMessage (encodedMessage, this.privateKey);
+                query = paramString;
+                query += '&' + 'signature=' + signature;
+                // headers = {};
+                // headers['Content-Type'] = 'application/x-www-form-urlencoded';
             }
-            query += '&' + 'signature=' + signature;
             if (method === 'GET') {
                 url += '?' + query;
             } else {
                 body = query;
-                headers['Content-Type'] = 'application/x-www-form-urlencoded';
             }
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
