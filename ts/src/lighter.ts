@@ -655,6 +655,7 @@ export default class lighter extends Exchange {
         await this.publicPostSendTx (request);
         this.options['lighterPrivateKey'] = privateKey;
         this.options['signer'] = signer; // reassign signer in go
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         return signer;
     }
 
@@ -873,12 +874,12 @@ export default class lighter extends Exchange {
             order = orderRequests[0];
             apiKeyIndex = order['api_key_index'];
         }
-        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         // the nonce could be updated
         if (order['nonce'] === undefined) {
             order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
         }
         const signer = await this.loadAccount (this.options['chainId'], this.options['lighterPrivateKey'], apiKeyIndex, accountIndex, params);
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         let txType = undefined;
         let txInfo = undefined;
         if (totalOrderRequests < 2) {
