@@ -2337,6 +2337,7 @@ class mexc extends Exchange {
              * create a trade order
              *
              * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+             * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
              *
@@ -2495,6 +2496,7 @@ class mexc extends Exchange {
              * @ignore
              * create a trade order
              *
+             * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
              * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2585,9 +2587,10 @@ class mexc extends Exchange {
             if ($hedged) {
                 if ($reduceOnly) {
                     $params = $this->omit($params, 'reduceOnly'); // $hedged mode does not accept this parameter
-                    $side = ($side === 'buy') ? 'sell' : 'buy';
+                    $sideInteger = ($side === 'buy') ? 4 : 2;  // close short, close long
+                } else {
+                    $sideInteger = ($side === 'buy') ? 1 : 3;
                 }
-                $sideInteger = ($side === 'buy') ? 1 : 3;
                 $request['positionMode'] = 1;
             } else {
                 if ($reduceOnly) {
