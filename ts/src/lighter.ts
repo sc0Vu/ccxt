@@ -411,14 +411,13 @@ export default class lighter extends Exchange {
      * @returns {boolean} true if the signer was loaded, false otherwise
      */
     async preLoadLighterLibrary (params = {}) {
-        let signer = this.safeDict (this.options, 'signer');
-        if (signer !== undefined) {
-            return true;
-        }
         let apiKeyIndex = undefined;
         [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'accountIndex', 'account_index');
+        if (accountIndex === undefined) {
+            throw new ArgumentsRequired (this.id + ' requires accountIndex or account_index');
+        }
         if (!('auths' in this.options)) {
             this.options['auths'] = {};
         }
@@ -432,6 +431,10 @@ export default class lighter extends Exchange {
                 'deadline': undefined,
                 'token': undefined,
             };
+        }
+        let signer = this.safeDict (this.options['auths'][accountIndex][apiKeyIndex], 'signer');
+        if (signer !== undefined) {
+            return true;
         }
         signer = await this.loadAccount (this.options['chainId'], this.options['auths'][accountIndex][apiKeyIndex]['lighterPrivateKey'], apiKeyIndex, accountIndex);
         return (signer !== undefined);
