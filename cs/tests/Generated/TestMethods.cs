@@ -1808,7 +1808,7 @@ public partial class testMainClass
         //  -----------------------------------------------------------------------------
         //  --- Init of brokerId tests functions-----------------------------------------
         //  -----------------------------------------------------------------------------
-        object promises = new List<object> {this.testBinance(), this.testOkx(), this.testCryptocom(), this.testBybit(), this.testKucoin(), this.testKucoinfutures(), this.testBitget(), this.testMexc(), this.testHtx(), this.testWoo(), this.testBitmart(), this.testCoinex(), this.testBingx(), this.testPhemex(), this.testBlofin(), this.testCoinbaseinternational(), this.testCoinbaseAdvanced(), this.testWoofiPro(), this.testOxfun(), this.testXT(), this.testParadex(), this.testHashkey(), this.testCryptomus(), this.testDerive(), this.testModeTrade(), this.testBackpack(), this.testToobit()};
+        object promises = new List<object> {this.testBinance(), this.testOkx(), this.testCryptocom(), this.testBybit(), this.testKucoin(), this.testKucoinfutures(), this.testBitget(), this.testMexc(), this.testHtx(), this.testWoo(), this.testBitmart(), this.testCoinex(), this.testBingx(), this.testPhemex(), this.testBlofin(), this.testCoinbaseinternational(), this.testCoinbaseAdvanced(), this.testWoofiPro(), this.testOxfun(), this.testXT(), this.testParadex(), this.testHashkey(), this.testCryptomus(), this.testDerive(), this.testModeTrade(), this.testBackpack(), this.testToobit(), this.testWeex()};
         await promiseAll(promises);
         object successMessage = add(add("[", this.lang), "][TEST_SUCCESS] brokerId tests passed.");
         dump(add("[INFO]", successMessage));
@@ -2633,5 +2633,31 @@ public partial class testMainClass
             await close(exchange);
         }
         return true;
+    }
+
+    public async virtual Task testWeex()
+    {
+        Exchange exchange = this.initOfflineExchange("weex");
+        object id = "b-WEEX111125";
+        assert(isEqual(getValue(exchange.options, "partner"), id), add(add("weex - id: ", id), " not in options"));
+        object request = null;
+        try
+        {
+            await exchange.createOrder("BTC/USDT", "limit", "buy", 1, 20000);
+        } catch(Exception e)
+        {
+            request = jsonParse(exchange.last_request_body);
+        }
+        object clientOrderId = getValue(request, "newClientOrderId");
+        assert(((string)clientOrderId).StartsWith(((string)id)), add(add(add("weex - newClientOrderId: ", clientOrderId), " for spot order does not start with id: "), id));
+        try
+        {
+            await exchange.createOrder("BTC/USDT:USDT", "limit", "buy", 1, 20000);
+        } catch(Exception e)
+        {
+            request = jsonParse(exchange.last_request_body);
+        }
+        clientOrderId = getValue(request, "newClientOrderId");
+        assert(((string)clientOrderId).StartsWith(((string)id)), add(add(add("weex - newClientOrderId: ", clientOrderId), " for swap order does not start with id: "), id));
     }
 }
