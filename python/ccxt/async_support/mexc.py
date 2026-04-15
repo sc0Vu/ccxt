@@ -2246,6 +2246,7 @@ class mexc(Exchange, ImplicitAPI):
         create a trade order
 
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
 
@@ -2383,6 +2384,7 @@ class mexc(Exchange, ImplicitAPI):
  @ignore
         create a trade order
 
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2466,8 +2468,9 @@ class mexc(Exchange, ImplicitAPI):
         if hedged:
             if reduceOnly:
                 params = self.omit(params, 'reduceOnly')  # hedged mode does not accept self parameter
-                side = 'sell' if (side == 'buy') else 'buy'
-            sideInteger = 1 if (side == 'buy') else 3
+                sideInteger = 4 if (side == 'buy') else 2  # close short, close long
+            else:
+                sideInteger = 1 if (side == 'buy') else 3
             request['positionMode'] = 1
         else:
             if reduceOnly:
