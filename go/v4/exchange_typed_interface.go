@@ -526,6 +526,9 @@ func CreateExchange(exchangeId string, options map[string]interface{}) IExchange
 	case "wavesexchange":
 		itf := NewWavesexchange(options)
 		return itf
+	case "weex":
+		itf := NewWeex(options)
+		return itf
 	case "whitebit":
 		itf := NewWhitebit(options)
 		return itf

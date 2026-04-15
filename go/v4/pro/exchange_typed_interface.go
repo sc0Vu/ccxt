@@ -241,6 +241,9 @@ func CreateExchange(exchangeId string, options map[string]interface{}) ccxt.IExc
     case "upbit":
         itf := NewUpbit(options)
         return itf
+    case "weex":
+        itf := NewWeex(options)
+        return itf
     case "whitebit":
         itf := NewWhitebit(options)
         return itf
