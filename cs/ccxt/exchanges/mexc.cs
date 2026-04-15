@@ -466,11 +466,6 @@ public partial class mexc : Exchange
             { "options", new Dictionary<string, object>() {
                 { "adjustForTimeDifference", false },
                 { "timeDifference", 0 },
-                { "unavailableContracts", new Dictionary<string, object>() {
-                    { "BTC/USDT:USDT", true },
-                    { "LTC/USDT:USDT", true },
-                    { "ETH/USDT:USDT", true },
-                } },
                 { "fetchMarkets", new Dictionary<string, object>() {
                     { "types", new Dictionary<string, object>() {
                         { "spot", true },
@@ -2346,12 +2341,6 @@ public partial class mexc : Exchange
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();
         object symbol = getValue(market, "symbol");
-        object unavailableContracts = this.safeValue(this.options, "unavailableContracts", new Dictionary<string, object>() {});
-        object isContractUnavaiable = this.safeBool(unavailableContracts, symbol, false);
-        if (isTrue(isContractUnavaiable))
-        {
-            throw new NotSupported ((string)add(add(this.id, " createSwapOrder() does not support yet this symbol:"), symbol)) ;
-        }
         object openType = null;
         if (isTrue(!isEqual(marginMode, null)))
         {
