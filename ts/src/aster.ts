@@ -347,9 +347,11 @@ export default class aster extends Exchange {
                         'v1/transactionHistory': 1,
                         'v1/account': 1,
                         'v1/userTrades': 1,
+                        //
                         'v3/order': 1,
                         'v3/account': 1,
                         'v3/userTrades': 1,
+                        'v3/allOrders': 1,
                     },
                     'post': {
                         'v1/order': 1,
@@ -2113,32 +2115,36 @@ export default class aster extends Exchange {
         //         "workingType": "CONTRACT_PRICE",
         //         "priceProtect": false
         //     }
+        //
         // spot
-        //     {
-        //         "orderId": 38,
-        //         "symbol": "ADA25SLP25",
-        //         "status": "FILLED",
-        //         "clientOrderId": "afMd4GBQyHkHpGWdiy34Li",
-        //         "price": "20",
-        //         "avgPrice": "12.0000000000000000",
-        //         "origQty": "10",
-        //         "executedQty": "10",
-        //         "cumQuote": "120",
-        //         "timeInForce": "GTC",
-        //         "type": "LIMIT",
-        //         "side": "BUY",
-        //         "stopPrice": "0",
-        //         "origType": "LIMIT",
-        //         "time": 1649913186270,
-        //         "updateTime": 1649913186297
-        //     }
+        //
+        // fetchOrders
+        //
+        //        {
+        //            "orderId": "417594542",
+        //            "symbol": "ETHUSDT",
+        //            "status": "FILLED",
+        //            "clientOrderId": "web_qnvMAhOJsiVbSyu0BdKG",
+        //            "price": "0",                     // value set for unfilled
+        //            "avgPrice": "2351.580000",        // value zero for unfilled
+        //            "origQty": "0.0054",
+        //            "executedQty": "0.0054",          // value zero for unfilled
+        //            "cumQuote": "12.69853200",        // value zero for unfilled
+        //            "timeInForce": "GTC",
+        //            "type": "MARKET",
+        //            "side": "SELL",
+        //            "stopPrice": "0",
+        //            "origType": "MARKET",
+        //            "time": "1776274219582",
+        //            "updateTime": "1776274219609",
+        //            "orderListId": "-1"
+        //        }
         //
         const info = order;
         const marketId = this.safeString (order, 'symbol');
         market = this.safeMarket (marketId, market);
         const side = this.safeStringLower (order, 'side');
         const timestamp = this.safeInteger (order, 'time');
-        const lastTradeTimestamp = this.safeInteger (order, 'updateTime');
         const statusId = this.safeStringUpper (order, 'status');
         const rawType = this.safeStringUpper (order, 'type');
         const stopPriceString = this.safeString (order, 'stopPrice');
@@ -2150,7 +2156,7 @@ export default class aster extends Exchange {
             'symbol': this.safeSymbol (marketId, market),
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
-            'lastTradeTimestamp': lastTradeTimestamp,
+            'lastTradeTimestamp': undefined,
             'lastUpdateTimestamp': this.safeInteger (order, 'updateTime'),
             'type': this.parseOrderType (rawType),
             'timeInForce': this.safeString (order, 'timeInForce'),
@@ -2263,17 +2269,36 @@ export default class aster extends Exchange {
             request['startTime'] = since;
         }
         if (limit !== undefined) {
-            if (limit > 1000) {
-                limit = 1000; // Default 500; max 1000
-            }
-            request['limit'] = limit;
+            request['limit'] = Math.min (limit, 1000);
         }
         [ request, params ] = this.handleUntilOption ('endTime', request, params);
         let response = undefined;
         if (market['swap']) {
             response = await this.fapiPrivateGetV1AllOrders (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateGetV1AllOrders (this.extend (request, params));
+            response = await this.sapiPrivateGetV3AllOrders (this.extend (request, params));
+            //
+            //    [
+            //        {
+            //            "orderId": "417594542",
+            //            "symbol": "ETHUSDT",
+            //            "status": "FILLED",
+            //            "clientOrderId": "web_qnvMAhOJsiVbSyu0BdKG",
+            //            "price": "0",                     // value set for unfilled
+            //            "avgPrice": "2351.580000",        // value zero for unfilled
+            //            "origQty": "0.0054",
+            //            "executedQty": "0.0054",          // value zero for unfilled
+            //            "cumQuote": "12.69853200",        // value zero for unfilled
+            //            "timeInForce": "GTC",
+            //            "type": "MARKET",
+            //            "side": "SELL",
+            //            "stopPrice": "0",
+            //            "origType": "MARKET",
+            //            "time": "1776274219582",
+            //            "updateTime": "1776274219609",
+            //            "orderListId": "-1"
+            //        }, ...
+            //
         }
         return this.parseOrders (response, market, since, limit);
     }
