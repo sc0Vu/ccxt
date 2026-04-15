@@ -2411,6 +2411,7 @@ public partial class mexc : Exchange
             if (isTrue(reduceOnly))
             {
                 sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 2 : 4;
+                parameters = this.omit(parameters, "reduceOnly");
             } else
             {
                 sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 1 : 3;
