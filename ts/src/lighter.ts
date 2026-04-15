@@ -428,7 +428,7 @@ export default class lighter extends Exchange {
         if (!(apiKeyIndex in this.options['auths'][accountIndex])) {
             this.options['auths'][accountIndex][apiKeyIndex] = {
                 'signer': undefined,
-                'privateKey': undefined,
+                'lighterPrivateKey': undefined,
                 'deadline': undefined,
                 'token': undefined,
             };
