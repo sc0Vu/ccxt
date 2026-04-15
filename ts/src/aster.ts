@@ -322,6 +322,7 @@ export default class aster extends Exchange {
                         'v1/ticker/price': 1,
                         'v1/ticker/bookTicker': 1,
                         'v1/aster/withdraw/estimateFee': 1,
+                        'v3/aster/withdraw/estimateFee': 1,
                         // v3
                         'v3/ping': 1,
                         'v3/time': 1,
@@ -358,6 +359,7 @@ export default class aster extends Exchange {
                         'v1/listenKey': 1,
                         //
                         'v3/order': 1,
+                        'v3/asset/wallet/transfer': 1,
                     },
                     'put': [
                         'v1/listenKey',
@@ -3835,8 +3837,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#transfer
      * @description transfer currency internally between wallets on the same account
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#transfer-asset-to-other-address-trade
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#transfer-between-futures-and-spot-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#perp-spot-transfer-trade
      * @param {string} code unified currency code
      * @param {float} amount amount to transfer
      * @param {string} fromAccount account to transfer from
@@ -3871,7 +3872,7 @@ export default class aster extends Exchange {
             const clientTranId = this.safeString (params, 'clientTranId', defaultClientTranId);
             request['kindType'] = type;
             request['clientTranId'] = clientTranId;
-            response = await this.fapiPrivatePostV1AssetWalletTransfer (this.extend (request, params));
+            response = await this.sapiPrivatePostV3AssetWalletTransfer (this.extend (request, params));
         } else {
             // transfer asset to other address
             request['toAddress'] = toAccount;
@@ -3883,28 +3884,29 @@ export default class aster extends Exchange {
         //         "status": "SUCCESS"
         //     }
         //
+        return this.parseTransfer (response, currency);
+    }
+
+    parseTransfer (transfer: Dict, currency: Currency = undefined): TransferEntry {
+        const currencyId = this.safeString (transfer, 'code');
         return {
-            'info': response,
-            'id': this.safeString (response, 'tranId'),
-            'txid': undefined,
+            'info': transfer,
+            'id': this.safeString (transfer, 'tranId'),
             'timestamp': undefined,
             'datetime': undefined,
-            'network': undefined,
-            'address': undefined,
-            'addressTo': fromAccount,
-            'addressFrom': toAccount,
-            'tag': undefined,
-            'tagTo': undefined,
-            'tagFrom': undefined,
-            'type': 'transfer',
-            'amount': amount,
-            'currency': code,
-            'status': undefined,
-            'updated': undefined,
-            'internal': undefined,
-            'comment': undefined,
-            'fee': undefined,
-        } as Transaction;
+            'currency': this.safeCurrencyCode (currencyId, currency),
+            'amount': undefined,
+            'fromAccount': undefined,
+            'toAccount': undefined,
+            'status': this.parseTransferStatus (this.safeString (transfer, 'status')),
+        };
+    }
+
+    parseTransferStatus (status: Str): Str {
+        const statuses: Dict = {
+            'SUCCESS': 'ok',
+        };
+        return this.safeString (statuses, status, status);
     }
 
     hashMessage (binaryMessage) {
@@ -3969,20 +3971,13 @@ export default class aster extends Exchange {
                 } else {
                     query = this.rawencode (extendedParams);
                 }
-            } else if (api === 'sapiPrivate') {
-                const nonce = this.milliseconds () * 1000; // milliseconds
-                const signerAddress = this.safeString (this.options, 'oea_signerAddress');
-                if (signerAddress === undefined) {
-                    throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
+                if (method === 'GET') {
+                    url += '?' + query;
+                } else {
+                    body = query;
                 }
-                // Build v3 params: original endpoint params + nonce (milliseconds) + user + signer
-                // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
-                const v3Params = this.extend ({}, params, {
-                    'nonce': nonce,
-                    'user': this.walletAddress,
-                    'signer': signerAddress,
-                });
-                const paramString = this.rawencode (v3Params);
+            } else if (api === 'sapiPrivate') {
+                const nonce = (this.milliseconds () * 1000).toString ();
                 // Sign using EIP-712 typed data per the AsterSignTransaction spec
                 const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
                 const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
@@ -3997,17 +3992,28 @@ export default class aster extends Exchange {
                         { 'name': 'msg', 'type': 'string' },
                     ],
                 };
+                const signerAddress = this.safeString (this.options, 'oea_signerAddress');
+                if (signerAddress === undefined) {
+                    throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
+                }
+                // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
+                // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
+                const v3Params = this.extend ({}, params, {
+                    'nonce': nonce,
+                    'user': this.walletAddress,
+                    'signer': signerAddress,
+                });
+                const paramString = this.rawencode (v3Params);
                 const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
                 signature = this.signMessage (encodedMessage, this.privateKey);
-                query = paramString;
-                query += '&' + 'signature=' + signature;
-                // headers = {};
-                // headers['Content-Type'] = 'application/x-www-form-urlencoded';
-            }
-            if (method === 'GET') {
-                url += '?' + query;
-            } else {
-                body = query;
+                const queryString = paramString + '&' + 'signature=' + signature;
+                if (method === 'GET') {
+                    url += '?' + queryString;
+                } else {
+                    headers = {};
+                    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                    body = queryString;
+                }
             }
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
