@@ -349,13 +349,13 @@ export default class aster extends Exchange {
                         'v1/userTrades': 1,
                         //
                         'v3/order': 1,
-                        'v3/account': 1,
-                        'v3/userTrades': 1,
-                        'v3/allOrders': 1,
+                        'v3/account': 5,
+                        'v3/userTrades': 5,
+                        'v3/allOrders': 5,
                     },
                     'post': {
                         'v1/order': 1,
-                        'v1/asset/wallet/transfer': 1,
+                        'v1/asset/wallet/transfer': 5,
                         'v1/asset/sendToAddress': 1,
                         'v1/aster/user-withdraw': 1,
                         'v1/listenKey': 1,
@@ -366,11 +366,12 @@ export default class aster extends Exchange {
                     'put': [
                         'v1/listenKey',
                     ],
-                    'delete': [
-                        'v1/order',
-                        'v1/allOpenOrders',
-                        'v1/listenKey',
-                    ],
+                    'delete': {
+                        'v1/order': 1,
+                        'v1/allOpenOrders': 1,
+                        'v1/listenKey': 1,
+                        'v3/allOpenOrders': 1,
+                    },
                 },
             },
             'timeframes': {
@@ -2247,8 +2248,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchOrders
      * @description fetches information on multiple orders made by the user
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#query-all-orders-user_data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#all-orders-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#query-all-orders-user_data
      * @param {string} symbol unified market symbol of the market orders were made in
      * @param {int} [since] the earliest time in ms to fetch orders for
      * @param {int} [limit] the maximum number of order structures to retrieve
@@ -2613,8 +2613,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#cancelAllOrders
      * @description cancel all open orders in a market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#cancel-all-open-orders-trade
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#cancel-all-open-orders-trade
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#cancel-all-open-orders-trade
      * @param {string} symbol unified market symbol of the market to cancel orders in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
@@ -2632,14 +2631,14 @@ export default class aster extends Exchange {
         if (market['swap']) {
             response = await this.fapiPrivateDeleteV1AllOpenOrders (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateDeleteV1AllOpenOrders (this.extend (request, params));
+            response = await this.sapiPrivateDeleteV3AllOpenOrders (this.extend (request, params));
+            //
+            //     {
+            //         "code": "200",
+            //         "msg": "The operation of cancel all open order is done."
+            //     }
+            //
         }
-        //
-        //     {
-        //         "code": "200",
-        //         "msg": "The operation of cancel all open order is done."
-        //     }
-        //
         return [
             this.safeOrder ({
                 'info': response,
