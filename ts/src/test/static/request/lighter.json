@@ -8,12 +8,18 @@
     "options": {
         "builderFee": true,
         "accountIndex": 715085,
-        "apiKeyIndex": 0,
+        "auths": {
+            "715085": {
+                "30": {
+                    "lighterPrivateKey": "e5b975b33b81e53fb5333bd84553f12b3b5327ce5b1595139f49e8bebf734d9b1b81d3351b487d1b"
+                }
+            }
+        },
+        "apiKeyIndex": 30,
         "nonce": 0,
         "integratorAccountIndex": 130303,
         "integratorMakerFee": 10,
-        "integratorTakerFee": 10,
-        "lighterPrivateKey": "e5b975b33b81e53fb5333bd84553f12b3b5327ce5b1595139f49e8bebf734d9b1b81d3351b487d1b"
+        "integratorTakerFee": 10
     },
     "methods": {
         "cancelAllOrders": [
