@@ -352,6 +352,7 @@ export default class aster extends Exchange {
                         'v3/account': 5,
                         'v3/userTrades': 5,
                         'v3/allOrders': 5,
+                        'v3/openOrders': 1, // with symbol 1, otherwise 40
                     },
                     'post': {
                         'v1/order': 1,
@@ -426,6 +427,9 @@ export default class aster extends Exchange {
                     'ETH': 1,
                     'BSC': 56,
                     'Arbitrum': 42161,
+                },
+                'fetchOpenOrders': {
+                    'warnIfNoSymbol': true, // set to false to suppress warning when calling fetchOpenOrders without symbol
                 },
             },
             'exceptions': {
@@ -2119,7 +2123,7 @@ export default class aster extends Exchange {
         //
         // spot
         //
-        // fetchOrders
+        // fetchOrders, fetchOpenOrders
         //
         //        {
         //            "orderId": "417594542",
@@ -2307,8 +2311,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchOpenOrders
      * @description fetch all unfilled currently open orders
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#current-open-orders-user_data
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#current-all-open-orders-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#current-open-orders-user_data
      * @param {string} symbol unified market symbol
      * @param {int} [since] the earliest time in ms to fetch open orders for
      * @param {int} [limit] the maximum number of  open orders structures to retrieve
@@ -2321,21 +2324,52 @@ export default class aster extends Exchange {
         await this.loadMarkets ();
         const request: Dict = {};
         let market = undefined;
-        let type = undefined;
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchOpenOrders', market, params);
+        let marketType = undefined;
         if (symbol !== undefined) {
             market = this.market (symbol);
             request['symbol'] = market['id'];
         }
-        [ type, params ] = this.handleMarketTypeAndParams ('fetchOpenOrders', market, params);
-        let response = undefined;
-        if (this.isLinear (type, subType)) {
-            response = await this.fapiPrivateGetV1OpenOrders (this.extend (request, params));
-        } else if (type === 'spot') {
-            response = await this.sapiPrivateGetV1OpenOrders (this.extend (request, params));
+        if (symbol === undefined) {
+            if (this.options['fetchOpenOrders']['warnIfNoSymbol']) {
+                throw new ExchangeError (this.id + ' fetchOpenOrders(): WARNING - this method without providing "symbol" argument uses 40 times more rate-limit quota. If you acknowledge this warning, set ' + this.id + '.options["fetchOpenOrders"]["warnIfNoSymbol"] = false to suppress this warning message.');
+            }
         } else {
-            throw new NotSupported (this.id + ' fetchOpenOrders() does not support ' + type + ' markets yet');
+            market = this.market (symbol);
+            request['symbol'] = market['id'];
+        }
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchOpenOrders', market, params);
+        let subType = undefined;
+        [ subType, params ] = this.handleSubTypeAndParams ('fetchOpenOrders', market, params);
+        let response = undefined;
+        if (this.isLinear (marketType, subType)) {
+            response = await this.fapiPrivateGetV1OpenOrders (this.extend (request, params));
+        } else if (marketType === 'spot') {
+            response = await this.sapiPrivateGetV3OpenOrders (this.extend (request, params));
+            //
+            //    [
+            //        {
+            //            "orderId": "417663664",
+            //            "symbol": "ETHUSDT",
+            //            "status": "NEW",
+            //            "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
+            //            "price": "2111.75",
+            //            "avgPrice": "0.000000",
+            //            "origQty": "0.0049",
+            //            "executedQty": "0",
+            //            "cumQuote": "0",
+            //            "timeInForce": "GTC",
+            //            "type": "LIMIT",
+            //            "side": "BUY",
+            //            "stopPrice": "0",
+            //            "origType": "LIMIT",
+            //            "time": "1776281810637",
+            //            "updateTime": "1776281810637",
+            //            "orderListId": "-1"
+            //        }
+            //    ]
+            //
+        } else {
+            throw new NotSupported (this.id + ' fetchOpenOrders() does not support ' + marketType + ' markets yet');
         }
         //
         //     [
