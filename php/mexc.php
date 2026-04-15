@@ -474,11 +474,6 @@ class mexc extends Exchange {
             'options' => array(
                 'adjustForTimeDifference' => false,
                 'timeDifference' => 0,
-                'unavailableContracts' => array(
-                    'BTC/USDT:USDT' => true,
-                    'LTC/USDT:USDT' => true,
-                    'ETH/USDT:USDT' => true,
-                ),
                 'fetchMarkets' => array(
                     'types' => array(
                         'spot' => true,
@@ -2481,11 +2476,6 @@ class mexc extends Exchange {
          */
         $this->load_markets();
         $symbol = $market['symbol'];
-        $unavailableContracts = $this->safe_value($this->options, 'unavailableContracts', array());
-        $isContractUnavaiable = $this->safe_bool($unavailableContracts, $symbol, false);
-        if ($isContractUnavaiable) {
-            throw new NotSupported($this->id . ' createSwapOrder() does not support yet this $symbol:' . $symbol);
-        }
         $openType = null;
         if ($marginMode !== null) {
             if ($marginMode === 'cross') {
