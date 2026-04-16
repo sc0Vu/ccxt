@@ -550,6 +550,16 @@
         ],
         "cancelOrder": [
             {
+                "description": "spot",
+                "method": "cancelOrder",
+                "url": "https://sapi.asterdex.com/api/v3/order",
+                "input": [
+                    417663664,
+                    "ETH/USDT"
+                ],
+                "output": "symbol=ETHUSDT&orderId=417663664&nonce=1776318948277000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x4aa48434f01282881450559ff99802a34993655932fdd7ccb7db827770b982ce60d1b076f1f6e3581e05b0687e0c165d8a54f020fffbc0ce4ec52790fc87bf0b1b"
+            },
+            {
                 "description": "cancel trigger roder",
                 "method": "cancelOrder",
                 "url": "https://fapi.asterdex.com/fapi/v1/order",

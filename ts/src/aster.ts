@@ -373,6 +373,7 @@ export default class aster extends Exchange {
                         'v1/allOpenOrders': 1,
                         'v1/listenKey': 1,
                         'v3/allOpenOrders': 1,
+                        'v3/order': 1,
                     },
                 },
             },
@@ -2124,7 +2125,7 @@ export default class aster extends Exchange {
         //
         // spot
         //
-        //   fetchOrders, fetchOpenOrders, fetchOpenOrder, fetchOrder
+        //   fetchOrders, fetchOpenOrders, fetchOpenOrder, fetchOrder, cancelOrder
         //
         //        {
         //            "orderId": "417594542",
@@ -2726,8 +2727,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#cancelOrder
      * @description cancels an open order
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#cancel-order-trade
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#cancel-order-trade
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#cancel-order-trade
      * @param {string} id order id
      * @param {string} symbol unified symbol of the market the order was made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2742,18 +2742,39 @@ export default class aster extends Exchange {
         const request: Dict = {
             'symbol': market['id'],
         };
-        const clientOrderId = this.safeStringN (params, [ 'origClientOrderId', 'clientOrderId', 'newClientStrategyId' ]);
+        const clientOrderId = this.safeStringN (params, [ 'origClientOrderId', 'clientOrderId' ]);
         if (clientOrderId !== undefined) {
             request['origClientOrderId'] = clientOrderId;
         } else {
             request['orderId'] = id;
         }
-        params = this.omit (params, [ 'origClientOrderId', 'clientOrderId', 'newClientStrategyId' ]);
+        params = this.omit (params, [ 'origClientOrderId', 'clientOrderId' ]);
         let response = undefined;
         if (market['swap']) {
             response = await this.fapiPrivateDeleteV1Order (this.extend (request, params));
         } else {
-            response = await this.sapiPrivateDeleteV1Order (this.extend (request, params));
+            response = await this.sapiPrivateDeleteV3Order (this.extend (request, params));
+            //
+            // {
+            //     "orderId": "417663664",
+            //     "symbol": "ETHUSDT",
+            //     "status": "CANCELED",
+            //     "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
+            //     "price": "2111.75",
+            //     "avgPrice": "0.000000",
+            //     "origQty": "0.0049",
+            //     "executedQty": "0",
+            //     "cumQty": "0",
+            //     "cumQuote": "0",
+            //     "timeInForce": "GTC",
+            //     "type": "LIMIT",
+            //     "side": "BUY",
+            //     "stopPrice": "0",
+            //     "origType": "LIMIT",
+            //     "updateTime": "1776318949284",
+            //     "orderListId": "-1"
+            // }
+            //
         }
         return this.parseOrder (response, market);
     }
