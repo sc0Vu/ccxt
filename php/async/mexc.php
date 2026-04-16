@@ -485,11 +485,6 @@ class mexc extends Exchange {
             'options' => array(
                 'adjustForTimeDifference' => false,
                 'timeDifference' => 0,
-                'unavailableContracts' => array(
-                    'BTC/USDT:USDT' => true,
-                    'LTC/USDT:USDT' => true,
-                    'ETH/USDT:USDT' => true,
-                ),
                 'fetchMarkets' => array(
                     'types' => array(
                         'spot' => true,
@@ -2342,6 +2337,7 @@ class mexc extends Exchange {
              * create a trade order
              *
              * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+             * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
              *
@@ -2500,6 +2496,7 @@ class mexc extends Exchange {
              * @ignore
              * create a trade order
              *
+             * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
              * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
              * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2525,11 +2522,6 @@ class mexc extends Exchange {
              */
             Async\await($this->load_markets());
             $symbol = $market['symbol'];
-            $unavailableContracts = $this->safe_value($this->options, 'unavailableContracts', array());
-            $isContractUnavaiable = $this->safe_bool($unavailableContracts, $symbol, false);
-            if ($isContractUnavaiable) {
-                throw new NotSupported($this->id . ' createSwapOrder() does not support yet this $symbol:' . $symbol);
-            }
             $openType = null;
             if ($marginMode !== null) {
                 if ($marginMode === 'cross') {
@@ -2595,13 +2587,15 @@ class mexc extends Exchange {
             if ($hedged) {
                 if ($reduceOnly) {
                     $params = $this->omit($params, 'reduceOnly'); // $hedged mode does not accept this parameter
-                    $side = ($side === 'buy') ? 'sell' : 'buy';
+                    $sideInteger = ($side === 'buy') ? 4 : 2;  // close short, close long
+                } else {
+                    $sideInteger = ($side === 'buy') ? 1 : 3;
                 }
-                $sideInteger = ($side === 'buy') ? 1 : 3;
                 $request['positionMode'] = 1;
             } else {
                 if ($reduceOnly) {
                     $sideInteger = ($side === 'buy') ? 2 : 4;
+                    $params = $this->omit($params, 'reduceOnly');
                 } else {
                     $sideInteger = ($side === 'buy') ? 1 : 3;
                 }

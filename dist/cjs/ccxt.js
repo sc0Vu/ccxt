@@ -110,6 +110,7 @@ var tokocrypto = require('./src/tokocrypto.js');
 var toobit = require('./src/toobit.js');
 var upbit = require('./src/upbit.js');
 var wavesexchange = require('./src/wavesexchange.js');
+var weex = require('./src/weex.js');
 var whitebit = require('./src/whitebit.js');
 var woo = require('./src/woo.js');
 var woofipro = require('./src/woofipro.js');
@@ -193,6 +194,7 @@ var phemex$1 = require('./src/pro/phemex.js');
 var poloniex$1 = require('./src/pro/poloniex.js');
 var toobit$1 = require('./src/pro/toobit.js');
 var upbit$1 = require('./src/pro/upbit.js');
+var weex$1 = require('./src/pro/weex.js');
 var whitebit$1 = require('./src/pro/whitebit.js');
 var woo$1 = require('./src/pro/woo.js');
 var woofipro$1 = require('./src/pro/woofipro.js');
@@ -200,7 +202,7 @@ var xt$1 = require('./src/pro/xt.js');
 
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
-const version = '4.5.48';
+const version = '4.5.49';
 Exchange["default"].ccxtVersion = version;
 const exchanges = {
     'aftermath': aftermath["default"],
@@ -305,6 +307,7 @@ const exchanges = {
     'toobit': toobit["default"],
     'upbit': upbit["default"],
     'wavesexchange': wavesexchange["default"],
+    'weex': weex["default"],
     'whitebit': whitebit["default"],
     'woo': woo["default"],
     'woofipro': woofipro["default"],
@@ -390,6 +393,7 @@ const pro = {
     'poloniex': poloniex$1["default"],
     'toobit': toobit$1["default"],
     'upbit': upbit$1["default"],
+    'weex': weex$1["default"],
     'whitebit': whitebit$1["default"],
     'woo': woo$1["default"],
     'woofipro': woofipro$1["default"],
@@ -548,6 +552,7 @@ exports.tokocrypto = tokocrypto["default"];
 exports.toobit = toobit["default"];
 exports.upbit = upbit["default"];
 exports.wavesexchange = wavesexchange["default"];
+exports.weex = weex["default"];
 exports.whitebit = whitebit["default"];
 exports.woo = woo["default"];
 exports.woofipro = woofipro["default"];

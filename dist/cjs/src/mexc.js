@@ -479,11 +479,6 @@ class mexc extends mexc$1["default"] {
             'options': {
                 'adjustForTimeDifference': false,
                 'timeDifference': 0,
-                'unavailableContracts': {
-                    'BTC/USDT:USDT': true,
-                    'LTC/USDT:USDT': true,
-                    'ETH/USDT:USDT': true,
-                },
                 'fetchMarkets': {
                     'types': {
                         'spot': true,
@@ -2305,6 +2300,7 @@ class mexc extends mexc$1["default"] {
      * @name mexc#createOrder
      * @description create a trade order
      * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+     * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
      * @param {string} symbol unified symbol of the market to create an order in
@@ -2462,6 +2458,7 @@ class mexc extends mexc$1["default"] {
      * @method
      * @name mexc#createSwapOrder
      * @description create a trade order
+     * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
      * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2487,11 +2484,6 @@ class mexc extends mexc$1["default"] {
     async createSwapOrder(market, type, side, amount, price = undefined, marginMode = undefined, params = {}) {
         await this.loadMarkets();
         const symbol = market['symbol'];
-        const unavailableContracts = this.safeValue(this.options, 'unavailableContracts', {});
-        const isContractUnavaiable = this.safeBool(unavailableContracts, symbol, false);
-        if (isContractUnavaiable) {
-            throw new errors.NotSupported(this.id + ' createSwapOrder() does not support yet this symbol:' + symbol);
-        }
         let openType = undefined;
         if (marginMode !== undefined) {
             if (marginMode === 'cross') {
@@ -2562,14 +2554,17 @@ class mexc extends mexc$1["default"] {
         if (hedged) {
             if (reduceOnly) {
                 params = this.omit(params, 'reduceOnly'); // hedged mode does not accept this parameter
-                side = (side === 'buy') ? 'sell' : 'buy';
+                sideInteger = (side === 'buy') ? 4 : 2; // close short, close long
             }
-            sideInteger = (side === 'buy') ? 1 : 3;
+            else {
+                sideInteger = (side === 'buy') ? 1 : 3;
+            }
             request['positionMode'] = 1;
         }
         else {
             if (reduceOnly) {
                 sideInteger = (side === 'buy') ? 2 : 4;
+                params = this.omit(params, 'reduceOnly');
             }
             else {
                 sideInteger = (side === 'buy') ? 1 : 3;

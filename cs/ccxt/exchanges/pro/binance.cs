@@ -259,7 +259,7 @@ public partial class binance : ccxt.binance
 
     public virtual object getFutureWsCategory(object channel)
     {
-        if (isTrue(isTrue(isTrue(isTrue(isTrue(isEqual(channel, "depth")) || isTrue(isEqual(channel, "rpiDepth"))) || isTrue(isEqual(channel, "bookTicker"))) || isTrue(isEqual(channel, "trade"))) || isTrue(isEqual(channel, "aggTrade"))))
+        if (isTrue(isTrue(isTrue(isTrue(isEqual(channel, "depth")) || isTrue(isEqual(channel, "rpiDepth"))) || isTrue(isEqual(channel, "bookTicker"))) || isTrue(isEqual(channel, "trade"))))
         {
             return "public";
         }

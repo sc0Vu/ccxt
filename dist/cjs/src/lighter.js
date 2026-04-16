@@ -1553,6 +1553,7 @@ class lighter extends lighter$1["default"] {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.by] fetch balance by 'index' or 'l1_address', defaults to 'index'
      * @param {string} [params.value] fetch balance value, account index or l1 address
+     * @param {string} [params.type] 'spot', 'swap', default is 'swap'
      * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
      */
     async fetchBalance(params = {}) {
@@ -1627,9 +1628,11 @@ class lighter extends lighter$1["default"] {
                 }
             }
             else {
-                const perpUSDC = this.safeString(account, 'collateral');
-                const perpBalance = this.safeDict(result, 'USDC(PERP)', this.account());
-                perpBalance['total'] = Precise["default"].stringAdd(perpBalance['total'], perpUSDC);
+                const perpBalance = this.safeDict(result, 'USDC', this.account());
+                const perpUSDCTotal = this.safeString(account, 'collateral');
+                const perpUSDCFree = this.safeString(account, 'available_balance');
+                perpBalance['total'] = Precise["default"].stringAdd(perpBalance['total'], perpUSDCTotal);
+                perpBalance['free'] = Precise["default"].stringAdd(perpBalance['free'], perpUSDCFree);
                 result['USDC'] = perpBalance;
             }
         }

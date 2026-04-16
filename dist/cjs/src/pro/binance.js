@@ -249,7 +249,7 @@ class binance extends binance$1["default"] {
         return baseUrl;
     }
     getFutureWsCategory(channel) {
-        if (channel === 'depth' || channel === 'rpiDepth' || channel === 'bookTicker' || channel === 'trade' || channel === 'aggTrade') {
+        if (channel === 'depth' || channel === 'rpiDepth' || channel === 'bookTicker' || channel === 'trade') {
             return 'public';
         }
         return 'market';

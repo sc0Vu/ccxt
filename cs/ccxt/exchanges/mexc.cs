@@ -466,11 +466,6 @@ public partial class mexc : Exchange
             { "options", new Dictionary<string, object>() {
                 { "adjustForTimeDifference", false },
                 { "timeDifference", 0 },
-                { "unavailableContracts", new Dictionary<string, object>() {
-                    { "BTC/USDT:USDT", true },
-                    { "LTC/USDT:USDT", true },
-                    { "ETH/USDT:USDT", true },
-                } },
                 { "fetchMarkets", new Dictionary<string, object>() {
                     { "types", new Dictionary<string, object>() {
                         { "spot", true },
@@ -2135,6 +2130,7 @@ public partial class mexc : Exchange
      * @name mexc#createOrder
      * @description create a trade order
      * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+     * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
      * @param {string} symbol unified symbol of the market to create an order in
@@ -2319,6 +2315,7 @@ public partial class mexc : Exchange
      * @method
      * @name mexc#createSwapOrder
      * @description create a trade order
+     * @see https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
      * @see https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
      * @see https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2346,12 +2343,6 @@ public partial class mexc : Exchange
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();
         object symbol = getValue(market, "symbol");
-        object unavailableContracts = this.safeValue(this.options, "unavailableContracts", new Dictionary<string, object>() {});
-        object isContractUnavaiable = this.safeBool(unavailableContracts, symbol, false);
-        if (isTrue(isContractUnavaiable))
-        {
-            throw new NotSupported ((string)add(add(this.id, " createSwapOrder() does not support yet this symbol:"), symbol)) ;
-        }
         object openType = null;
         if (isTrue(!isEqual(marginMode, null)))
         {
@@ -2413,15 +2404,18 @@ public partial class mexc : Exchange
             if (isTrue(reduceOnly))
             {
                 parameters = this.omit(parameters, "reduceOnly"); // hedged mode does not accept this parameter
-                side = ((bool) isTrue((isEqual(side, "buy")))) ? "sell" : "buy";
+                sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 4 : 2; // close short, close long
+            } else
+            {
+                sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 1 : 3;
             }
-            sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 1 : 3;
             ((IDictionary<string,object>)request)["positionMode"] = 1;
         } else
         {
             if (isTrue(reduceOnly))
             {
                 sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 2 : 4;
+                parameters = this.omit(parameters, "reduceOnly");
             } else
             {
                 sideInteger = ((bool) isTrue((isEqual(side, "buy")))) ? 1 : 3;

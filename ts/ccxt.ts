@@ -40,7 +40,7 @@ import {BaseError, ExchangeError, AuthenticationError, PermissionDenied, Account
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
 
-const version = '4.5.48';
+const version = '4.5.49';
 
 (Exchange as any).ccxtVersion = version
 
@@ -148,6 +148,7 @@ import tokocrypto from  './src/tokocrypto.js'
 import toobit from  './src/toobit.js'
 import upbit from  './src/upbit.js'
 import wavesexchange from  './src/wavesexchange.js'
+import weex from  './src/weex.js'
 import whitebit from  './src/whitebit.js'
 import woo from  './src/woo.js'
 import woofipro from  './src/woofipro.js'
@@ -234,6 +235,7 @@ import phemexPro from  './src/pro/phemex.js'
 import poloniexPro from  './src/pro/poloniex.js'
 import toobitPro from  './src/pro/toobit.js'
 import upbitPro from  './src/pro/upbit.js'
+import weexPro from  './src/pro/weex.js'
 import whitebitPro from  './src/pro/whitebit.js'
 import wooPro from  './src/pro/woo.js'
 import woofiproPro from  './src/pro/woofipro.js'
@@ -342,6 +344,7 @@ const exchanges = {
     'toobit':                 toobit,
     'upbit':                  upbit,
     'wavesexchange':          wavesexchange,
+    'weex':                   weex,
     'whitebit':               whitebit,
     'woo':                    woo,
     'woofipro':               woofipro,
@@ -428,6 +431,7 @@ const pro = {
     'poloniex':               poloniexPro,
     'toobit':                 toobitPro,
     'upbit':                  upbitPro,
+    'weex':                   weexPro,
     'whitebit':               whitebitPro,
     'woo':                    wooPro,
     'woofipro':               woofiproPro,
@@ -679,6 +683,7 @@ export {
     toobit,
     upbit,
     wavesexchange,
+    weex,
     whitebit,
     woo,
     woofipro,

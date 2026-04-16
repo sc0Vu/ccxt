@@ -4,7 +4,7 @@
 
 # ----------------------------------------------------------------------------
 
-__version__ = '4.5.48'
+__version__ = '4.5.49'
 
 # ----------------------------------------------------------------------------
 
@@ -132,6 +132,7 @@ from ccxt.pro.phemex import phemex                                        # noqa
 from ccxt.pro.poloniex import poloniex                                    # noqa: F401
 from ccxt.pro.toobit import toobit                                        # noqa: F401
 from ccxt.pro.upbit import upbit                                          # noqa: F401
+from ccxt.pro.weex import weex                                            # noqa: F401
 from ccxt.pro.whitebit import whitebit                                    # noqa: F401
 from ccxt.pro.woo import woo                                              # noqa: F401
 from ccxt.pro.woofipro import woofipro                                    # noqa: F401
@@ -213,6 +214,7 @@ exchanges = [
     'poloniex',
     'toobit',
     'upbit',
+    'weex',
     'whitebit',
     'woo',
     'woofipro',

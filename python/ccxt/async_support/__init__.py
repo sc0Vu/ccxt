@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.5.48'
+__version__ = '4.5.49'
 
 # -----------------------------------------------------------------------------
 
@@ -166,6 +166,7 @@ from ccxt.async_support.tokocrypto import tokocrypto                            
 from ccxt.async_support.toobit import toobit                                    # noqa: F401
 from ccxt.async_support.upbit import upbit                                      # noqa: F401
 from ccxt.async_support.wavesexchange import wavesexchange                      # noqa: F401
+from ccxt.async_support.weex import weex                                        # noqa: F401
 from ccxt.async_support.whitebit import whitebit                                # noqa: F401
 from ccxt.async_support.woo import woo                                          # noqa: F401
 from ccxt.async_support.woofipro import woofipro                                # noqa: F401
@@ -278,6 +279,7 @@ exchanges = [
     'toobit',
     'upbit',
     'wavesexchange',
+    'weex',
     'whitebit',
     'woo',
     'woofipro',

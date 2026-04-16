@@ -1684,6 +1684,7 @@ public partial class lighter : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.by] fetch balance by 'index' or 'l1_address', defaults to 'index'
      * @param {string} [params.value] fetch balance value, account index or l1 address
+     * @param {string} [params.type] 'spot', 'swap', default is 'swap'
      * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
      */
     public async override Task<object> fetchBalance(object parameters = null)
@@ -1767,9 +1768,11 @@ public partial class lighter : Exchange
                 }
             } else
             {
-                object perpUSDC = this.safeString(account, "collateral");
-                object perpBalance = this.safeDict(result, "USDC(PERP)", this.account());
-                ((IDictionary<string,object>)perpBalance)["total"] = Precise.stringAdd(getValue(perpBalance, "total"), perpUSDC);
+                object perpBalance = this.safeDict(result, "USDC", this.account());
+                object perpUSDCTotal = this.safeString(account, "collateral");
+                object perpUSDCFree = this.safeString(account, "available_balance");
+                ((IDictionary<string,object>)perpBalance)["total"] = Precise.stringAdd(getValue(perpBalance, "total"), perpUSDCTotal);
+                ((IDictionary<string,object>)perpBalance)["free"] = Precise.stringAdd(getValue(perpBalance, "free"), perpUSDCFree);
                 ((IDictionary<string,object>)result)["USDC"] = perpBalance;
             }
         }
