@@ -955,8 +955,6 @@ export default class hyperliquid extends hyperliquidRest {
         [ userAddress, params ] = this.handlePublicAddress ('watchBalance', params);
         let type = undefined;
         [ type, params ] = this.handleMarketTypeAndParams ('watchBalance', undefined, params);
-        let marginMode = undefined;
-        [ marginMode, params ] = this.handleMarginModeAndParams ('watchBalance', params);
         let isUnifiedEnabled = undefined;
         [ isUnifiedEnabled, params ] = await this.isUnifiedEnabled ('watchBalance', userAddress, false, params);
         const dex = this.safeString (params, 'dex');
