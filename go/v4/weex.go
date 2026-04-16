@@ -195,7 +195,7 @@ func (this *WeexCore) Describe() interface{} {
 			},
 			"www":      "https://www.weex.com",
 			"doc":      []interface{}{"https://www.weex.com/api-doc"},
-			"referral": "https://weex.com/register?vipCode=4lvdl",
+			"referral": "https://www.weex.com/register?vipCode=qfyh",
 		},
 		"api": map[string]interface{}{
 			"public": map[string]interface{}{
