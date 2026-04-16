@@ -414,7 +414,7 @@ export default class lighter extends Exchange {
         let apiKeyIndex = undefined;
         [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
-        [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'accountIndex', 'account_index');
+        [ accountIndex, params ] = await this.handleAccountIndex (params, 'loadAccount', 'accountIndex', 'account_index');
         if (accountIndex === undefined) {
             throw new ArgumentsRequired (this.id + ' requires accountIndex or account_index');
         }
