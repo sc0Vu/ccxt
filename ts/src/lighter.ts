@@ -456,9 +456,12 @@ export default class lighter extends Exchange {
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
         if (accountIndex === undefined) {
-            const walletAddress = this.walletAddress;
+            let walletAddress = this.walletAddress;
+            if (this.privateKey !== undefined) {
+                walletAddress = this.ethGetAddressFromPrivateKey (this.privateKey);
+            }
             if (walletAddress === undefined || walletAddress === '') {
-                throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + '/' + optionName2 + ' parameter or walletAddress to fetch accountIndex');
+                throw new ArgumentsRequired (this.id + ' ' + methodName1 + '() requires an ' + optionName1 + '/' + optionName2 + ' parameter or walletAddress to fetch accountIndex. Alternatively set privateKey in credentials to enable automatic walletAddress detection.');
             }
             const res = await this.publicGetAccountsByL1Address ({ 'l1_address': walletAddress });
             //
@@ -888,7 +891,6 @@ export default class lighter extends Exchange {
             order = orderRequests[0];
             apiKeyIndex = order['api_key_index'];
         }
-        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         // the nonce could be updated
         if (order['nonce'] === undefined) {
             order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
@@ -3093,7 +3095,7 @@ export default class lighter extends Exchange {
         [ apiKeyIndex, params ] = this.handleApiKeyIndex (params, 'cancelAllOrders', 'apiKeyIndex', 'api_key_index');
         let accountIndex = undefined;
         [ accountIndex, params ] = await this.handleAccountIndex (params, 'cancelAllOrders', 'accountIndex', 'account_index');
-        await this.preLoadLighterLibrary();
+        await this.preLoadLighterLibrary ();
         const nonce = await this.fetchNonce (accountIndex, apiKeyIndex, params);
         const signRaw: Dict = {
             'time_in_force': 0, // 0: IMMEDIATE 1: SCHEDULED 2: ABORT
