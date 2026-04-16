@@ -673,6 +673,7 @@ export default class lighter extends Exchange {
         await this.publicPostSendTx (request);
         this.options['auths'][strAccountIndex][strApiKeyIndex]['lighterPrivateKey'] = privateKey;
         this.options['auths'][strAccountIndex][strApiKeyIndex]['signer'] = signer; // reassign signer in go
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         return signer;
     }
 
@@ -898,6 +899,7 @@ export default class lighter extends Exchange {
         const strAccountIndex = this.numberToString (accountIndex);
         const strApiKeyIndex = this.numberToString (apiKeyIndex);
         const signer = await this.loadAccount (this.options['chainId'], this.options['auths'][strAccountIndex][strApiKeyIndex]['lighterPrivateKey'], strApiKeyIndex, strAccountIndex, params);
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         let txType = undefined;
         let txInfo = undefined;
         if (totalOrderRequests < 2) {
