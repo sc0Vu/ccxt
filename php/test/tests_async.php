@@ -367,6 +367,7 @@ class testMainClass {
                     $is_auth_error = ($e instanceof AuthenticationError);
                     $is_not_supported = ($e instanceof NotSupported);
                     $is_operation_failed = ($e instanceof OperationFailed); // includes "DDoSProtection", "RateLimitExceeded", "RequestTimeout", "ExchangeNotAvailable", "OperationFailed", "InvalidNonce", ...
+                    $last_url_msg = $this->ws_tests ? '' : ' (Last url: ' . $exchange->last_request_url . ' )';
                     if ($is_operation_failed) {
                         // if last retry was gone with same `tempFailure` error, then let's eventually return false
                         if ($i === $max_retries - 1) {
@@ -397,7 +398,7 @@ class testMainClass {
                             }
                             // output the message
                             $fail_type = $should_fail ? '[TEST_FAILURE]' : '[TEST_WARNING]';
-                            dump($fail_type, 'Method could not be tested due to a repeated Network/Availability issues', ' | ', $exchange->id, $method_name, $args_stringified, exception_message($e));
+                            dump($fail_type, $exchange->id, $method_name, $args_stringified, $last_url_msg, 'Method could not be tested due to a repeated Network/Availability issues', ' | ', exception_message($e));
                             return $ret_success;
                         } else {
                             // wait and retry again
@@ -407,14 +408,14 @@ class testMainClass {
                     } else {
                         // if it's loadMarkets, then fail test, because it's mandatory for tests
                         if ($is_load_markets) {
-                            dump('[TEST_FAILURE]', 'Exchange can not load markets', exception_message($e), $exchange->id, $method_name, $args_stringified);
+                            dump('[TEST_FAILURE]', $exchange->id, $method_name, $args_stringified, $last_url_msg, 'Exchange can not load markets', exception_message($e));
                             return false;
                         }
                         // if the specific arguments to the test method throws "NotSupported" exception
                         // then let's don't fail the test
                         if ($is_not_supported) {
                             if ($this->info) {
-                                dump('[INFO] NOT_SUPPORTED', exception_message($e), $exchange->id, $method_name, $args_stringified);
+                                dump('[INFO] NOT_SUPPORTED', $exchange->id, $method_name, $args_stringified, $last_url_msg, exception_message($e));
                             }
                             return true;
                         }
@@ -422,11 +423,11 @@ class testMainClass {
                         if ($is_public && $is_auth_error) {
                             if ($this->info) {
                                 // todo - turn into warning
-                                dump('[INFO]', 'Authentication problem for public method', exception_message($e), $exchange->id, $method_name, $args_stringified);
+                                dump('[INFO]', $exchange->id, $method_name, $args_stringified, $last_url_msg, 'Authentication problem for public method', exception_message($e));
                             }
                             return true;
                         } else {
-                            dump('[TEST_FAILURE]', exception_message($e), $exchange->id, $method_name, $args_stringified);
+                            dump('[TEST_FAILURE]', $exchange->id, $method_name, $args_stringified, $last_url_msg, exception_message($e));
                             return false;
                         }
                     }
