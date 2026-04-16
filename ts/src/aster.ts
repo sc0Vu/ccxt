@@ -362,11 +362,11 @@ export default class aster extends Exchange {
                         'v1/order': 1,
                         'v1/asset/wallet/transfer': 5,
                         'v1/asset/sendToAddress': 1,
-                        'v1/aster/user-withdraw': 1,
                         'v1/listenKey': 1,
                         // v3
                         'v3/order': 1,
                         'v3/asset/wallet/transfer': 5,
+                        'v3/aster/user-withdraw': 1,
                     },
                     'put': [
                         'v1/listenKey',
@@ -3891,11 +3891,6 @@ export default class aster extends Exchange {
         return signature;
     }
 
-    networkCodeToId (networkCode: string, currencyCode: any = undefined) {
-        const chainIds = this.safeDict (this.options, 'networksToChainId', {});
-        return this.safeInteger (chainIds, networkCode);
-    }
-
     /**
      * @method
      * @name aster#withdraw
@@ -3918,9 +3913,11 @@ export default class aster extends Exchange {
             'receiver': address,
             'nonce': this.milliseconds () * 1000,
         };
-        let networkCode = undefined;
-        [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
-        const network = this.networkCodeToId (networkCode);
+        let chainId = this.safeInteger (params, 'chainId');
+        // TODO: check how ARBI signature would work
+        const networks = this.safeDict (this.options, 'networks', {});
+        let network = this.safeStringUpper (params, 'network');
+        network = this.safeString (networks, network, network);
         if ((chainId === undefined) && (network !== undefined)) {
             const chainIds = this.safeDict (this.options, 'networksToChainId', {});
             chainId = this.safeInteger (chainIds, network);
@@ -3960,66 +3957,6 @@ export default class aster extends Exchange {
             'comment': undefined,
             'fee': undefined,
         } as Transaction;
-    }
-
-    parseDepositWithdrawFee (fee, currency: Currency = undefined) {
-        //
-        //    {
-        //        "today_available_withdraw_BTC": "100.0000",
-        //        "min_withdraw": "0.005",
-        //        "withdraw_precision": "8",
-        //        "withdraw_fee": "0.000500000000000000000000000000"
-        //    }
-        //
-        return {
-            'info': fee,
-            'withdraw': {
-                'fee': this.safeNumber (fee, 'withdraw_fee'),
-                'percentage': undefined,
-            },
-            'deposit': {
-                'fee': undefined,
-                'percentage': undefined,
-            },
-            'networks': {},
-        };
-    }
-
-    /**
-     * @method
-     * @name aster#fetchDepositWithdrawFee
-     * @description fetch the fee for deposits and withdrawals
-     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#get-withdraw-fee-none
-     * @param {string} code unified currency code
-     * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @param {string} [params.network] the network code of the currency
-     * @returns {object} a [fee structure]{@link https://docs.ccxt.com/?id=fee-structure}
-     */
-    async fetchDepositWithdrawFee (code: string, params = {}) {
-        await this.loadMarkets ();
-        const currency = this.currency (code);
-        let network: Str = undefined;
-        [ network, params ] = this.handleNetworkCodeAndParams (params);
-        const request: Dict = {
-            'asset': currency['id'],
-            'chainId': this.networkCodeToId (network),
-        };
-        const response = await this.privateGetAccountV1WithdrawCharge (this.extend (request, params));
-        //
-        //     {
-        //         "message": "OK",
-        //         "code": "1000",
-        //         "trace": "3ecc0adf-91bd-4de7-aca1-886c1122f54f",
-        //         "data": {
-        //             "today_available_withdraw_BTC": "100.0000",
-        //             "min_withdraw": "0.005",
-        //             "withdraw_precision": "8",
-        //             "withdraw_fee": "0.000500000000000000000000000000"
-        //         }
-        //     }
-        //
-        const data = response['data'];
-        return this.parseDepositWithdrawFee (data) as any;
     }
 
     /**
