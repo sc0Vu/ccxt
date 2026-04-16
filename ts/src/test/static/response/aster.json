@@ -3,6 +3,51 @@
     "skipKeys": [],
     "options": {},
     "methods": {
+        "withdraw": [
+            {
+                "description": "arbitrum",
+                "method": "withdraw",
+                "input": [
+                    "USDT",
+                    5,
+                    "0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f",
+                    null,
+                    {
+                        "network": "ARBONE",
+                        "fee": 1.01
+                    }
+                ],
+                "httpResponse": {
+                    "withdrawId": "1097219372504338432",
+                    "hash": "0x9e6baa3eb75d92a1164eef51a0cc97b9591930518ba3e8e5ab40ce524ba4e463"
+                },
+                "parsedResponse": {
+                    "info": {
+                        "withdrawId": "1097219372504338432",
+                        "hash": "0x9e6baa3eb75d92a1164eef51a0cc97b9591930518ba3e8e5ab40ce524ba4e463"
+                    },
+                    "id": "1097219372504338432",
+                    "txid": "0x9e6baa3eb75d92a1164eef51a0cc97b9591930518ba3e8e5ab40ce524ba4e463",
+                    "timestamp": null,
+                    "datetime": null,
+                    "network": "Arbitrum",
+                    "address": "0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f",
+                    "addressTo": "0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f",
+                    "addressFrom": null,
+                    "tag": null,
+                    "tagTo": null,
+                    "tagFrom": null,
+                    "type": "withdrawal",
+                    "amount": 5,
+                    "currency": "USDT",
+                    "status": null,
+                    "updated": null,
+                    "internal": null,
+                    "comment": null,
+                    "fee": null
+                }
+            }
+        ],
         "fetchTime": [
             {
                 "description": "fetchTime",

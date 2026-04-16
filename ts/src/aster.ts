@@ -361,7 +361,7 @@ export default class aster extends Exchange {
                         // v1
                         'v1/order': 1,
                         'v1/asset/wallet/transfer': 5,
-                        'v1/asset/sendToAddress': 1,
+                        'v1/asset/sendToAddress': 1, // inexistent in v3
                         'v1/listenKey': 1,
                         // v3
                         'v3/order': 1,
@@ -639,7 +639,7 @@ export default class aster extends Exchange {
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
         const promises = [
-            this.sapiPublicGetV1ExchangeInfo (params),
+            this.sapiPublicGetV3ExchangeInfo (params),
             this.fapiPublicGetV1ExchangeInfo (params),
         ];
         const results = await Promise.all (promises);
@@ -652,8 +652,8 @@ export default class aster extends Exchange {
         //     [
         //         {
         //             "asset": "USDT",
-        //             "marginAvailable": true,
-        //             "autoAssetExchange": "-10000"
+        //             "marginAvailable": true,           // present in PERP
+        //             "autoAssetExchange": "-10000"      // present in PERP
         //         }
         //     ]
         //
@@ -1563,7 +1563,7 @@ export default class aster extends Exchange {
         if (this.isLinear (type, subType)) {
             response = await this.fapiPublicGetV1Ticker24hr (params);
         } else if (type === 'spot') {
-            response = await this.sapiPublicGetV1Ticker24hr (params);
+            response = await this.sapiPublicGetV3Ticker24hr (params);
         } else {
             throw new NotSupported (this.id + ' fetchTickers() does not support ' + type + ' markets yet');
         }
@@ -3856,12 +3856,11 @@ export default class aster extends Exchange {
     }
 
     signWithdrawPayload (withdrawPayload, network): string {
-        const zeroAddress = this.safeString (this.options, 'zeroAddress');
         const chainId = this.safeInteger (withdrawPayload, 'chainId');
         const domain: Dict = {
             'chainId': chainId,
             'name': 'Aster',
-            'verifyingContract': zeroAddress,
+            'verifyingContract': this.safeString (this.options, 'zeroAddress'),
             'version': '1',
         };
         const messageTypes: Dict = {
@@ -3883,7 +3882,7 @@ export default class aster extends Exchange {
             'token': this.safeString (withdrawPayload, 'asset'),
             'amount': this.safeString (withdrawPayload, 'amount'),
             'fee': this.safeString (withdrawPayload, 'fee'),
-            'nonce': this.safeInteger (withdrawPayload, 'nonce'),
+            'nonce': this.safeInteger (withdrawPayload, 'userNonce'),
             'aster chain': 'Mainnet',
         };
         const msg = this.ethEncodeStructuredData (domain, messageTypes, withdraw);
@@ -3911,7 +3910,7 @@ export default class aster extends Exchange {
         const request: Dict = {
             'asset': currency['id'],
             'receiver': address,
-            'nonce': this.milliseconds () * 1000,
+            'userNonce': (this.milliseconds () * 1000).toString (),
         };
         let chainId = this.safeInteger (params, 'chainId');
         // TODO: check how ARBI signature would work
