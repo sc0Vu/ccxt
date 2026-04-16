@@ -419,6 +419,7 @@ public partial class testMainClass
                 object isAuthError = (e is AuthenticationError);
                 object isNotSupported = (e is NotSupported);
                 object isOperationFailed = (e is OperationFailed); // includes "DDoSProtection", "RateLimitExceeded", "RequestTimeout", "ExchangeNotAvailable", "OperationFailed", "InvalidNonce", ...
+                object lastUrlMsg = ((bool) isTrue(this.wsTests)) ? "" : add(add(" (Last url: ", exchange.last_request_url), " )");
                 if (isTrue(isOperationFailed))
                 {
                     // if last retry was gone with same `tempFailure` error, then let's eventually return false
@@ -457,7 +458,7 @@ public partial class testMainClass
                         }
                         // output the message
                         object failType = ((bool) isTrue(shouldFail)) ? "[TEST_FAILURE]" : "[TEST_WARNING]";
-                        dump(failType, "Method could not be tested due to a repeated Network/Availability issues", " | ", exchange.id, methodName, argsStringified, exceptionMessage(e));
+                        dump(failType, exchange.id, methodName, argsStringified, lastUrlMsg, "Method could not be tested due to a repeated Network/Availability issues", " | ", exceptionMessage(e));
                         return retSuccess;
                     } else
                     {
@@ -470,7 +471,7 @@ public partial class testMainClass
                     // if it's loadMarkets, then fail test, because it's mandatory for tests
                     if (isTrue(isLoadMarkets))
                     {
-                        dump("[TEST_FAILURE]", "Exchange can not load markets", exceptionMessage(e), exchange.id, methodName, argsStringified);
+                        dump("[TEST_FAILURE]", exchange.id, methodName, argsStringified, lastUrlMsg, "Exchange can not load markets", exceptionMessage(e));
                         return false;
                     }
                     // if the specific arguments to the test method throws "NotSupported" exception
@@ -479,7 +480,7 @@ public partial class testMainClass
                     {
                         if (isTrue(this.info))
                         {
-                            dump("[INFO] NOT_SUPPORTED", exceptionMessage(e), exchange.id, methodName, argsStringified);
+                            dump("[INFO] NOT_SUPPORTED", exchange.id, methodName, argsStringified, lastUrlMsg, exceptionMessage(e));
                         }
                         return true;
                     }
@@ -489,12 +490,12 @@ public partial class testMainClass
                         if (isTrue(this.info))
                         {
                             // todo - turn into warning
-                            dump("[INFO]", "Authentication problem for public method", exceptionMessage(e), exchange.id, methodName, argsStringified);
+                            dump("[INFO]", exchange.id, methodName, argsStringified, lastUrlMsg, "Authentication problem for public method", exceptionMessage(e));
                         }
                         return true;
                     } else
                     {
-                        dump("[TEST_FAILURE]", exceptionMessage(e), exchange.id, methodName, argsStringified);
+                        dump("[TEST_FAILURE]", exchange.id, methodName, argsStringified, lastUrlMsg, exceptionMessage(e));
                         return false;
                     }
                 }
