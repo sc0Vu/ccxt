@@ -1,12 +1,21 @@
 {
     "exchange": "aster",
     "skipKeys": [
+        "nonce",
         "timestamp",
         "recvWindow",
-        "signature"
+        "signature",
+        "userSignature",
+        "userNonce",
+        "user",
+        "signer"
     ],
     "options": {
-        "leverageBrackets":{"BTC/USDT:USDT":[["0","0.004"],["50000","0.005"],["250000","0.01"],["3000000","0.025"],["20000000","0.05"],["40000000","0.1"],["100000000","0.125"],["120000000","0.15"],["200000000","0.25"],["300000000","0.5"]],"ETH/USDT:USDT":[["0","0.005"],["100000","0.0065"],["250000","0.01"],["2000000","0.02"],["15000000","0.05"],["30000000","0.1"],["60000000","0.125"],["80000000","0.15"],["100000000","0.25"],["150000000","0.5"]],"LTC/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"ADA/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"BTC/USD:BTC":[["0","0.004"],["5","0.005"],["10","0.01"],["20","0.025"],["50","0.05"],["100","0.1"],["200","0.125"],["400","0.15"],["1000","0.25"],["1500","0.5"]]}
+        "leverageBrackets":{"BTC/USDT:USDT":[["0","0.004"],["50000","0.005"],["250000","0.01"],["3000000","0.025"],["20000000","0.05"],["40000000","0.1"],["100000000","0.125"],["120000000","0.15"],["200000000","0.25"],["300000000","0.5"]],"ETH/USDT:USDT":[["0","0.005"],["100000","0.0065"],["250000","0.01"],["2000000","0.02"],["15000000","0.05"],["30000000","0.1"],["60000000","0.125"],["80000000","0.15"],["100000000","0.25"],["150000000","0.5"]],"LTC/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"ADA/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"BTC/USD:BTC":[["0","0.004"],["5","0.005"],["10","0.01"],["20","0.025"],["50","0.05"],["100","0.1"],["200","0.125"],["400","0.15"],["1000","0.25"],["1500","0.5"]]},
+        "signerAddress": "0x1230000000000000000000000000000000000123",
+        "walletAddress": "0x1230000000000000000000000000000000000123",
+        "zeroAddress": "0x0000000000000000000000000000000000000000",
+        "privateKey": "0xff3bdd43534543d421f05aec535965b5050ad6ac15345435345435453495e771"
     },
     "outputType": "urlencoded",
     "methods": {
@@ -18,21 +27,21 @@
                 "input": [
                     "USDT",
                     5,
-                    "0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f",
+                    "0x1230000000000000000000000000000000000123",
                     null,
                     {
                         "network": "ARBONE",
                         "fee": 1.01
                     }
                 ],
-                "output": "asset=USDT&receiver=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&userNonce=1776362282719000&chainId=42161&fee=1.01&amount=5&userSignature=0x51e0b4a4045605524f7141def1c27a35273194e4ac79011f27a4fa6e070b2b5636ed422323e67bf48c3ed325ed85f0acf1734e4c04bac2d0f1bd39fde6e9a8451c&nonce=1776362282755000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x69a7fdfe7d6f9ed8310c93963dc7e4ae8c073a46530f5b2850a4d7a38c1cc74304dd6b660c02b4f615039c88b4a26df671f39922d6f74a4f8cb4db495306af621b"
+                "output": "asset=USDT&receiver=0x1230000000000000000000000000000000000123&userNonce=1776362282719000&chainId=42161&fee=1.01&amount=5&userSignature=0x51e0b4a4045605524f7141def1c27a35273194e4ac79011f27a4fa6e070b2b5636ed422323e67bf48c3ed325ed85f0acf1734e4c04bac2d0f1bd39fde6e9a8451c&nonce=1776362282755000&user=0x1230000000000000000000000000000000000123&signer=0x1230000000000000000000000000000000000123&signature=0x69a7fdfe7d6f9ed8310c93963dc7e4ae8c073a46530f5b2850a4d7a38c1cc74304dd6b660c02b4f615039c88b4a26df671f39922d6f74a4f8cb4db495306af621b"
             }
         ],
         "createOrder": [
             {
                 "description": "market buy trigger  order",
                 "method": "createOrder",
-                "url": "https://sapi.asterdex.com/api/v1/order",
+                "url": "https://sapi.asterdex.com/api/v3/order",
                 "input": [
                     "ASTER/USDT",
                     "market",
@@ -43,31 +52,31 @@
                         "triggerPrice": 0.9
                     }
                 ],
-                "output": "timestamp=1767869133664&symbol=ASTERUSDT&side=BUY&type=STOP_MARKET&quantity=9.99&stopPrice=0.9&recvWindow=10000&signature=b57d40b5492c14d3caf9fc6160b9ebf2ab8022b618e4358c913e8dbfd7cca47a"
+                "output": "symbol=ASTERUSDT&side=BUY&type=STOP_MARKET&quantity=9.99&stopPrice=0.9&nonce=1776370479023000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=b57d40b5492c14d3caf9fc6160b9ebf2ab8022b618e4358c913e8dbfd7cca47a"
             },
             {
                 "description": "market sell order",
                 "method": "createOrder",
-                "url": "https://sapi.asterdex.com/api/v1/order",
+                "url": "https://sapi.asterdex.com/api/v3/order",
                 "input": [
                     "ASTER/USDT",
                     "market",
                     "sell",
                     9.996
                 ],
-                "output": "timestamp=1767869080826&symbol=ASTERUSDT&side=SELL&type=MARKET&quantity=9.99&recvWindow=10000&signature=9394fb3567bca1f40f63742342494b988ad5e18af804bd71f4418e1ea61c1d92"
+                "output": "symbol=ASTERUSDT&side=SELL&type=MARKET&quantity=9.99&nonce=1776371582548000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=9394fb3567bca1f40f63742342494b988ad5e18af804bd71f4418e1ea61c1d92"
             },
             {
                 "description": "market buy order",
                 "method": "createOrder",
-                "url": "https://sapi.asterdex.com/api/v1/order",
+                "url": "https://sapi.asterdex.com/api/v3/order",
                 "input": [
                     "ASTER/USDT",
                     "market",
                     "buy",
                     10
                 ],
-                "output": "timestamp=1767869058417&symbol=ASTERUSDT&side=BUY&type=MARKET&quantity=10&recvWindow=10000&signature=1219d72552019cbabe68725089bc8b958d23b2d6d6bcc0e689fde4188420c6c3"
+                "output": "symbol=ASTERUSDT&side=BUY&type=MARKET&quantity=10&nonce=1776371582548000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=9394fb3567bca1f40f63742342494b988ad5e18af804bd71f4418e1ea61c1d92"
             },
             {
                 "description": "create swap limit trigger order",
@@ -86,7 +95,7 @@
                 "output": "timestamp=1767868923180&symbol=ASTERUSDT&side=BUY&type=STOP&quantity=10&price=0.7&stopPrice=0.8&recvWindow=10000&signature=9b38bd66a95cd70317de92b140cfd48dfbe37a4e5d161dbbaa9908ce138a163d"
             },
             {
-                "description": "limit sell  order",
+                "description": "limit sell order",
                 "method": "createOrder",
                 "url": "https://fapi.asterdex.com/fapi/v1/order",
                 "input": [
@@ -140,7 +149,7 @@
             {
                 "description": "fetchTime",
                 "method": "fetchTime",
-                "url": "https://fapi.asterdex.com/fapi/v1/time",
+                "url": "https://sapi.asterdex.com/api/v3/time",
                 "input": []
             }
         ],
@@ -148,7 +157,7 @@
             {
                 "description": "fetchOHLCV - spot",
                 "method": "fetchOHLCV",
-                "url": "https://sapi.asterdex.com/api/v1/klines?symbol=BTCUSDT&startTime=1749806347909&limit=1&interval=5m",
+                "url": "https://sapi.asterdex.com/api/v3/klines?symbol=BTCUSDT&startTime=1749806347909&limit=1&interval=5m",
                 "input": [
                     "BTC/USDT",
                     "5m",
@@ -200,7 +209,7 @@
             {
                 "description": "fetchTrades - spot",
                 "method": "fetchTrades",
-                "url": "https://sapi.asterdex.com/api/v1/trades?symbol=BTCUSDT&limit=1",
+                "url": "https://sapi.asterdex.com/api/v3/trades?symbol=BTCUSDT&limit=1",
                 "input": [
                     "BTC/USDT",
                     null,
@@ -222,7 +231,7 @@
             {
                 "description": "fetchMyTrades - spot",
                 "method": "fetchMyTrades",
-                "url": "https://sapi.asterdex.com/api/v1/userTrades?symbol=BTCUSDT&startTime=1750400269888&limit=1&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/userTrades?symbol=BTCUSDT&startTime=1750400269888&limit=1&nonce=1776370479023000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=b57d40b5492c14d3caf9fc6160b9ebf2ab8022b618e4358c913e8dbfd7cca47a",
                 "input": [
                     "BTC/USDT",
                     1750400269888,
@@ -244,7 +253,7 @@
             {
                 "description": "fetchOrderBook - spot",
                 "method": "fetchOrderBook",
-                "url": "https://sapi.asterdex.com/api/v1/depth?symbol=BTCUSDT&limit=5",
+                "url": "https://sapi.asterdex.com/api/v3/depth?symbol=BTCUSDT&limit=5",
                 "input": [
                     "BTC/USDT",
                     5
@@ -276,7 +285,7 @@
             {
                 "description": "fetchTicker - spot",
                 "method": "fetchTicker",
-                "url": "https://sapi.asterdex.com/api/v1/ticker/24hr?symbol=BTCUSDT",
+                "url": "https://sapi.asterdex.com/api/v3/ticker/24hr?symbol=BTCUSDT",
                 "input": [
                     "BTC/USDT"
                 ]
@@ -294,7 +303,7 @@
             {
                 "description": "fetchTickers",
                 "method": "fetchTickers",
-                "url": "https://sapi.asterdex.com/api/v1/ticker/24hr",
+                "url": "https://sapi.asterdex.com/api/v3/ticker/24hr",
                 "input": [
                     [
                         "BTC/USDT"
@@ -350,7 +359,7 @@
             {
                 "description": "fetchBalance - spot",
                 "method": "fetchBalance",
-                "url": "https://sapi.asterdex.com/api/v1/account?timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/account?timestamp=timestamp&recvWindow=recvWindow&signature=signature",
                 "input": []
             },
             {
@@ -387,7 +396,7 @@
             {
                 "description": "fetchTradingFee - spot",
                 "method": "fetchTradingFee",
-                "url": "https://sapi.asterdex.com/api/v1/commissionRate?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/commissionRate?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
                 "input": [
                     "BTC/USDT"
                 ]
@@ -405,7 +414,7 @@
             {
                 "description": "fetchOrder - spot",
                 "method": "fetchOrder",
-                "url": "https://sapi.asterdex.com/api/v1/order?orderId=1917641&symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/order?orderId=1917641&symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
                 "input": [
                     1917641,
                     "BTC/USDT"
@@ -436,7 +445,7 @@
             {
                 "description": "fetchOrders- spot",
                 "method": "fetchOrders",
-                "url": "https://sapi.asterdex.com/api/v1/allOrders?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/allOrders?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
                 "input": [
                     "BTC/USDT"
                 ]
@@ -454,7 +463,7 @@
             {
                 "description": "fetchOpenOrders - spot",
                 "method": "fetchOpenOrders",
-                "url": "https://sapi.asterdex.com/api/v1/openOrders?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
+                "url": "https://sapi.asterdex.com/api/v3/openOrders?symbol=BTCUSDT&timestamp=timestamp&recvWindow=recvWindow&signature=signature",
                 "input": [
                     "BTC/USDT"
                 ]
@@ -550,7 +559,7 @@
             {
                 "description": "cancelAllOrders - spot",
                 "method": "cancelAllOrders",
-                "url": "https://sapi.asterdex.com/api/v1/allOpenOrders",
+                "url": "https://sapi.asterdex.com/api/v3/allOpenOrders",
                 "input": [
                     "BTC/USDT"
                 ],
@@ -575,7 +584,7 @@
                     417663664,
                     "ETH/USDT"
                 ],
-                "output": "symbol=ETHUSDT&orderId=417663664&nonce=1776318948277000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x4aa48434f01282881450559ff99802a34993655932fdd7ccb7db827770b982ce60d1b076f1f6e3581e05b0687e0c165d8a54f020fffbc0ce4ec52790fc87bf0b1b"
+                "output": "symbol=ETHUSDT&orderId=417663664&nonce=1776318948277000&user=0x1230000000000000000000000000000000000123&signer=0x1230000000000000000000000000000000000123&signature=0x4aa48434f01282881450559ff99802a34993655932fdd7ccb7db827770b982ce60d1b076f1f6e3581e05b0687e0c165d8a54f020fffbc0ce4ec52790fc87bf0b1b"
             },
             {
                 "description": "cancel trigger roder",
@@ -590,7 +599,7 @@
             {
                 "description": "cancelOrder - spot",
                 "method": "cancelOrder",
-                "url": "https://sapi.asterdex.com/api/v1/order",
+                "url": "https://sapi.asterdex.com/api/v3/order",
                 "input": [
                     "123",
                     "BTC/USDT"

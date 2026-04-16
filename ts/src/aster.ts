@@ -2483,7 +2483,7 @@ export default class aster extends Exchange {
             if (test) {
                 response = await this.fapiPrivatePostV1OrderTest (request);
             } else {
-                response = await this.fapiPrivatePostV3Order (request);
+                response = await this.fapiPrivatePostV1Order (request);
             }
         } else {
             response = await this.sapiPrivatePostV3Order (request);
@@ -4117,7 +4117,7 @@ export default class aster extends Exchange {
                         { 'name': 'msg', 'type': 'string' },
                     ],
                 };
-                const signerAddress = this.safeString (this.options, 'oea_signerAddress');
+                const signerAddress = this.safeString (this.options, 'signerAddress');
                 if (signerAddress === undefined) {
                     throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
                 }
