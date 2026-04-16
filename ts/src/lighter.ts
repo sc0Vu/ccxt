@@ -697,6 +697,7 @@ export default class lighter extends Exchange {
         await this.publicPostSendTx (request);
         this.options['auths'][strAccountIndex][strApiKeyIndex]['lighterPrivateKey'] = privateKey;
         this.options['auths'][strAccountIndex][strApiKeyIndex]['signer'] = signer; // reassign signer in go
+        await this.handleBuilderFeeApproval (accountIndex, apiKeyIndex);
         return signer;
     }
 
