@@ -203,7 +203,7 @@ class weex extends Exchange {
                 'doc' => array(
                     'https://www.weex.com/api-doc',
                 ),
-                'referral' => 'https://weex.com/register?vipCode=4lvdl',
+                'referral' => 'https://www.weex.com/register?vipCode=qfyh',
             ),
             'api' => array(
                 'public' => array(
