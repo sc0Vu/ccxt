@@ -921,7 +921,7 @@ export default class lighter extends Exchange {
         const strApiKeyIndex = this.numberToString (apiKeyIndex);
         const signer = await this.loadAccount (this.options['chainId'], this.getLighterPrivateKey (strAccountIndex, strApiKeyIndex), strApiKeyIndex, strAccountIndex, params);
         // the nonce could be updated
-        if (order['nonce'] === undefined) {
+        if (!this.safeInteger (order, 'nonce') === undefined) {
             order['nonce'] = await this.fetchNonce (accountIndex, apiKeyIndex);
         }
         let txType = undefined;
