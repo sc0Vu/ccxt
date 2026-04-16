@@ -310,6 +310,7 @@ export default class aster extends Exchange {
                 },
                 'sapiPublic': {
                     'get': {
+                        // v1
                         'v1/ping': 1,
                         'v1/time': 1,
                         'v1/exchangeInfo': 1,
@@ -322,7 +323,6 @@ export default class aster extends Exchange {
                         'v1/ticker/price': 1,
                         'v1/ticker/bookTicker': 1,
                         'v1/aster/withdraw/estimateFee': 1,
-                        'v3/aster/withdraw/estimateFee': 1,
                         // v3
                         'v3/ping': 1,
                         'v3/time': 1,
@@ -335,10 +335,12 @@ export default class aster extends Exchange {
                         'v3/ticker/24hr': { 'cost': 1, 'noSymbol': 40 },
                         'v3/ticker/price': { 'cost': 1, 'noSymbol': 2 },
                         'v3/ticker/bookTicker': { 'cost': 1, 'noSymbol': 2 },
+                        'v3/aster/withdraw/estimateFee': 1,
                     },
                 },
                 'sapiPrivate': {
                     'get': {
+                        // v1
                         'v1/commissionRate': 1,
                         'v1/order': 1,
                         'v1/openOrders': 1,
@@ -346,32 +348,35 @@ export default class aster extends Exchange {
                         'v1/transactionHistory': 1,
                         'v1/account': 1,
                         'v1/userTrades': 1,
-                        //
+                        // v3
                         'v3/commissionRate': { 'cost': 1, 'noSymbol': 2 },
                         'v3/order': 1,
+                        'v3/openOrders': 1, // with symbol 1, otherwise 40
+                        'v3/allOrders': 5,
                         'v3/account': 5,
                         'v3/userTrades': 5,
-                        'v3/allOrders': 5,
-                        'v3/openOrders': 1, // with symbol 1, otherwise 40
                         'v3/openOrder': 1,
                     },
                     'post': {
+                        // v1
                         'v1/order': 1,
                         'v1/asset/wallet/transfer': 5,
                         'v1/asset/sendToAddress': 1,
                         'v1/aster/user-withdraw': 1,
                         'v1/listenKey': 1,
-                        //
+                        // v3
                         'v3/order': 1,
-                        'v3/asset/wallet/transfer': 1,
+                        'v3/asset/wallet/transfer': 5,
                     },
                     'put': [
                         'v1/listenKey',
                     ],
                     'delete': {
+                        // v1
                         'v1/order': 1,
                         'v1/allOpenOrders': 1,
                         'v1/listenKey': 1,
+                        // v3
                         'v3/allOpenOrders': 1,
                         'v3/order': 1,
                     },
@@ -423,7 +428,7 @@ export default class aster extends Exchange {
                 'networks': {
                     'ERC20': 'ETH',
                     'BEP20': 'BSC',
-                    'ARB': 'Arbitrum',
+                    'ARBONE': 'Arbitrum',
                 },
                 'networksToChainId': {
                     'ETH': 1,
@@ -2125,7 +2130,7 @@ export default class aster extends Exchange {
         //
         // spot
         //
-        //   fetchOrders, fetchOpenOrders, fetchOpenOrder, fetchOrder, cancelOrder
+        //   fetchOrders, fetchOpenOrders, fetchOpenOrder, fetchOrder, cancelOrder, createOrder
         //
         //        {
         //            "orderId": "417594542",
@@ -3890,7 +3895,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#withdraw
      * @description make a withdrawal
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#withdraw-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#withdraw-user_data
      * @param {string} code unified currency code
      * @param {float} amount the amount to withdraw
      * @param {string} address the address to withdraw to
@@ -3929,7 +3934,7 @@ export default class aster extends Exchange {
         params = this.omit (params, [ 'chainId', 'network', 'fee' ]);
         request['amount'] = this.currencyToPrecision (code, amount, network);
         request['userSignature'] = this.signWithdrawPayload (request, network);
-        const response = await this.sapiPrivatePostV1AsterUserWithdraw (this.extend (request, params));
+        const response = await this.sapiPrivatePostV3AsterUserWithdraw (this.extend (request, params));
         return {
             'info': response,
             'id': this.safeString (response, 'withdrawId'),
