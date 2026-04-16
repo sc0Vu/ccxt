@@ -18,7 +18,7 @@ export default class hyperliquid extends hyperliquidRest {
                 'createOrderWs': true,
                 'createOrdersWs': true,
                 'editOrderWs': true,
-                'watchBalance': false,
+                'watchBalance': true,
                 'watchMyTrades': true,
                 'watchOHLCV': true,
                 'watchOrderBook': true,
@@ -943,6 +943,195 @@ export default class hyperliquid extends hyperliquidRest {
 
     /**
      * @method
+     * @name hyperliquid#watchBalance
+     * @description watch balance and get the amount of funds available for trading or funds locked in orders
+     * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
+     */
+    async watchBalance (params = {}): Promise<Balances> {
+        await this.loadMarkets ();
+        let userAddress = undefined;
+        [ userAddress, params ] = this.handlePublicAddress ('watchBalance', params);
+        let type = undefined;
+        [ type, params ] = this.handleMarketTypeAndParams ('watchBalance', undefined, params);
+        let marginMode = undefined;
+        [ marginMode, params ] = this.handleMarginModeAndParams ('watchBalance', params);
+        let isUnifiedEnabled = undefined;
+        [ isUnifiedEnabled, params ] = await this.isUnifiedEnabled ('watchBalance', userAddress, false, params);
+        const dex = this.safeString (params, 'dex');
+        const isSpot = ((type === 'spot') || isUnifiedEnabled) && (dex === undefined);
+        let messageHash = 'balances';
+        const url = this.urls['api']['ws']['public'];
+        const subscription = {
+            'type': (isSpot) ? 'spotState' : 'clearinghouseState',
+            'user': userAddress,
+        };
+        if (isSpot) {
+            if (isUnifiedEnabled) {
+                subscription['isPortfolioMargin'] = true;
+            }
+            messageHash += ':spot';
+        } else {
+            messageHash += ':swap';
+            if (dex !== undefined) {
+                subscription['dex'] = dex;
+            }
+        }
+        const request: Dict = {
+            'method': 'subscribe',
+            'subscription': subscription,
+        };
+        const message = this.extend (request, params);
+        return await this.watch (url, messageHash, message, messageHash);
+    }
+
+    handleBalance (client: Client, message) {
+        //
+        // spot
+        // {
+        //     "channel": "spotState",
+        //     "data": {
+        //         "user": "0xeeeeexxxxeeeee",
+        //         "spotState": {
+        //             "balances": [
+        //                 {
+        //                     "coin": "USDH",
+        //                     "token": 360,
+        //                     "total": "0.0",
+        //                     "hold": "0.0",
+        //                     "entryNtl": "0.0"
+        //                 }
+        //             ],
+        //             "tokenToAvailableAfterMaintenance": [
+        //                 [
+        //                     0,
+        //                     "56.1"
+        //                 ]
+        //             ]
+        //         }
+        //     }
+        // }
+        // swap
+        // {
+        //     "channel": "clearinghouseState",
+        //     "data": {
+        //         "dex": "",
+        //         "user": "0xeeeeexxxxeeeee",
+        //         "clearinghouseState": {
+        //             "marginSummary": {
+        //                 "accountValue": "0.0",
+        //                 "totalNtlPos": "0.0",
+        //                 "totalRawUsd": "0.0",
+        //                 "totalMarginUsed": "0.0"
+        //             },
+        //             "crossMarginSummary": {
+        //                 "accountValue": "0.0",
+        //                 "totalNtlPos": "0.0",
+        //                 "totalRawUsd": "0.0",
+        //                 "totalMarginUsed": "0.0"
+        //             },
+        //             "crossMaintenanceMarginUsed": "0.0",
+        //             "withdrawable": "0.0",
+        //             "assetPositions": [],
+        //             "time": 1776000003409
+        //         }
+        //     }
+        // }
+        //
+        if (this.balance === undefined) {
+            this.balance = {};
+        }
+        let messageHash = 'balances';
+        const topic = this.safeValue (message, 'channel');
+        let info = undefined;
+        let rawBalances = [];
+        let account = undefined;
+        let timestamp = undefined;
+        const data = this.safeValue (message, 'data', []);
+        if (topic === 'spotState') {
+            const spotState = this.safeDict (data, 'spotState');
+            rawBalances = this.safeList (spotState, 'balances');
+            account = 'spot';
+            info = rawBalances;
+        }
+        if (topic === 'clearinghouseState') {
+            account = 'swap';
+            const clearinghouseState = this.safeDict (data, 'clearinghouseState');
+            rawBalances.push (clearinghouseState);
+            info = clearinghouseState;
+            timestamp = this.safeInteger(clearinghouseState, 'time');
+        }
+        for (let i = 0; i < rawBalances.length; i++) {
+            this.parseWsBalance (rawBalances[i], account);
+        }
+        if (this.safeValue (this.balance, account) === undefined) {
+            this.balance[account] = {};
+        }
+        messageHash += ':' + account;
+        this.balance[account]['info'] = info;
+        this.balance[account]['timestamp'] = timestamp;
+        this.balance[account]['datetime'] = this.iso8601 (timestamp);
+        this.balance[account] = this.safeBalance (this.balance[account]);
+        client.resolve (this.balance[account], messageHash);
+    }
+
+    parseWsBalance (balance, accountType = undefined) {
+        //
+        // spot
+        //     {
+        //         "coin": "USDH",
+        //         "token": 360,
+        //         "total": "0.0",
+        //         "hold": "0.0",
+        //         "entryNtl": "0.0"
+        //     }
+        // swap
+        //     {
+        //         "marginSummary": {
+        //             "accountValue": "0.0",
+        //             "totalNtlPos": "0.0",
+        //             "totalRawUsd": "0.0",
+        //             "totalMarginUsed": "0.0"
+        //         },
+        //         "crossMarginSummary": {
+        //             "accountValue": "0.0",
+        //             "totalNtlPos": "0.0",
+        //             "totalRawUsd": "0.0",
+        //             "totalMarginUsed": "0.0"
+        //         },
+        //         "crossMaintenanceMarginUsed": "0.0",
+        //         "withdrawable": "0.0",
+        //         "assetPositions": [],
+        //         "time": 1776000003409
+        //     }
+        //
+        const account = this.account ();
+        const currencyId = this.safeString (balance, 'coin');
+        let code = undefined;
+        if (currencyId === undefined) {
+            code = 'USDC';
+            const marginSummary = this.safeDict(balance, 'marginSummary', {});
+            account['free'] = this.safeString(balance, 'withdrawable');
+            account['used'] = this.safeString(marginSummary, 'totalMarginUsed');
+            account['total'] = this.safeString(marginSummary, 'accountValue');
+        } else {
+            code = this.safeCurrencyCode (currencyId);
+            account['used'] = this.safeString (balance, 'hold');
+            account['total'] = this.safeString (balance, 'total');
+        }
+        if (accountType !== undefined) {
+            if (this.safeValue (this.balance, accountType) === undefined) {
+                this.balance[accountType] = {};
+            }
+            this.balance[accountType][code] = account;
+        } else {
+            this.balance[code] = account;
+        }
+    }
+
+    /**
+     * @method
      * @name hyperliquid#watchOrders
      * @description watches information on multiple orders made by the user
      * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
@@ -1280,6 +1469,8 @@ export default class hyperliquid extends hyperliquidRest {
             'allMids': this.handleWsTickers,
             'post': this.handleWsPost,
             'subscriptionResponse': this.handleSubscriptionResponse,
+            'clearinghouseState': this.handleBalance,
+            'spotState': this.handleBalance,
         };
         const exacMethod = this.safeValue (methods, topic);
         if (exacMethod !== undefined) {
