@@ -1069,30 +1069,33 @@ export default class aster extends Exchange {
         //         "m": true, // Was the buyer the maker?
         //     }
         //
-        // fetchMyTrades
+        // fetchMyTrades  (SPOT & PERP have similar format)
         //
-        //     {
-        //         "buyer": false,
-        //         "commission": "-0.07819010",
-        //         "commissionAsset": "USDT",
-        //         "id": 698759,                       // String in SPOT
-        //         "maker": false,
-        //         "orderId": 25851813,
-        //         "price": "7819.01",
-        //         "qty": "0.002",
-        //         "quoteQty": "15.63802",
-        //         "side": "SELL",
-        //         "symbol": "BTCUSDT",
-        //         "time": 1569514978020
-        //         "realizedPnl": "-0.91539999",       // in PERP
-        //         "positionSide": "SHORT",            // in PERP
-        //         "counterpartyId": "5143150",        // in SPOT
-        //         "createUpdateId": null,             // in SPOT
-        //     }
+        // {
+        //     "symbol": "ETHUSDT",
+        //     "id": 2583152,
+        //     "orderId": 418588675,
+        //     "side": "SELL",
+        //     "price": "2330.04",
+        //     "qty": "0.0030",
+        //     "quoteQty": "6.99000000",
+        //     "commission": "0.00279605",
+        //     "commissionAsset": "USDT",
+        //     "time": 1776409179230,
+        //     "counterpartyId": 5143150,   // only in SPOT
+        //     "createUpdateId": null,      // only in SPOT
+        //     "maker": false,              // only in SPOT
+        //     "buyer": false,              // only in SPOT
+        //     "realizedPnl": "0.00029999", // only in PERP
+        //     "marginAsset": "USDT",       // only in PERP
+        //     "positionSide": "BOTH",      // only in PERP
+        // }
         //
         const id = this.safeString2 (trade, 'id', 'a');
-        const symbol = market['symbol'];
-        const currencyId = this.safeString (trade, 'commissionAsset');
+        const marketId = this.safeString (trade, 'symbol');
+        const marketType = ('positionSide' in trade) ? 'swap' : 'spot';
+        market = this.safeMarket (marketId, market, undefined, marketType);
+        const currencyId = this.safeString2 (trade, 'commissionAsset', 'marginAsset');
         const currencyCode = this.safeCurrencyCode (currencyId);
         const amountString = this.safeString2 (trade, 'qty', 'q');
         const priceString = this.safeString2 (trade, 'price', 'p');
@@ -1103,6 +1106,11 @@ export default class aster extends Exchange {
         let takerOrMaker = undefined;
         if (isMaker !== undefined) {
             takerOrMaker = isMaker ? 'maker' : 'taker';
+            if (side === undefined) {
+                const isBuyer = this.safeBool (trade, 'buyer');
+                if (isBuyer !== undefined) {
+                    side = isBuyer ? 'buy' : 'sell';
+                }
         }
         const isBuyerMaker = this.safeBool2 (trade, 'isBuyerMaker', 'm');
         if (isBuyerMaker !== undefined) {
@@ -1113,7 +1121,7 @@ export default class aster extends Exchange {
             'info': trade,
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
-            'symbol': symbol,
+            'symbol': market['symbol'],
             'order': this.safeString (trade, 'orderId'),
             'type': undefined,
             'side': side,
@@ -1254,27 +1262,30 @@ export default class aster extends Exchange {
             response = await this.fapiPrivateGetV3UserTrades (this.extend (request, params));
         } else {
             response = await this.sapiPrivateGetV3UserTrades (this.extend (request, params));
-            //
-            //    [
-            //        {
-            //            "symbol": "ETHUSDT",
-            //            "id": "2579600",
-            //            "orderId": "417594542",
-            //            "side": "SELL",
-            //            "price": "2351.58",
-            //            "qty": "0.0054",
-            //            "quoteQty": "12.69000000",
-            //            "commission": "0.00507941",
-            //            "commissionAsset": "USDT",
-            //            "time": "1776274219582",
-            //            "counterpartyId": "5143150",
-            //            "createUpdateId": null,
-            //            "maker": false,
-            //            "buyer": false
-            //        }
-            //    ]
-            //
         }
+        //
+        // SPOT & PERP have similar format
+        //
+        // {
+        //     "symbol": "ETHUSDT",
+        //     "id": 2583152,
+        //     "orderId": 418588675,
+        //     "side": "SELL",
+        //     "price": "2330.04",
+        //     "qty": "0.0030",
+        //     "quoteQty": "6.99000000",
+        //     "commission": "0.00279605",
+        //     "commissionAsset": "USDT",
+        //     "time": 1776409179230,
+        //     "counterpartyId": 5143150,   // only in PERP
+        //     "createUpdateId": null,      // only in PERP
+        //     "maker": false,              // only in PERP
+        //     "buyer": false,              // only in PERP
+        //     "realizedPnl": "0.00029999", // only in SPOT
+        //     "marginAsset": "USDT",       // only in SPOT
+        //     "positionSide": "BOTH",      // only in SPOT
+        // }
+        //
         return this.parseTrades (response, market, since, limit, params);
     }
 
@@ -1330,64 +1341,36 @@ export default class aster extends Exchange {
     }
 
     parseTicker (ticker: Dict, market: Market = undefined): Ticker {
+        
         //
-        // spot
+        // both SPOT & PERP has same format
         //
-        //     {
-        //         "symbol": "BTCUSDT",
-        //         "priceChange": "238.00",
-        //         "priceChangePercent": "0.336",
-        //         "weightedAvgPrice": "70946.12052580",
-        //         "lastPrice": "71160.00",
-        //         "lastQty": "0.01000",
-        //         "openPrice": "70922.00",
-        //         "highPrice": "71429.27",
-        //         "lowPrice": "70500.00",
-        //         "volume": "12.67491",
-        //         "quoteVolume": "899235.69251370",
-        //         "openTime": "1775998920000",
-        //         "closeTime": "1776085367531",
-        //         "firstId": "4146804",
-        //         "lastId": "4147868",
-        //         "count": "1065",
-        //         "baseAsset": "BTC",
-        //         "quoteAsset": "USDT",
-        //         "bidPrice": "71125.98",
-        //         "bidQty": "0.00737",
-        //         "askPrice": "71152.10",
-        //         "askQty": "0.32399"
-        //     }
-        //
-        // swap
-        //     {
-        //         "symbol": "BTCUSDT",
-        //         "priceChange": "1845.7",
-        //         "priceChangePercent": "1.755",
-        //         "weightedAvgPrice": "105515.5",
-        //         "lastPrice": "107037.7",
-        //         "lastQty": "0.004",
-        //         "openPrice": "105192.0",
-        //         "highPrice": "107223.5",
-        //         "lowPrice": "104431.6",
-        //         "volume": "8753.286",
-        //         "quoteVolume": "923607368.61",
-        //         "openTime": 1749976620000,
-        //         "closeTime": 1750063053754,
-        //         "firstId": 24195078,
-        //         "lastId": 24375783,
-        //         "count": 180706
-        //     }
+        //    {
+        //        "symbol": "ETHUSDT",
+        //        "priceChange": "6.54",
+        //        "priceChangePercent": "0.279",
+        //        "weightedAvgPrice": "2330.70",
+        //        "lastPrice": "2350.00",
+        //        "lastQty": "4.437",
+        //        "openPrice": "2343.46",
+        //        "highPrice": "2363.20",
+        //        "lowPrice": "2283.86",
+        //        "volume": "267154.248",
+        //        "quoteVolume": "622657018.70",
+        //        "openTime": "1776329400000",
+        //        "closeTime": "1776415832593",
+        //        "firstId": "73520536",
+        //        "lastId": "73630176",
+        //        "count": "109640",
+        //        "baseAsset": "BTC",            // only in SPOT
+        //        "quoteAsset": "USDT",          // only in SPOT
+        //        "bidPrice": "71125.98",        // only in SPOT
+        //        "bidQty": "0.00737",           // only in SPOT
+        //        "askPrice": "71152.10",        // only in SPOT
+        //        "askQty": "0.32399"            // only in SPOT
+        //    }
         //
         const timestamp = this.safeInteger (ticker, 'closeTime');
-        let marketType = undefined;
-        if ('bidQty' in ticker) {
-            marketType = 'spot';
-        } else {
-            marketType = 'contract';
-        }
-        const marketId = this.safeString (ticker, 'symbol');
-        market = this.safeMarket (marketId, market, undefined, marketType);
-        const symbol = market['symbol'];
         const last = this.safeString (ticker, 'lastPrice');
         const open = this.safeString (ticker, 'openPrice');
         let percentage = this.safeString (ticker, 'priceChangePercent');
@@ -1397,7 +1380,7 @@ export default class aster extends Exchange {
         const high = this.safeString (ticker, 'highPrice');
         const low = this.safeString (ticker, 'lowPrice');
         return this.safeTicker ({
-            'symbol': symbol,
+            'symbol': market['symbol'],
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
             'high': high,
@@ -1604,6 +1587,7 @@ export default class aster extends Exchange {
      * @name aster#fetchBidsAsks
      * @description fetches the bid and ask price and volume for multiple markets
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#current-best-order
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#current-best-order
      * @param {string[]|undefined} symbols unified symbols of the markets to fetch the bids and asks for, all markets are returned if not assigned
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
@@ -1613,24 +1597,29 @@ export default class aster extends Exchange {
         await this.loadMarkets ();
         symbols = this.marketSymbols (symbols, undefined, true, true, true);
         const market = this.getMarketFromSymbols (symbols);
-        let type = undefined;
-        [ type, params ] = this.handleMarketTypeAndParams ('fetchBidsAsks', market, params);
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchBidsAsks', market, params);
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchBidsAsks', market, params);
         let response = undefined;
-        if (this.isLinear (type, subType)) {
-            response = await this.fapiPublicGetTickerBookTicker (params);
-        } else if (this.isInverse (type, subType)) {
-            response = await this.dapiPublicGetTickerBookTicker (params);
-        } else if (type === 'spot') {
+        if (marketType === 'swap') {
+            response = await this.fapiPublicGetV3TickerBookTicker (params);
+        } else if (marketType === 'spot') {
             response = await this.sapiPublicGetV3TickerBookTicker (params);
-        } else {
-            throw new NotSupported (this.id + ' fetchBidsAsks() does not support ' + type + ' markets yet');
         }
-        return this.parseTickers (response, symbols);
+        const results = [];
+        for (let i = 0; i < response.length; i++) {
+            const marketId = this.safeString (response[i], 'symbol');
+            const safeMarket = this.safeMarket (marketId, undefined, undefined, marketType);
+            const parsedTicker = this.parseTicker (response[i], safeMarket);
+            const ticker = this.extend (parsedTicker, params);
+            results.push (ticker);
+        }
+        symbols = this.marketSymbols (symbols);
+        return this.filterByArray (results, 'symbol', symbols);
     }
 
     parseFundingRate (contract, market: Market = undefined): FundingRate {
+        //
+        // fundingRate
         //
         //     {
         //         "symbol": "BTCUSDT",
@@ -1642,6 +1631,9 @@ export default class aster extends Exchange {
         //         "nextFundingTime": 1750147200000,
         //         "time": 1750146970000
         //     }
+        //
+        // funding interval
+        //
         //     {
         //         "symbol": "INJUSDT",
         //         "interestRate": "0.00010000",
@@ -1685,7 +1677,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchFundingRate
      * @description fetch the current funding rate
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#mark-price
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#symbol-price-ticker
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [funding rate structure]{@link https://docs.ccxt.com/#/?id=funding-rate-structure}
@@ -1699,7 +1691,7 @@ export default class aster extends Exchange {
         const request: Dict = {
             'symbol': market['id'],
         };
-        const response = await this.fapiPublicGetV1PremiumIndex (this.extend (request, params));
+        const response = await this.fapiPublicGetV3PremiumIndex (this.extend (request, params));
         //
         //     {
         //         "symbol": "BTCUSDT",
@@ -1719,7 +1711,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchFundingRates
      * @description fetch the current funding rate for multiple symbols
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#24hr-ticker-price-change-statistics
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#symbol-price-ticker
      * @param {string[]} [symbols] list of unified market symbols
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-structure}
@@ -1727,7 +1719,7 @@ export default class aster extends Exchange {
     async fetchFundingRates (symbols: Strings = undefined, params = {}): Promise<FundingRates> {
         await this.loadMarkets ();
         symbols = this.marketSymbols (symbols);
-        const response = await this.fapiPublicGetV1PremiumIndex (this.extend (params));
+        const response = await this.fapiPublicGetV3PremiumIndex (this.extend (params));
         //
         //     [
         //         {
@@ -1759,7 +1751,7 @@ export default class aster extends Exchange {
         if (symbols !== undefined) {
             symbols = this.marketSymbols (symbols);
         }
-        const response = await this.fapiPublicGetV1FundingInfo (params);
+        const response = await this.fapiPublicGetV3FundingInfo (params);
         //
         //     [
         //         {
@@ -1844,11 +1836,12 @@ export default class aster extends Exchange {
         const sorted = this.sortBy (rates, 'timestamp');
         return this.filterBySymbolSinceLimit (sorted, symbol, since, limit) as FundingRateHistory[];
     }
+
     /**
      * @method
      * @name aster#fetchBalance
      * @description query for balance and get the amount of funds available for trading or funds locked in orders
-     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#account-trade-history-user_data
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
      * @param {string} [params.type] 'spot', 'option', use params["subType"] for swap and future markets
@@ -4022,44 +4015,7 @@ export default class aster extends Exchange {
             // Nonce is in microseconds
             let signature = '';
             let query = undefined;
-            if (api === 'fapiPrivate') {
-                const nonce = this.microseconds ();
-                headers = {
-                    'X-MBX-APIKEY': this.apiKey,
-                };
-                const defaultRecvWindow = this.safeInteger (this.options, 'recvWindow');
-                let extendedParams = this.extend ({
-                    'timestamp': timestamp,
-                }, params);
-                if (defaultRecvWindow !== undefined) {
-                    extendedParams['recvWindow'] = defaultRecvWindow;
-                }
-                const recvWindow = this.safeInteger (params, 'recvWindow');
-                if (recvWindow !== undefined) {
-                    extendedParams['recvWindow'] = recvWindow;
-                }
-                if ((method === 'DELETE') && (path === 'v1/batchOrders')) {
-                    const orderidlist = this.safeList (extendedParams, 'orderIdList', []);
-                    const origclientorderidlist = this.safeList (extendedParams, 'origClientOrderIdList', []);
-                    extendedParams = this.omit (extendedParams, [ 'orderIdList', 'origClientOrderIdList' ]);
-                    query = this.rawencode (extendedParams);
-                    const orderidlistLength = orderidlist.length;
-                    const origclientorderidlistLength = origclientorderidlist.length;
-                    if (orderidlistLength > 0) {
-                        query = query + '&' + 'orderidlist=%5B' + orderidlist.join ('%2C') + '%5D';
-                    }
-                    if (origclientorderidlistLength > 0) {
-                        query = query + '&' + 'origclientorderidlist=%5B' + origclientorderidlist.join ('%2C') + '%5D';
-                    }
-                } else {
-                    query = this.rawencode (extendedParams);
-                }
-                if (method === 'GET') {
-                    url += '?' + query;
-                } else {
-                    body = query;
-                }
-            } else if (api === 'sapiPrivate') {
+         {
                 const nonce = (this.milliseconds () * 1000).toString ();
                 // Sign using EIP-712 typed data per the AsterSignTransaction spec
                 const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
