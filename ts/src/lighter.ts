@@ -1,6 +1,6 @@
 //  ---------------------------------------------------------------------------
 import Exchange from './abstract/lighter.js';
-import { ArgumentsRequired, BadRequest, ExchangeError, InvalidOrder, RateLimitExceeded } from './base/errors.js';
+import { ArgumentsRequired, BadRequest, ExchangeError, InvalidOrder, NotSupported, RateLimitExceeded } from './base/errors.js';
 import { TICK_SIZE } from './base/functions/number.js';
 import Precise from './base/Precise.js';
 import type { Dict, FundingRate, FundingRates, Int, int, Market, OHLCV, OrderBook, Strings, Ticker, Tickers, OrderType, OrderSide, Num, Order, Balances, Position, Str, TransferEntry, Currency, Currencies, Transaction, Trade, Account, MarginModification } from './base/types.js';
@@ -397,6 +397,9 @@ export default class lighter extends Exchange {
         }
         const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
         if (privateKeyIsSet && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
+            if (this.privateKey.length > 66) {
+                throw new NotSupported (this.id + 'after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check this FAQ for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
+            }
             // load lighter library without creating lighter client
             signer = await this.loadLighterLibrary (libraryPath, chainId, '', this.parseToInt (apiKeyIndex), this.parseToInt (accountIndex), false);
             this.options['auths'][accountIndex][apiKeyIndex]['signer'] = signer;
