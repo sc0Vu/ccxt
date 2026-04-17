@@ -3,7 +3,7 @@
 import hyperliquidRest from '../hyperliquid.js';
 import { NotSupported } from '../base/errors.js';
 import Client from '../base/ws/Client.js';
-import { Int, Str, Market, OrderBook, Trade, OHLCV, Order, Dict, Strings, Ticker, Tickers, type Num, OrderType, OrderSide, type OrderRequest, Bool, Balances } from '../base/types.js';
+import { Int, Str, Market, OrderBook, Trade, OHLCV, Order, Dict, Strings, Ticker, Tickers, type Num, OrderType, OrderSide, type OrderRequest, Bool, Balances, Position } from '../base/types.js';
 import { ArrayCache, ArrayCacheByTimestamp, ArrayCacheBySymbolById, ArrayCacheBySymbolBySide } from '../base/ws/Cache.js';
 
 //  ---------------------------------------------------------------------------
@@ -1059,7 +1059,7 @@ export default class hyperliquid extends hyperliquidRest {
             const clearinghouseState = this.safeDict (data, 'clearinghouseState');
             rawBalances.push (clearinghouseState);
             info = clearinghouseState;
-            timestamp = this.safeInteger(clearinghouseState, 'time');
+            timestamp = this.safeInteger (clearinghouseState, 'time');
             this.handlePositions (client, message);
         }
         for (let i = 0; i < rawBalances.length; i++) {
@@ -1110,10 +1110,10 @@ export default class hyperliquid extends hyperliquidRest {
         let code = undefined;
         if (currencyId === undefined) {
             code = 'USDC';
-            const marginSummary = this.safeDict(balance, 'marginSummary', {});
-            account['free'] = this.safeString(balance, 'withdrawable');
-            account['used'] = this.safeString(marginSummary, 'totalMarginUsed');
-            account['total'] = this.safeString(marginSummary, 'accountValue');
+            const marginSummary = this.safeDict (balance, 'marginSummary', {});
+            account['free'] = this.safeString (balance, 'withdrawable');
+            account['used'] = this.safeString (marginSummary, 'totalMarginUsed');
+            account['total'] = this.safeString (marginSummary, 'accountValue');
         } else {
             code = this.safeCurrencyCode (currencyId);
             account['used'] = this.safeString (balance, 'hold');
@@ -1131,7 +1131,7 @@ export default class hyperliquid extends hyperliquidRest {
 
     /**
      * @method
-     * @name hyperliquid@watchPositions
+     * @name hyperliquid#watchPositions
      * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
      * @description watch all open positions
      * @param {string[]} [symbols] list of unified market symbols
@@ -1212,7 +1212,7 @@ export default class hyperliquid extends hyperliquidRest {
 
     /**
      * @method
-     * @name hyperliquid@unWatchPositions
+     * @name hyperliquid#unWatchPositions
      * @description unWatches all open positions
      * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
      * @param {string[]} [symbols] list of unified market symbols
