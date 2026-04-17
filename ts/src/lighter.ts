@@ -398,7 +398,7 @@ export default class lighter extends Exchange {
         const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
         if (privateKeyIsSet && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
             if (this.privateKey.length > 66) {
-                throw new NotSupported (this.id + ' after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check this FAQ for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
+                throw new NotSupported (this.id + ' after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
             }
             // load lighter library without creating lighter client
             signer = await this.loadLighterLibrary (libraryPath, chainId, '', this.parseToInt (apiKeyIndex), this.parseToInt (accountIndex), false);
@@ -488,7 +488,7 @@ export default class lighter extends Exchange {
             let walletAddress = this.walletAddress;
             if (this.privateKey !== undefined) {
                 if (this.privateKey.length > 66) {
-                    throw new NotSupported (this.id + ' after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check this FAQ for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
+                    throw new NotSupported (this.id + ' after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
                 }
                 walletAddress = this.ethGetAddressFromPrivateKey (this.privateKey);
             }
