@@ -1786,21 +1786,6 @@ export default class aster extends Exchange {
         return this.parseFundingRates (response, symbols);
     }
 
-    parseBalance (response): Balances {
-        const result: Dict = { 'info': response };
-        for (let i = 0; i < response.length; i++) {
-            const balance = response[i];
-            const currencyId = this.safeString (balance, 'asset');
-            const code = this.safeCurrencyCode (currencyId);
-            const account = this.account ();
-            account['free'] = this.safeString2 (balance, 'free', 'maxWithdrawAmount');
-            account['used'] = this.safeString (balance, 'locked');
-            account['total'] = this.safeString (balance, 'walletBalance');
-            result[code] = account;
-        }
-        return this.safeBalance (result);
-    }
-
     /**
      * @method
      * @name aster#fetchFundingRateHistory
@@ -1860,20 +1845,19 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchBalance
      * @description query for balance and get the amount of funds available for trading or funds locked in orders
-     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#account-information-user_data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#futures-account-balance-v3-user_data
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
      * @param {string} [params.type] 'spot', 'option', use params["subType"] for swap and future markets
      * @returns {object} a [balance structure]{@link https://docs.ccxt.com/#/?id=balance-structure}
      */
     async fetchBalance (params = {}): Promise<Balances> {
-        let type = undefined;
-        [ type, params ] = this.handleMarketTypeAndParams ('fetchBalance', undefined, params);
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchBalance', undefined, params);
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchBalance', undefined, params);
         let response = undefined;
         let data = undefined;
-        if (this.isLinear (type, subType)) {
+        if (marketType === 'swap') {
             response = await this.fapiPrivateGetV4Account (params);
             data = this.safeList (response, 'assets', []);
             //
@@ -1896,7 +1880,7 @@ export default class aster extends Exchange {
             //         }
             //     ]
             //
-        } else if (type === 'spot') {
+        } else if (marketType === 'spot') {
             response = await this.sapiPrivateGetV3Account (params);
             data = this.safeList (response, 'balances', []);
             //
@@ -1908,10 +1892,23 @@ export default class aster extends Exchange {
             //         }
             //     ]
             //
-        } else {
-            throw new NotSupported (this.id + ' fetchBalance() does not support ' + type + ' markets yet');
         }
         return this.parseBalance (data);
+    }
+
+    parseBalance (response): Balances {
+        const result: Dict = { 'info': response };
+        for (let i = 0; i < response.length; i++) {
+            const balance = response[i];
+            const currencyId = this.safeString (balance, 'asset');
+            const code = this.safeCurrencyCode (currencyId);
+            const account = this.account ();
+            account['free'] = this.safeString2 (balance, 'free', 'maxWithdrawAmount');
+            account['used'] = this.safeString (balance, 'locked');
+            account['total'] = this.safeString (balance, 'walletBalance');
+            result[code] = account;
+        }
+        return this.safeBalance (result);
     }
 
     /**
