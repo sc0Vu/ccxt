@@ -277,8 +277,8 @@ After the latest upgrade CCXT has simplified the authentication process and now 
 
 Lighter requires the following :
 - `privateKey`: the L1 private key **mandatory**
-- `accountIndex` (an integer) in `exchange.options`: — **optional** CCXT will derive it if not available
-- `apiKeyIndex` (an integer) in `exchange.options`: **optional**  CCXT will generate if not available
+- `accountIndex` (an integer) in `exchange.options`: — **optional** CCXT will fetch it if not available, set it if using a subAccount
+- `apiKeyIndex` (an integer) in `exchange.options`: **optional**  CCXT will use a default value (254)
 
 Example
 
