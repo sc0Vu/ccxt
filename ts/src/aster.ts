@@ -200,19 +200,19 @@ export default class aster extends Exchange {
                         'v1/exchangeInfo': 1,
                         'v3/exchangeInfo': 1,
                         'v1/depth': 1,
-                        'v3/depth': 1,
+                        'v3/depth': 2, // dynamic: 5, 10, 20, 50->2, 100->5, 500->10, 1000->20
                         'v1/trades': 1,
                         'v3/trades': 1,
                         'v1/historicalTrades': 1,
-                        'v3/historicalTrades': 1,
+                        'v3/historicalTrades': 20,
                         'v1/aggTrades': 1,
-                        'v3/aggTrades': 1,
+                        'v3/aggTrades': 20,
                         'v1/klines': 1,
-                        'v3/klines': 1,
+                        'v3/klines': 1, // dynamic [1,100) ->1,  [100, 500)->2, [500, 1000]->5, [1000 -> 10
                         'v1/indexPriceKlines': 1,
-                        'v3/indexPriceKlines': 1,
+                        'v3/indexPriceKlines': 1, // same as klines
                         'v1/markPriceKlines': 1,
-                        'v3/markPriceKlines': 1,
+                        'v3/markPriceKlines': 1, // same as klines
                         'v1/premiumIndex': 1,
                         'v3/premiumIndex': 1,
                         'v1/fundingRate': 1,
@@ -220,11 +220,11 @@ export default class aster extends Exchange {
                         'v1/fundingInfo': 1,
                         'v3/fundingInfo': 1,
                         'v1/ticker/24hr': 1,
-                        'v3/ticker/24hr': 1,
+                        'v3/ticker/24hr': 1, // 1 single-symbol, otherwise 40
                         'v1/ticker/price': 1,
-                        'v3/ticker/price': 1,
+                        'v3/ticker/price': 1, // 1 single-symbol, otherwise 2
                         'v1/ticker/bookTicker': 1,
-                        'v3/ticker/bookTicker': 1,
+                        'v3/ticker/bookTicker': 1, // 1 single-symbol, otherwise 2
                         // different endpoints
                         'v1/adlQuantile': 1,
                         'v1/forceOrders': 1,
@@ -234,7 +234,7 @@ export default class aster extends Exchange {
                 'fapiPrivate': {
                     'get': {
                         'v1/positionSide/dual': 1,
-                        'v3/positionSide/dual': 1,
+                        'v3/positionSide/dual': 30,
                         'v1/multiAssetsMargin': 1,
                         'v3/multiAssetsMargin': 1,
                         'v1/order': 1,
@@ -608,6 +608,8 @@ export default class aster extends Exchange {
                     '-4184': InvalidOrder, // PRICE_LOWER_THAN_STOP_MULTIPLIER_DOWN
                     '-5060': OperationRejected, // {"code":-5060,"msg":"The limit order price does not meet the PERCENT_PRICE filter limit."}
                     '-5076': OperationRejected, // {"code":-5076,"msg":"Total order value should be more than 5 USDT"}
+                    // occured errors:
+                    '-4168': OperationRejected, // Unable to adjust to isolated-margin mode under the Multi-Assets mode.
                 },
                 'broad': {
                 },
@@ -1910,7 +1912,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#setMarginMode
      * @description set margin mode to 'cross' or 'isolated'
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#change-margin-type-trade
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#change-margin-type-trade
      * @param {string} marginMode 'cross' or 'isolated'
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1933,14 +1935,9 @@ export default class aster extends Exchange {
             'symbol': market['id'],
             'marginType': marginMode,
         };
-        const response = await this.fapiPrivatePostV1MarginType (this.extend (request, params));
+        const response = await this.fapiPrivatePostV3MarginType (this.extend (request, params));
         //
-        //     {
-        //         "amount": 100.0,
-        //         "code": 200,
-        //         "msg": "Successfully modify position margin.",
-        //         "type": 1
-        //     }
+        //     {"code": 200,"msg": "success"} 
         //
         return response;
     }
@@ -1949,22 +1946,21 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchPositionMode
      * @description fetchs the position mode, hedged or one way, hedged for aster is set identically for all linear markets or all inverse markets
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#get-current-position-modeuser_data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#get-current-position-modeuser_data
      * @param {string} symbol unified symbol of the market to fetch the order book for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} an object detailing whether the market is in hedged or one-way mode
      */
     async fetchPositionMode (symbol: Str = undefined, params = {}) {
-        const response = await this.fapiPrivateGetV1PositionSideDual (params);
+        const response = await this.fapiPrivateGetV3PositionSideDual (params);
         //
         //     {
         //         "dualSidePosition": true // "true": Hedge Mode; "false": One-way Mode
         //     }
         //
-        const dualSidePosition = this.safeBool (response, 'dualSidePosition');
         return {
             'info': response,
-            'hedged': (dualSidePosition === true),
+            'hedged': this.safeBool (response, 'dualSidePosition'),
         };
     }
 
@@ -1972,7 +1968,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#setPositionMode
      * @description set hedged to true or false for a market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#change-position-modetrade
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#change-position-modetrade
      * @param {bool} hedged set to true to use dualSidePosition
      * @param {string} symbol not used by bingx setPositionMode ()
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1988,7 +1984,7 @@ export default class aster extends Exchange {
         //         "msg": "success"
         //     }
         //
-        return await this.fapiPrivatePostV1PositionSideDual (this.extend (request, params));
+        return await this.fapiPrivatePostV3PositionSideDual (this.extend (request, params));
     }
 
     parseTradingFee (fee: Dict, market: Market = undefined): TradingFeeInterface {
