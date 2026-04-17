@@ -192,81 +192,81 @@ export default class aster extends Exchange {
             },
             'api': {
                 'fapiPublic': {
-                    'get': [
-                        'v1/ping',
-                        'v3/ping',
-                        'v1/time',
-                        'v3/time',
-                        'v1/exchangeInfo',
-                        'v3/exchangeInfo',
-                        'v1/depth',
-                        'v3/depth',
-                        'v1/trades',
-                        'v3/trades',
-                        'v1/historicalTrades',
-                        'v3/historicalTrades',
-                        'v1/aggTrades',
-                        'v3/aggTrades',
-                        'v1/klines',
-                        'v3/klines',
-                        'v1/indexPriceKlines',
-                        'v3/indexPriceKlines',
-                        'v1/markPriceKlines',
-                        'v3/markPriceKlines',
-                        'v1/premiumIndex',
-                        'v3/premiumIndex',
-                        'v1/fundingRate',
-                        'v3/fundingRate',
-                        'v1/fundingInfo',
-                        'v3/fundingInfo',
-                        'v1/ticker/24hr',
-                        'v3/ticker/24hr',
-                        'v1/ticker/price',
-                        'v3/ticker/price',
-                        'v1/ticker/bookTicker',
-                        'v3/ticker/bookTicker',
+                    'get': {
+                        'v1/ping': 1,
+                        'v3/ping': 1,
+                        'v1/time': 1,
+                        'v3/time': 1,
+                        'v1/exchangeInfo': 1,
+                        'v3/exchangeInfo': 1,
+                        'v1/depth': 1,
+                        'v3/depth': 1,
+                        'v1/trades': 1,
+                        'v3/trades': 1,
+                        'v1/historicalTrades': 1,
+                        'v3/historicalTrades': 1,
+                        'v1/aggTrades': 1,
+                        'v3/aggTrades': 1,
+                        'v1/klines': 1,
+                        'v3/klines': 1,
+                        'v1/indexPriceKlines': 1,
+                        'v3/indexPriceKlines': 1,
+                        'v1/markPriceKlines': 1,
+                        'v3/markPriceKlines': 1,
+                        'v1/premiumIndex': 1,
+                        'v3/premiumIndex': 1,
+                        'v1/fundingRate': 1,
+                        'v3/fundingRate': 1,
+                        'v1/fundingInfo': 1,
+                        'v3/fundingInfo': 1,
+                        'v1/ticker/24hr': 1,
+                        'v3/ticker/24hr': 1,
+                        'v1/ticker/price': 1,
+                        'v3/ticker/price': 1,
+                        'v1/ticker/bookTicker': 1,
+                        'v3/ticker/bookTicker': 1,
                         // different endpoints
-                        'v1/adlQuantile',
-                        'v1/forceOrders',
-                        'v3/indexreferences',
-                    ],
+                        'v1/adlQuantile': 1,
+                        'v1/forceOrders': 1,
+                        'v3/indexreferences': 1,
+                    },
                 },
                 'fapiPrivate': {
-                    'get': [
-                        'v1/positionSide/dual',
-                        'v3/positionSide/dual',
-                        'v1/multiAssetsMargin',
-                        'v3/multiAssetsMargin',
-                        'v1/order',
-                        'v3/order',
-                        'v1/openOrder',
-                        'v3/openOrder',
-                        'v1/openOrders',
-                        'v3/openOrders',
-                        'v1/allOrders',
-                        'v3/allOrders',
-                        'v2/balance',
-                        'v3/balance',
-                        'v3/account',
-                        'v1/positionMargin/history',
-                        'v3/positionMargin/history',
-                        'v2/positionRisk',
-                        'v3/positionRisk',
-                        'v1/userTrades',
-                        'v3/userTrades',
-                        'v1/income',
-                        'v3/income',
-                        'v1/leverageBracket',
-                        'v3/leverageBracket',
-                        'v1/commissionRate',
-                        'v3/commissionRate',
+                    'get': {
+                        'v1/positionSide/dual': 1,
+                        'v3/positionSide/dual': 1,
+                        'v1/multiAssetsMargin': 1,
+                        'v3/multiAssetsMargin': 1,
+                        'v1/order': 1,
+                        'v3/order': 1,
+                        'v1/openOrder': 1,
+                        'v3/openOrder': 1,
+                        'v1/openOrders': 1,
+                        'v3/openOrders': 1,
+                        'v1/allOrders': 1,
+                        'v3/allOrders': 1,
+                        'v2/balance': 1,
+                        'v3/balance': 1,
+                        'v3/account': 1,
+                        'v1/positionMargin/history': 1,
+                        'v3/positionMargin/history': 1,
+                        'v2/positionRisk': 1,
+                        'v3/positionRisk': 1,
+                        'v1/userTrades': 1,
+                        'v3/userTrades': 5,
+                        'v1/income': 1,
+                        'v3/income': 1,
+                        'v1/leverageBracket': 1,
+                        'v3/leverageBracket': 1,
+                        'v1/commissionRate': 1,
+                        'v3/commissionRate': 1,
                         // others
-                        'v3/adlQuantile',
-                        'v3/forceOrders',
-                        'v3/mmp',
-                        'v3/accountWithJoinMargin',
-                        'v4/account',
-                    ],
+                        'v3/adlQuantile': 1,
+                        'v3/forceOrders': 1,
+                        'v3/mmp': 1,
+                        'v3/accountWithJoinMargin': 1,
+                        'v4/account': 1,
+                    },
                     'post': {
                         'v1/positionSide/dual': 1,
                         'v3/positionSide/dual': 1,
@@ -295,21 +295,21 @@ export default class aster extends Exchange {
                         'v3/mmpReset': 1,
                         'v3/noop': 1,
                     },
-                    'put': [
-                        'v1/listenKey',
-                        'v3/listenKey',
-                    ],
-                    'delete': [
-                        'v1/order',
-                        'v3/order',
-                        'v1/allOpenOrders',
-                        'v3/allOpenOrders',
-                        'v1/batchOrders',
-                        'v3/batchOrders',
-                        'v3/mmp',
-                        'v1/listenKey',
-                        'v3/listenKey',
-                    ],
+                    'put': {
+                        'v1/listenKey': 1,
+                        'v3/listenKey': 1,
+                    },
+                    'delete': {
+                        'v1/order': 1,
+                        'v3/order': 1,
+                        'v1/allOpenOrders': 1,
+                        'v3/allOpenOrders': 1,
+                        'v1/batchOrders': 1,
+                        'v3/batchOrders': 1,
+                        'v3/mmp': 1,
+                        'v1/listenKey': 1,
+                        'v3/listenKey': 1,
+                    },
                 },
                 'sapiPublic': {
                     'get': {
@@ -701,6 +701,7 @@ export default class aster extends Exchange {
      * @name aster#fetchMarkets
      * @description retrieves data on all markets for bigone
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#trading-specification-information
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#exchange-information
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} an array of objects representing market data
      */
@@ -917,6 +918,7 @@ export default class aster extends Exchange {
      * @name aster#fetchTime
      * @description fetches the current integer timestamp in milliseconds from the exchange server
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#get-server-time
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#check-server-time
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {int} the current integer timestamp in milliseconds from the exchange server
      */
@@ -926,19 +928,16 @@ export default class aster extends Exchange {
         let response = undefined;
         if (marketType === 'swap') {
             response = await this.fapiPublicGetTime (params);
-            //
-            // {
-            //     "serverTime": 1499827319559
-            // }
-            //
         } else {
             response = await this.sapiPublicGetV3Time (params);
-            //
-            // {
-            //     "serverTime": 1499827319559
-            // }
-            //
         }
+        //
+        // both SPOT & PERP has same format
+        //
+        // {
+        //     "serverTime": 1499827319559
+        // }
+        //
         return this.safeInteger (response, 'serverTime');
     }
 
@@ -1017,24 +1016,27 @@ export default class aster extends Exchange {
                 response = await this.fapiPublicGetV3Klines (this.extend (request, params));
             } else {
                 response = await this.sapiPublicGetV3Klines (this.extend (request, params));
-                //
-                //  [
-                //     [
-                //         1499040000000, // Open time
-                //         "0.01634790", // Open
-                //         "0.80000000", // High
-                //         "0.01575800", // Low
-                //         "0.01577100", // Close
-                //         "148976.11427815", // Volume
-                //         1499644799999, // Close time
-                //         "2434.19055334", // Quote asset volume
-                //         308, // Number of trades
-                //         "1756.87402397", // Taker buy base asset volume
-                //         "28.46694368", // Taker buy quote asset volume
-                //     ]
-                //  ]
-                //
             }
+            //
+            // both SPOT & PERP has same format
+            //
+            //  [
+            //     [
+            //         1499040000000, // Open time
+            //         "0.01634790", // Open
+            //         "0.80000000", // High
+            //         "0.01575800", // Low
+            //         "0.01577100", // Close
+            //         "148976.11427815", // Volume
+            //         1499644799999, // Close time
+            //         "2434.19055334", // Quote asset volume
+            //         308, // Number of trades
+            //         "1756.87402397", // Taker buy base asset volume
+            //         "28.46694368", // Taker buy quote asset volume,
+            //         "0"
+            //     ]
+            //  ]
+            //
         }
         return this.parseOHLCVs (response, market, timeframe, since, limit);
     }
@@ -1055,7 +1057,7 @@ export default class aster extends Exchange {
         //         "isBuyerMaker": true
         //     }
         //
-        //     aggrTrades:
+        //     aggrTrades
         //
         //     {
         //         "a": 26129, // Aggregate tradeId
@@ -1067,7 +1069,7 @@ export default class aster extends Exchange {
         //         "m": true, // Was the buyer the maker?
         //     }
         //
-        //     fetchMyTrades
+        // fetchMyTrades
         //
         //     {
         //         "buyer": false,
@@ -1132,6 +1134,8 @@ export default class aster extends Exchange {
      * @description get the list of most recent trades for a particular symbol
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#recent-trades-list
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#recent-trades-aggregated
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#recent-trades-list
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#compressedaggregate-trades-list
      * @param {string} symbol unified symbol of the market to fetch trades for
      * @param {int} [since] timestamp in ms of the earliest trade to fetch
      * @param {int} [limit] the maximum amount of trades to fetch
@@ -1168,7 +1172,7 @@ export default class aster extends Exchange {
                 response = await this.sapiPublicGetV3AggTrades (this.extend (request, params));
             }
             //
-            // both FAPI and SAPI have same response format, but FAPI has string instead of numeric values everywhere
+            // both FAPI and SAPI have same response format
             //
             // [
             //     {
@@ -1220,6 +1224,7 @@ export default class aster extends Exchange {
      * @name aster#fetchMyTrades
      * @description fetch all trades made by the user
      * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#account-trade-history-user_data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#account-trade-list-user_data
      * @param {string} [symbol] unified market symbol
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum number of trades structures to retrieve
@@ -1246,7 +1251,7 @@ export default class aster extends Exchange {
         [ request, params ] = this.handleUntilOption ('endTime', request, params);
         let response = undefined;
         if (marketType === 'swap') {
-            response = await this.fapiPrivateGetV1UserTrades (this.extend (request, params));
+            response = await this.fapiPrivateGetV3UserTrades (this.extend (request, params));
         } else {
             response = await this.sapiPrivateGetV3UserTrades (this.extend (request, params));
             //
@@ -1278,6 +1283,7 @@ export default class aster extends Exchange {
      * @name aster#fetchOrderBook
      * @description fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#depth-information
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#order-book
      * @param {string} symbol unified symbol of the market to fetch the order book for
      * @param {int} [limit] the maximum amount of order book entries to return
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -1290,21 +1296,16 @@ export default class aster extends Exchange {
             'symbol': market['id'],
         };
         let response = undefined;
+        if (limit !== undefined) {
+            request['limit'] = this.findNearestCeiling ([ 5, 10, 20, 50, 100, 500, 1000 ], limit);
+        }
         if (market['swap']) {
-            if (limit !== undefined) {
-                // limit: [5, 10, 20, 50, 100, 500, 1000]. Default: 500
-                if (limit > 1000) {
-                    limit = 1000; // Default 500; max 1000.
-                }
-                request['limit'] = limit;
-            }
             response = await this.fapiPublicGetV1Depth (this.extend (request, params));
         } else {
-            if (limit !== undefined) {
-                request['limit'] = this.findNearestCeiling ([ 5, 10, 20, 50, 100, 500, 1000 ], limit);
-            }
             response = await this.sapiPublicGetV3Depth (this.extend (request, params));
         }
+        //
+        // both SPOT & PERP has same format
         //
         //     {
         //         "lastUpdateId": 1027024,
@@ -1326,61 +1327,6 @@ export default class aster extends Exchange {
         //
         const timestamp = this.safeInteger (response, 'T');
         return this.parseOrderBook (response, symbol, timestamp, 'bids', 'asks');
-    }
-
-    /**
-     * @method
-     * @name aster#fetchFundingRateHistory
-     * @description fetches historical funding rate prices
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#get-funding-rate-history
-     * @param {string} symbol unified symbol of the market to fetch the funding rate history for
-     * @param {int} [since] timestamp in ms of the earliest funding rate to fetch
-     * @param {int} [limit] the maximum amount of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure} to fetch
-     * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @param {int} [params.until] timestamp in ms of the latest funding rate
-     * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure}
-     */
-    async fetchFundingRateHistory (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}) {
-        await this.loadMarkets ();
-        let request: Dict = {};
-        if (symbol !== undefined) {
-            const market = this.market (symbol);
-            request['symbol'] = market['id'];
-        }
-        if (since !== undefined) {
-            request['startTime'] = since;
-        }
-        if (limit !== undefined) {
-            if (limit > 1000) {
-                limit = 1000; // Default 100; max 1000
-            }
-            request['limit'] = limit;
-        }
-        [ request, params ] = this.handleUntilOption ('endTime', request, params);
-        const response = await this.fapiPublicGetV1FundingRate (this.extend (request, params));
-        //
-        //     [
-        //         {
-        //             "symbol": "BTCUSDT",
-        //             "fundingTime": 1747209600000,
-        //             "fundingRate": "0.00010000"
-        //         }
-        //     ]
-        //
-        const rates = [];
-        for (let i = 0; i < response.length; i++) {
-            const entry = response[i];
-            const timestamp = this.safeInteger (entry, 'fundingTime');
-            rates.push ({
-                'info': entry,
-                'symbol': this.safeSymbol (this.safeString (entry, 'symbol'), undefined, undefined, 'swap'),
-                'fundingRate': this.safeNumber (entry, 'fundingRate'),
-                'timestamp': timestamp,
-                'datetime': this.iso8601 (timestamp),
-            });
-        }
-        const sorted = this.sortBy (rates, 'timestamp');
-        return this.filterBySymbolSinceLimit (sorted, symbol, since, limit) as FundingRateHistory[];
     }
 
     parseTicker (ticker: Dict, market: Market = undefined): Ticker {
@@ -1481,6 +1427,7 @@ export default class aster extends Exchange {
      * @name aster#fetchTicker
      * @description fetches a price ticker, a statistical calculation with the information calculated over the past 24 hours for a specific market
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#24h-price-change
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#24hr-ticker-price-change-statistics
      * @param {string} symbol unified symbol of the market to fetch the ticker for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
@@ -1493,56 +1440,38 @@ export default class aster extends Exchange {
         };
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPublicGetV1Ticker24hr (this.extend (request, params));
-            //
-            //     {
-            //         "symbol": "BTCUSDT",
-            //         "priceChange": "1845.7",
-            //         "priceChangePercent": "1.755",
-            //         "weightedAvgPrice": "105515.5",
-            //         "lastPrice": "107037.7",
-            //         "lastQty": "0.004",
-            //         "openPrice": "105192.0",
-            //         "highPrice": "107223.5",
-            //         "lowPrice": "104431.6",
-            //         "volume": "8753.286",
-            //         "quoteVolume": "923607368.61",
-            //         "openTime": 1749976620000,
-            //         "closeTime": 1750063053754,
-            //         "firstId": 24195078,
-            //         "lastId": 24375783,
-            //         "count": 180706
-            //     }
-            //
+            response = await this.fapiPublicGetV3Ticker24hr (this.extend (request, params));
         } else {
             response = await this.sapiPublicGetV3Ticker24hr (this.extend (request, params));
-            //
-            //    {
-            //        "symbol": "BTCUSDT",
-            //        "priceChange": "238.00",
-            //        "priceChangePercent": "0.336",
-            //        "weightedAvgPrice": "70946.12052580",
-            //        "lastPrice": "71160.00",
-            //        "lastQty": "0.01000",
-            //        "openPrice": "70922.00",
-            //        "highPrice": "71429.27",
-            //        "lowPrice": "70500.00",
-            //        "volume": "12.67491",
-            //        "quoteVolume": "899235.69251370",
-            //        "openTime": "1775998920000",
-            //        "closeTime": "1776085367531",
-            //        "firstId": "4146804",
-            //        "lastId": "4147868",
-            //        "count": "1065",
-            //        "baseAsset": "BTC",
-            //        "quoteAsset": "USDT",
-            //        "bidPrice": "71125.98",
-            //        "bidQty": "0.00737",
-            //        "askPrice": "71152.10",
-            //        "askQty": "0.32399"
-            //    }
-            //
         }
+        //
+        // both SPOT & PERP has same format
+        //
+        //    {
+        //        "symbol": "ETHUSDT",
+        //        "priceChange": "6.54",
+        //        "priceChangePercent": "0.279",
+        //        "weightedAvgPrice": "2330.70",
+        //        "lastPrice": "2350.00",
+        //        "lastQty": "4.437",
+        //        "openPrice": "2343.46",
+        //        "highPrice": "2363.20",
+        //        "lowPrice": "2283.86",
+        //        "volume": "267154.248",
+        //        "quoteVolume": "622657018.70",
+        //        "openTime": "1776329400000",
+        //        "closeTime": "1776415832593",
+        //        "firstId": "73520536",
+        //        "lastId": "73630176",
+        //        "count": "109640",
+        //        "baseAsset": "BTC",            // only in SPOT
+        //        "quoteAsset": "USDT",          // only in SPOT
+        //        "bidPrice": "71125.98",        // only in SPOT
+        //        "bidQty": "0.00737",           // only in SPOT
+        //        "askPrice": "71152.10",        // only in SPOT
+        //        "askQty": "0.32399"            // only in SPOT
+        //    }
+        //
         return this.parseTicker (response, market);
     }
 
@@ -1551,6 +1480,7 @@ export default class aster extends Exchange {
      * @name aster#fetchTickers
      * @description fetches price tickers for multiple markets, statistical information calculated over the past 24 hours for each market
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#24h-price-change
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#24hr-ticker-price-change-statistics
      * @param {string[]} symbols unified symbols of the markets to fetch the ticker for, all market tickers are returned if not assigned
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
@@ -1561,17 +1491,15 @@ export default class aster extends Exchange {
         await this.loadMarkets ();
         symbols = this.marketSymbols (symbols, undefined, true, true, true);
         const market = this.getMarketFromSymbols (symbols);
-        let type = undefined;
-        [ type, params ] = this.handleMarketTypeAndParams ('fetchTickers', market, params);
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchTickers', market, params);
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchTickers', market, params);
         let response = undefined;
-        if (this.isLinear (type, subType)) {
-            response = await this.fapiPublicGetV1Ticker24hr (params);
-        } else if (type === 'spot') {
+        if (marketType === 'swap') {
+            response = await this.fapiPublicGetV3Ticker24hr (params);
+        } else if (marketType === 'spot') {
             response = await this.sapiPublicGetV3Ticker24hr (params);
         } else {
-            throw new NotSupported (this.id + ' fetchTickers() does not support ' + type + ' markets yet');
+            throw new NotSupported (this.id + ' fetchTickers() does not support ' + marketType + ' markets yet');
         }
         //
         //     [
@@ -1591,7 +1519,13 @@ export default class aster extends Exchange {
         //             "closeTime": 1750063053754,
         //             "firstId": 24195078,
         //             "lastId": 24375783,
-        //             "count": 180706
+        //             "count": 180706,
+        //             "baseAsset": "BTC",              // only in SPOT
+        //             "quoteAsset": "USDT",            // only in SPOT
+        //             "bidPrice": "71125.98",          // only in SPOT
+        //             "bidQty": "0.00737",             // only in SPOT
+        //             "askPrice": "71152.10",          // only in SPOT
+        //             "askQty": "0.32399"              // only in SPOT
         //         }
         //     ]
         //
@@ -1603,6 +1537,7 @@ export default class aster extends Exchange {
      * @name aster#fetchLastPrices
      * @description fetches the last price for multiple markets
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#latest-price
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#symbol-price-ticker
      * @param {string[]|undefined} symbols unified symbols of the markets to fetch the last prices
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.subType] "linear" or "inverse"
@@ -1612,85 +1547,48 @@ export default class aster extends Exchange {
         await this.loadMarkets ();
         symbols = this.marketSymbols (symbols, undefined, true, true, true);
         const market = this.getMarketFromSymbols (symbols);
-        let type = undefined;
-        [ type, params ] = this.handleMarketTypeAndParams ('fetchLastPrices', market, params);
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchLastPrices', market, params);
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchLastPrices', market, params);
         let response = undefined;
-        if (this.isLinear (type, subType)) {
-            response = await this.fapiPublicV2GetTickerPrice (params);
-            //
-            //     [
-            //         {
-            //             "symbol": "LTCBTC",
-            //             "price": "4.00000200"
-            //             "time": 1589437530011
-            //         },
-            //         ...
-            //     ]
-            //
-        } else if (this.isInverse (type, subType)) {
-            response = await this.dapiPublicGetTickerPrice (params);
-            //
-            //     [
-            //         {
-            //             "symbol": "BTCUSD_200626",
-            //             "ps": "9647.8",
-            //             "price": "9647.8",
-            //             "time": 1591257246176
-            //         }
-            //     ]
-            //
-        } else if (type === 'spot') {
-            response = await this.publicGetV3TickerPrice (params);
-            //
-            //     [
-            //         {
-            //             "symbol": "LTCBTC",
-            //             "price": "4.00000200"
-            //             "time": 1649666690902
-            //         },
-            //         ...
-            //     ]
-            //
-        } else {
-            throw new NotSupported (this.id + ' fetchLastPrices() does not support ' + type + ' markets yet');
+        if (marketType === 'swap') {
+            response = await this.fapiPublicGetV3TickerPrice (params);
+        } else if (marketType === 'spot') {
+            response = await this.sapiPublicGetV3TickerPrice (params);
         }
-        return this.parseLastPrices (response, symbols);
+        //
+        // both SPOT & SWAP has same format
+        //
+        //     [
+        //         {
+        //             "symbol": "LTCBTC",
+        //             "price": "4.00000200"
+        //             "time": "1649666690902"
+        //         },
+        //         ...
+        //     ]
+        //
+        const results = [];
+        for (let i = 0; i < response.length; i++) {
+            const marketId = this.safeString (response[i], 'symbol');
+            const safeMarket = this.safeMarket (marketId, undefined, undefined, marketType);
+            const priceData = this.extend (this.parseLastPrice (response[i], safeMarket), params);
+            results.push (priceData);
+        }
+        symbols = this.marketSymbols (symbols);
+        return this.filterByArray (results, 'symbol', symbols);
     }
 
     parseLastPrice (entry, market: Market = undefined) {
         //
-        // spot
+        // spot & swap
         //
         //     {
         //         "symbol": "LTCBTC",
         //         "price": "4.00000200"
-        //         "time": 1649666690902
-        //     }
-        //
-        // usdm (swap/future)
-        //
-        //     {
-        //         "symbol": "BTCUSDT",
-        //         "price": "6000.01",
-        //         "time": 1589437530011   // Transaction time
-        //     }
-        //
-        //
-        // coinm (swap/future)
-        //
-        //     {
-        //         "symbol": "BTCUSD_200626", // symbol ("BTCUSD_200626", "BTCUSD_PERP", etc..)
-        //         "ps": "BTCUSD", // pair
-        //         "price": "9647.8",
-        //         "time": 1591257246176
+        //         "time": "1649666690902"
         //     }
         //
         const timestamp = this.safeInteger (entry, 'time');
-        const type = (timestamp === undefined) ? 'spot' : 'swap';
-        const marketId = this.safeString (entry, 'symbol');
-        market = this.safeMarket (marketId, market, undefined, type);
         return {
             'symbol': market['symbol'],
             'timestamp': timestamp,
@@ -1892,6 +1790,60 @@ export default class aster extends Exchange {
         return this.safeBalance (result);
     }
 
+    /**
+     * @method
+     * @name aster#fetchFundingRateHistory
+     * @description fetches historical funding rate prices
+     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#get-funding-rate-history
+     * @param {string} symbol unified symbol of the market to fetch the funding rate history for
+     * @param {int} [since] timestamp in ms of the earliest funding rate to fetch
+     * @param {int} [limit] the maximum amount of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure} to fetch
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {int} [params.until] timestamp in ms of the latest funding rate
+     * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure}
+     */
+    async fetchFundingRateHistory (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}) {
+        await this.loadMarkets ();
+        let request: Dict = {};
+        if (symbol !== undefined) {
+            const market = this.market (symbol);
+            request['symbol'] = market['id'];
+        }
+        if (since !== undefined) {
+            request['startTime'] = since;
+        }
+        if (limit !== undefined) {
+            if (limit > 1000) {
+                limit = 1000; // Default 100; max 1000
+            }
+            request['limit'] = limit;
+        }
+        [ request, params ] = this.handleUntilOption ('endTime', request, params);
+        const response = await this.fapiPublicGetV1FundingRate (this.extend (request, params));
+        //
+        //     [
+        //         {
+        //             "symbol": "BTCUSDT",
+        //             "fundingTime": 1747209600000,
+        //             "fundingRate": "0.00010000"
+        //         }
+        //     ]
+        //
+        const rates = [];
+        for (let i = 0; i < response.length; i++) {
+            const entry = response[i];
+            const timestamp = this.safeInteger (entry, 'fundingTime');
+            rates.push ({
+                'info': entry,
+                'symbol': this.safeSymbol (this.safeString (entry, 'symbol'), undefined, undefined, 'swap'),
+                'fundingRate': this.safeNumber (entry, 'fundingRate'),
+                'timestamp': timestamp,
+                'datetime': this.iso8601 (timestamp),
+            });
+        }
+        const sorted = this.sortBy (rates, 'timestamp');
+        return this.filterBySymbolSinceLimit (sorted, symbol, since, limit) as FundingRateHistory[];
+    }
     /**
      * @method
      * @name aster#fetchBalance
