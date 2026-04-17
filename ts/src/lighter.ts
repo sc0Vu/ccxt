@@ -344,6 +344,7 @@ export default class lighter extends Exchange {
             'commonCurrencies': {},
             'options': {
                 'defaultType': 'swap',
+                'builderFee': true,
                 'chainId': 304,
                 'accountIndex': undefined,
                 'apiKeyIndex': undefined,
