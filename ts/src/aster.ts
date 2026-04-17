@@ -1858,27 +1858,20 @@ export default class aster extends Exchange {
         let response = undefined;
         let data = undefined;
         if (marketType === 'swap') {
-            response = await this.fapiPrivateGetV4Account (params);
-            data = this.safeList (response, 'assets', []);
+            data = await this.fapiPrivateGetV3Balance (params);
             //
-            //     [
-            //         {
-            //             "asset": "USDT", // asset name
-            //             "walletBalance": "23.72469206", // wallet balance
-            //             "unrealizedProfit": "0.00000000", // unrealized profit
-            //             "marginBalance": "23.72469206", // margin balance
-            //             "maintMargin": "0.00000000", // maintenance margin required
-            //             "initialMargin": "0.00000000", // total initial margin required with current mark price
-            //             "positionInitialMargin": "0.00000000", //initial margin required for positions with current mark price
-            //             "openOrderInitialMargin": "0.00000000", // initial margin required for open orders with current mark price
-            //             "crossWalletBalance": "23.72469206", // crossed wallet balance
-            //             "crossUnPnl": "0.00000000", // unrealized profit of crossed positions
-            //             "availableBalance": "23.72469206", // available balance
-            //             "maxWithdrawAmount": "23.72469206", // maximum amount for transfer out
-            //             "marginAvailable": true, // whether the asset can be used as margin in Multi-Assets mode
-            //             "updateTime": 1625474304765 // last update time
-            //         }
-            //     ]
+            //    [
+            //        {
+            //            "accountAlias": "FzXquXsRFzXqAufW",
+            //            "asset": "CDL",
+            //            "balance": "0.00000000",
+            //            "crossWalletBalance": "0.00000000",
+            //            "crossUnPnl": "0.00000000",
+            //            "availableBalance": "878.90500233",
+            //            "maxWithdrawAmount": "0.00000000",
+            //            "marginAvailable": true,
+            //            "updateTime": "0"
+            //        }, ...
             //
         } else if (marketType === 'spot') {
             response = await this.sapiPrivateGetV3Account (params);
@@ -1903,9 +1896,9 @@ export default class aster extends Exchange {
             const currencyId = this.safeString (balance, 'asset');
             const code = this.safeCurrencyCode (currencyId);
             const account = this.account ();
-            account['free'] = this.safeString2 (balance, 'free', 'maxWithdrawAmount');
+            account['free'] = this.safeString2 (balance, 'free', 'availableBalance');
             account['used'] = this.safeString (balance, 'locked');
-            account['total'] = this.safeString (balance, 'walletBalance');
+            account['total'] = this.safeString (balance, 'balance');
             result[code] = account;
         }
         return this.safeBalance (result);
