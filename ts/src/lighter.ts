@@ -471,8 +471,9 @@ export default class lighter extends Exchange {
         let apiKeyIndex = undefined;
         [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
         if ((apiKeyIndex === undefined) || (apiKeyIndex < 4) || (apiKeyIndex > 254)) {
-            apiKeyIndex = this.randNumber (2);
-            this.options['apiKeyIndex'] = apiKeyIndex;
+            // apiKeyIndex = this.randNumber (2);
+            apiKeyIndex = 254;
+            this.options['apiKeyIndex'] = apiKeyIndex; // default to a value to avoid overriding other keys
         }
         return [ this.parseToInt (apiKeyIndex), params ];
     }
