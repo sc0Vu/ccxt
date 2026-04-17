@@ -28,6 +28,7 @@ export default class hyperliquid extends hyperliquidRest {
                 'watchTrades': true,
                 'watchTradesForSymbols': false,
                 'watchPosition': false,
+                'unWatchBalance': true,
                 'watchPositions': true,
                 'unWatchPositions': true,
                 'unWatchOrderBook': true,
@@ -962,7 +963,7 @@ export default class hyperliquid extends hyperliquidRest {
         const dex = this.safeString (params, 'dex');
         const isSpot = ((type === 'spot') || isUnifiedEnabled) && (dex === undefined);
         const topic = (isSpot) ? 'spotState' : 'clearinghouseState';
-        const messageHash = topic + ':balance';
+        const messageHash = topic + '::balance';
         const url = this.urls['api']['ws']['public'];
         const subscription = {
             'type': topic,
@@ -983,6 +984,38 @@ export default class hyperliquid extends hyperliquidRest {
         };
         const message = this.extend (request, params);
         return await this.watch (url, messageHash, message, topic);
+    }
+
+    /**
+     * @method
+     * @name hyperliquid#unWatchBalance
+     * @description unWatches balance
+     * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} status of the unwatch request
+     */
+    async unWatchBalance (params = {}): Promise<any> {
+        await this.loadMarkets ();
+        const url = this.urls['api']['ws']['public'];
+        let userAddress = undefined;
+        [ userAddress, params ] = this.handlePublicAddress ('unWatchBalance', params);
+        let type = undefined;
+        [ type, params ] = this.handleMarketTypeAndParams ('unWatchBalance', undefined, params);
+        let isUnifiedEnabled = undefined;
+        [ isUnifiedEnabled, params ] = await this.isUnifiedEnabled ('unWatchBalance', userAddress, false, params);
+        const dex = this.safeString (params, 'dex');
+        const isSpot = ((type === 'spot') || isUnifiedEnabled) && (dex === undefined);
+        const topic = (isSpot) ? 'spotState' : 'clearinghouseState';
+        const messageHash = 'unsubscribe' + ':' + topic;
+        const request: Dict = {
+            'method': 'unsubscribe',
+            'subscription': {
+                'type': topic,
+                'user': userAddress,
+            },
+        };
+        const message = this.extend (request, params);
+        return await this.watch (url, messageHash, message, messageHash);
     }
 
     handleBalance (client: Client, message) {
@@ -1042,7 +1075,7 @@ export default class hyperliquid extends hyperliquidRest {
             this.balance = {};
         }
         const topic = this.safeValue (message, 'channel');
-        const messageHash = topic + ':balance';
+        const messageHash = topic + '::balance';
         let info = undefined;
         let rawBalances = [];
         let account = undefined;
@@ -1145,7 +1178,7 @@ export default class hyperliquid extends hyperliquidRest {
         let userAddress = undefined;
         [ userAddress, params ] = this.handlePublicAddress ('watchPositions', params);
         const topic = 'clearinghouseState';
-        let messageHash = 'positions';
+        let messageHash = topic + '::positions';
         if (!this.isEmpty (symbols)) {
             symbols = this.marketSymbols (symbols);
             messageHash += '::' + symbols.join (',');
@@ -1196,18 +1229,22 @@ export default class hyperliquid extends hyperliquidRest {
             newPositions.push (position);
             cache.append (position);
         }
-        const messageHashes = this.findMessageHashes (client, 'positions:');
+        const baseMessageHash = 'clearinghouseState::positions';
+        const messageHashes = this.findMessageHashes (client, baseMessageHash);
         for (let i = 0; i < messageHashes.length; i++) {
             const messageHash = messageHashes[i];
             const parts = messageHash.split ('::');
-            const symbolsString = parts[1];
+            const symbolsString = this.safeString (parts, 2);
+            if (symbolsString === undefined) {
+                continue;
+            }
             const symbols = symbolsString.split (',');
             const positions = this.filterByArray (newPositions, 'symbol', symbols, false);
             if (!this.isEmpty (positions)) {
                 client.resolve (positions, messageHash);
             }
         }
-        client.resolve (newPositions, 'positions');
+        client.resolve (newPositions, baseMessageHash);
     }
 
     /**
@@ -1224,7 +1261,7 @@ export default class hyperliquid extends hyperliquidRest {
         if (!this.isEmpty (symbols)) {
             throw new NotSupported (this.id + ' unWatchPositions() does not support a symbol parameter, you must unwatch all orders');
         }
-        const messageHash = 'unsubscribe:positions';
+        const messageHash = 'unsubscribe:clearinghouseState';
         const url = this.urls['api']['ws']['public'];
         let userAddress = undefined;
         [ userAddress, params ] = this.handlePublicAddress ('unWatchPositions', params);
@@ -1503,14 +1540,26 @@ export default class hyperliquid extends hyperliquidRest {
     }
 
     handlePositionsUnsubscription (client: Client, subscription: Dict) {
-        const subHash = 'positions';
+        const subHash = 'clearinghouseState';
         const unSubHash = 'unsubscribe:' + subHash;
         this.cleanUnsubscription (client, subHash, unSubHash, true);
-        // this.cleanUnsubscription (client, 'clearinghouseState', unSubHash, true);
         const topicStructure = {
             'topic': 'positions',
         };
         this.cleanCache (topicStructure);
+        // clean swap balance if it existed
+        if ('swap' in this.balance) {
+            delete this.balance['swap'];
+        }
+    }
+
+    handleSpotBalanceUnsubscription (client: Client, subscription: Dict) {
+        const subHash = 'spotState';
+        const unSubHash = 'unsubscribe:' + subHash;
+        this.cleanUnsubscription (client, subHash, unSubHash, true);
+        if ('spot' in this.balance) {
+            delete this.balance['spot'];
+        }
     }
 
     handleSubscriptionResponse (client: Client, message) {
@@ -1557,6 +1606,8 @@ export default class hyperliquid extends hyperliquidRest {
                 this.handleMyTradesUnsubscription (client, subscription);
             } else if (type === 'clearinghoustState') {
                 this.handlePositionsUnsubscription (client, subscription);
+            } else if (type === 'spotState') {
+                this.handleSpotBalanceUnsubscription (client, subscription);
             }
         }
     }
