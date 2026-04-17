@@ -1111,6 +1111,7 @@ export default class aster extends Exchange {
                 if (isBuyer !== undefined) {
                     side = isBuyer ? 'buy' : 'sell';
                 }
+            }
         }
         const isBuyerMaker = this.safeBool2 (trade, 'isBuyerMaker', 'm');
         if (isBuyerMaker !== undefined) {
@@ -1197,32 +1198,23 @@ export default class aster extends Exchange {
         } else {
             if (market['swap']) {
                 response = await this.fapiPublicGetV3Trades (this.extend (request, params));
-                //
-                //    [
-                //        {
-                //            "id": "73620768",
-                //            "price": "2324.07",
-                //            "qty": "0.430",
-                //            "quoteQty": "999.35",
-                //            "time": "1776407252900",
-                //            "isBuyerMaker": false
-                //        }, ...
-                //
             } else {
                 response = await this.sapiPublicGetV3Trades (this.extend (request, params));
-                //
-                //     [
-                //         {
-                //             "id": 657,
-                //             "price": "1.01000000",
-                //             "qty": "5.00000000",
-                //             "baseQty": "4.95049505",
-                //             "time": 1755156533943,
-                //             "isBuyerMaker": false
-                //         }
-                //     ]
-                //
             }
+            //
+            // SAPI & FAPI have only one field difference
+            //
+            //    [
+            //        {
+            //            "id": "73620768",
+            //            "price": "2324.07",
+            //            "qty": "0.430",
+            //            "quoteQty": "999.35",      // only in PERP
+            //             "baseQty": "4.95049505",  // only in SPOT
+            //            "time": "1776407252900",
+            //            "isBuyerMaker": false
+            //        }, ...
+            //
         }
         return this.parseTrades (response, market, since, limit);
     }
@@ -1341,9 +1333,8 @@ export default class aster extends Exchange {
     }
 
     parseTicker (ticker: Dict, market: Market = undefined): Ticker {
-        
         //
-        // both SPOT & PERP has same format
+        // fetchTicker & fetchTickers: both SPOT & PERP has similar format
         //
         //    {
         //        "symbol": "ETHUSDT",
@@ -1370,6 +1361,20 @@ export default class aster extends Exchange {
         //        "askQty": "0.32399"            // only in SPOT
         //    }
         //
+        //
+        // fetchBidsAsks: SPOT & PERP have only one field difference
+        //
+        //     [
+        //        {
+        //            "symbol": "BMTUSDT",
+        //            "bidPrice": "0.004000",
+        //            "bidQty": "1250.0",
+        //            "askPrice": "0.000000",
+        //            "askQty": "0.0",
+        //            "time": "1776411276072",
+        //            "lastUpdateId": "453174307613"   // only in PERP
+        //        }, ...
+        //
         const timestamp = this.safeInteger (ticker, 'closeTime');
         const last = this.safeString (ticker, 'lastPrice');
         const open = this.safeString (ticker, 'openPrice');
@@ -1379,6 +1384,15 @@ export default class aster extends Exchange {
         const baseVolume = this.safeString (ticker, 'volume');
         const high = this.safeString (ticker, 'highPrice');
         const low = this.safeString (ticker, 'lowPrice');
+        const isTickerResponse = ('priceChange' in ticker);
+        let marketType: Str = undefined;
+        if (isTickerResponse) {
+            marketType = ('baseAsset' in ticker) ? 'spot' : 'swap';
+        } else {
+            marketType = ('lastUpdateId' in ticker) ? 'swap' : 'spot';
+        }
+        const marketId = this.safeString (ticker, 'symbol');
+        market = this.safeMarket (marketId, market, undefined, marketType);
         return this.safeTicker ({
             'symbol': market['symbol'],
             'timestamp': timestamp,
@@ -1605,16 +1619,21 @@ export default class aster extends Exchange {
         } else if (marketType === 'spot') {
             response = await this.sapiPublicGetV3TickerBookTicker (params);
         }
-        const results = [];
-        for (let i = 0; i < response.length; i++) {
-            const marketId = this.safeString (response[i], 'symbol');
-            const safeMarket = this.safeMarket (marketId, undefined, undefined, marketType);
-            const parsedTicker = this.parseTicker (response[i], safeMarket);
-            const ticker = this.extend (parsedTicker, params);
-            results.push (ticker);
-        }
-        symbols = this.marketSymbols (symbols);
-        return this.filterByArray (results, 'symbol', symbols);
+        //
+        // SPOT & PERP have only one field difference
+        //
+        //     [
+        //        {
+        //            "symbol": "BMTUSDT",
+        //            "bidPrice": "0.004000",
+        //            "bidQty": "1250.0",
+        //            "askPrice": "0.000000",
+        //            "askQty": "0.0",
+        //            "time": "1776411276072",
+        //            "lastUpdateId": "453174307613"   // only in PERP
+        //        }, ...
+        //
+        return this.parseTickers (response, symbols);
     }
 
     parseFundingRate (contract, market: Market = undefined): FundingRate {
