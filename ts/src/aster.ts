@@ -225,9 +225,10 @@ export default class aster extends Exchange {
                         'v3/ticker/price',
                         'v1/ticker/bookTicker',
                         'v3/ticker/bookTicker',
-                        'v3/indexreferences',
+                        // different endpoints
                         'v1/adlQuantile',
                         'v1/forceOrders',
+                        'v3/indexreferences',
                     ],
                 },
                 'fapiPrivate': {
@@ -247,8 +248,6 @@ export default class aster extends Exchange {
                         'v2/balance',
                         'v3/balance',
                         'v3/account',
-                        'v3/accountWithJoinMargin',
-                        'v4/account',
                         'v1/positionMargin/history',
                         'v3/positionMargin/history',
                         'v2/positionRisk',
@@ -259,39 +258,43 @@ export default class aster extends Exchange {
                         'v3/income',
                         'v1/leverageBracket',
                         'v3/leverageBracket',
-                        'v3/adlQuantile',
-                        'v3/forceOrders',
                         'v1/commissionRate',
                         'v3/commissionRate',
+                        // others
+                        'v3/adlQuantile',
+                        'v3/forceOrders',
                         'v3/mmp',
+                        'v3/accountWithJoinMargin',
+                        'v4/account',
                     ],
-                    'post': [
-                        'v3/noop',
-                        'v1/positionSide/dual',
-                        'v3/positionSide/dual',
-                        'v1/multiAssetsMargin',
-                        'v3/multiAssetsMargin',
-                        'v1/order',
-                        'v3/order',
-                        'v1/order/test',
-                        'v3/order/test',
-                        'v1/batchOrders',
-                        'v3/batchOrders',
-                        'v1/asset/wallet/transfer',
-                        'v3/asset/wallet/transfer',
-                        'v1/countdownCancelAll',
-                        'v3/countdownCancelAll',
-                        'v1/leverage',
-                        'v3/leverage',
-                        'v1/marginType',
-                        'v3/marginType',
-                        'v1/positionMargin',
-                        'v3/positionMargin',
-                        'v3/mmp',
-                        'v3/mmpReset',
-                        'v1/listenKey',
-                        'v3/listenKey',
-                    ],
+                    'post': {
+                        'v1/positionSide/dual': 1,
+                        'v3/positionSide/dual': 1,
+                        'v1/multiAssetsMargin': 1,
+                        'v3/multiAssetsMargin': 1,
+                        'v1/order': 1,
+                        'v3/order': 1,
+                        'v1/order/test': 1,
+                        'v3/order/test': 1,
+                        'v1/batchOrders': 1,
+                        'v3/batchOrders': 1,
+                        'v1/asset/wallet/transfer': 1,
+                        'v3/asset/wallet/transfer': 1,
+                        'v1/countdownCancelAll': 1,
+                        'v3/countdownCancelAll': 1,
+                        'v1/leverage': 1,
+                        'v3/leverage': 1,
+                        'v1/marginType': 1,
+                        'v3/marginType': 1,
+                        'v1/positionMargin': 1,
+                        'v3/positionMargin': 1,
+                        'v1/listenKey': 1,
+                        'v3/listenKey': 1,
+                        // others
+                        'v3/mmp': 1,
+                        'v3/mmpReset': 1,
+                        'v3/noop': 1,
+                    },
                     'put': [
                         'v1/listenKey',
                         'v3/listenKey',
@@ -632,15 +635,15 @@ export default class aster extends Exchange {
      * @method
      * @name aster#fetchCurrencies
      * @description fetches all available currencies on an exchange
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#trading-specification-information
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#exchange-information
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#trading-specification-information
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#exchange-information
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} an associative dictionary of currencies
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
         const promises = [
             this.sapiPublicGetV3ExchangeInfo (params),
-            this.fapiPublicGetV1ExchangeInfo (params),
+            this.fapiPublicGetV3ExchangeInfo (params),
         ];
         const results = await Promise.all (promises);
         const sapiResult = this.safeDict (results, 0, {});
@@ -652,8 +655,8 @@ export default class aster extends Exchange {
         //     [
         //         {
         //             "asset": "USDT",
-        //             "marginAvailable": true,           // present in PERP
-        //             "autoAssetExchange": "-10000"      // present in PERP
+        //             "marginAvailable": true,           // only in PERP
+        //             "autoAssetExchange": "-10000"      // only in PERP
         //         }
         //     ]
         //
@@ -704,13 +707,15 @@ export default class aster extends Exchange {
     async fetchMarkets (params = {}): Promise<Market[]> {
         const promises = [
             this.sapiPublicGetV3ExchangeInfo (params),
-            this.fapiPublicGetV1ExchangeInfo (params),
+            this.fapiPublicGetV3ExchangeInfo (params),
         ];
         const results = await Promise.all (promises);
         const sapiResult = this.safeDict (results, 0, {});
         const sapiRows = this.safeList (sapiResult, 'symbols', []);
         const fapiResult = this.safeDict (results, 1, {});
         const fapiRows = this.safeList (fapiResult, 'symbols', []);
+        //
+        // example:
         //
         //     [
         //       {
@@ -916,18 +921,23 @@ export default class aster extends Exchange {
      * @returns {int} the current integer timestamp in milliseconds from the exchange server
      */
     async fetchTime (params = {}): Promise<Int> {
-        const defaultType = this.safeString2 (this.options, 'fetchTime', 'defaultType', 'spot');
-        const type = this.safeString (params, 'type', defaultType);
-        const query = this.omit (params, 'type');
-        let subType = undefined;
-        [ subType, params ] = this.handleSubTypeAndParams ('fetchTime', undefined, params);
+        let marketType = undefined;
+        [ marketType, params ] = this.handleMarketTypeAndParams ('fetchTime', undefined, params);
         let response = undefined;
-        if (this.isLinear (type, subType)) {
-            response = await this.fapiPublicGetTime (query);
-        } else if (this.isInverse (type, subType)) {
-            response = await this.dapiPublicGetTime (query);
+        if (marketType === 'swap') {
+            response = await this.fapiPublicGetTime (params);
+            //
+            // {
+            //     "serverTime": 1499827319559
+            // }
+            //
         } else {
-            response = await this.sapiPublicGetV3Time (query);
+            response = await this.sapiPublicGetV3Time (params);
+            //
+            // {
+            //     "serverTime": 1499827319559
+            // }
+            //
         }
         return this.safeInteger (response, 'serverTime');
     }
@@ -966,6 +976,9 @@ export default class aster extends Exchange {
      * @name aster#fetchOHLCV
      * @description fetches historical candlestick data containing the open, high, low, and close price, and the volume of a market
      * @see https://asterdex.github.io/aster-api-website/spot-v3/market-data/#k-line-data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#klinecandlestick-data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#index-price-klinecandlestick-data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/market-data/#mark-price-klinecandlestick-data
      * @param {string} symbol unified symbol of the market to fetch OHLCV data for
      * @param {string} timeframe the length of time each candle represents
      * @param {int} [since] timestamp in ms of the earliest candle to fetch
@@ -994,14 +1007,14 @@ export default class aster extends Exchange {
         let response = undefined;
         if (isMark) {
             request['symbol'] = market['id'];
-            response = await this.fapiPublicGetV1MarkPriceKlines (this.extend (request, params));
+            response = await this.fapiPublicGetV3MarkPriceKlines (this.extend (request, params));
         } else if (isIndex) {
             request['pair'] = market['id'];
-            response = await this.fapiPublicGetV1IndexPriceKlines (this.extend (request, params));
+            response = await this.fapiPublicGetV3IndexPriceKlines (this.extend (request, params));
         } else {
             request['symbol'] = market['id'];
             if (market['linear']) {
-                response = await this.fapiPublicGetV1Klines (this.extend (request, params));
+                response = await this.fapiPublicGetV3Klines (this.extend (request, params));
             } else {
                 response = await this.sapiPublicGetV3Klines (this.extend (request, params));
                 //
@@ -1030,29 +1043,19 @@ export default class aster extends Exchange {
         //
         // fetchTrades
         //
-        //   swap recent trades:
+        //     recent trades:
         //
         //     {
         //         "id": 3913206,
         //         "price": "644.100",
         //         "qty": "0.08",
-        //         "quoteQty": "51.528",
+        //         "quoteQty": "51.528",      // present in PERP
+        //         "baseQty": "4.95049505",   // present in SPOT
         //         "time": 1749784506633,
         //         "isBuyerMaker": true
         //     }
         //
-        //   spot recent trades:
-        //
-        //     {
-        //         "id": 657,
-        //         "price": "1.01000000",
-        //         "qty": "5.00000000",
-        //         "baseQty": "4.95049505",
-        //         "time": 1755156533943,
-        //         "isBuyerMaker": false
-        //     }
-        //
-        //   spot aggrTrades:
+        //     aggrTrades:
         //
         //     {
         //         "a": 26129, // Aggregate tradeId
@@ -1064,13 +1067,13 @@ export default class aster extends Exchange {
         //         "m": true, // Was the buyer the maker?
         //     }
         //
-        // fetchMyTrades
+        //     fetchMyTrades
         //
         //     {
         //         "buyer": false,
         //         "commission": "-0.07819010",
         //         "commissionAsset": "USDT",
-        //         "id": 698759,
+        //         "id": 698759,                       // String in SPOT
         //         "maker": false,
         //         "orderId": 25851813,
         //         "price": "7819.01",
@@ -1142,58 +1145,60 @@ export default class aster extends Exchange {
             'symbol': market['id'],
         };
         if (limit !== undefined) {
-            if (limit > 1000) {
-                limit = 1000; // Default 500; max 1000.
-            }
-            request['limit'] = limit;
+            request['limit'] = Math.min (limit, 1000);
         }
         let response = undefined;
-        if (market['swap']) {
-            response = await this.fapiPublicGetV1Trades (this.extend (request, params));
+        const sinceDefined = since !== undefined;
+        const untilDefined = ('until' in params);
+        if (sinceDefined) {
+            request['startTime'] = since;
+            if (!untilDefined) {
+                request['endTime'] = this.sum (since, 3600000); // add 1 hour window
+            }
+        } else if (untilDefined) {
+            request = this.handleUntilOption ('endTime', request, params);
+            if (!sinceDefined) {
+                request['startTime'] = this.sum (request['endTime'], -3600000); // subtract 1 hour window
+            }
+        }
+        if ('startTime' in request) {
+            if (market['swap']) {
+                response = await this.fapiPublicGetV3AggTrades (this.extend (request, params));
+            } else {
+                response = await this.sapiPublicGetV3AggTrades (this.extend (request, params));
+            }
             //
-            //     [
-            //         {
-            //             "id": 3913206,
-            //             "price": "644.100",
-            //             "qty": "0.08",
-            //             "quoteQty": "51.528",
-            //             "time": 1749784506633,
-            //             "isBuyerMaker": true
-            //         }
-            //     ]
+            // both FAPI and SAPI have same response format, but FAPI has string instead of numeric values everywhere
+            //
+            // [
+            //     {
+            //         "a": 26129, // Aggregate tradeId
+            //         "p": "0.01633102", // Price
+            //         "q": "4.70443515", // Quantity
+            //         "f": 27781, // First tradeId
+            //         "l": 27781, // Last tradeId
+            //         "T": 1498793709153, // Timestamp
+            //         "m": true, // Was the buyer the maker?
+            //     }
+            // ]
             //
         } else {
-            const sinceDefined = since !== undefined;
-            const untilDefined = ('until' in params);
-            if (sinceDefined) {
-                request['startTime'] = since;
-                if (!untilDefined) {
-                    request['endTime'] = this.sum (since, 3600000); // add 1 hour window
-                }
-            }
-            else if (untilDefined) {
-                request = this.handleUntilOption ('endTime', request, params);
-                if (!sinceDefined) {
-                    request['startTime'] = this.sum (request['endTime'], -3600000); // subtract 1 hour window
-                }
-            }
-            if ('startTime' in request) {
-                response = await this.sapiPublicGetV3AggrTrades (this.extend (request, params));
+            if (market['swap']) {
+                response = await this.fapiPublicGetV3Trades (this.extend (request, params));
                 //
-                // [
-                //     {
-                //         "a": 26129, // Aggregate tradeId
-                //         "p": "0.01633102", // Price
-                //         "q": "4.70443515", // Quantity
-                //         "f": 27781, // First tradeId
-                //         "l": 27781, // Last tradeId
-                //         "T": 1498793709153, // Timestamp
-                //         "m": true, // Was the buyer the maker?
-                //     }
-                // ]
+                //    [
+                //        {
+                //            "id": "73620768",
+                //            "price": "2324.07",
+                //            "qty": "0.430",
+                //            "quoteQty": "999.35",
+                //            "time": "1776407252900",
+                //            "isBuyerMaker": false
+                //        }, ...
                 //
             } else {
                 response = await this.sapiPublicGetV3Trades (this.extend (request, params));
+                //
                 //     [
                 //         {
                 //             "id": 657,
@@ -1204,6 +1209,7 @@ export default class aster extends Exchange {
                 //             "isBuyerMaker": false
                 //         }
                 //     ]
+                //
             }
         }
         return this.parseTrades (response, market, since, limit);
