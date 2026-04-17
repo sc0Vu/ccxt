@@ -487,6 +487,9 @@ export default class lighter extends Exchange {
         if (accountIndex === undefined) {
             let walletAddress = this.walletAddress;
             if (this.privateKey !== undefined) {
+                if (this.privateKey.length > 66) {
+                    throw new NotSupported (this.id + 'after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check this FAQ for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
+                }
                 walletAddress = this.ethGetAddressFromPrivateKey (this.privateKey);
             }
             if (walletAddress === undefined || walletAddress === '') {
