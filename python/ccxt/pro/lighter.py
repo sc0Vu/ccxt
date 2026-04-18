@@ -102,6 +102,7 @@ class lighter(ccxt.async_support.lighter):
         return await self.watch(url, messageHash, self.extend(request, params), messageHash, subscription)
 
     async def subscribe_private(self, messageHash, params={}):
+        await self.preLoadLighterLibrary()
         params['auth'] = self.createAuth(params)
         return await self.subscribe_public(messageHash, params)
 

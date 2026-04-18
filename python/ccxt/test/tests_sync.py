@@ -985,8 +985,10 @@ class testMainClass:
                     else:
                         library_path = base_path + 'lighter-signer-linux-arm64.so'
                 else:
-                    # assume macos arm64
-                    library_path = base_path + 'lighter-signer-darwin-arm64.dylib'
+                    if is_amd64():
+                        library_path = base_path + 'lighter-signer-darwin-x86.dylib'
+                    else:
+                        library_path = base_path + 'lighter-signer-darwin-arm64.dylib'
         options = {
             'markets': markets,
             'currencies': currencies,
