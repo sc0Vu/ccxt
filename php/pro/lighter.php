@@ -115,6 +115,7 @@ class lighter extends \ccxt\async\lighter {
 
     public function subscribe_private($messageHash, $params = array ()) {
         return Async\async(function () use ($messageHash, $params) {
+            Async\await($this->preLoadLighterLibrary ());
             $params['auth'] = $this->createAuth ($params);
             return Async\await($this->subscribe_public($messageHash, $params));
         }) ();
