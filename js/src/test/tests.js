@@ -1294,8 +1294,12 @@ class testMainClass {
                     }
                 }
                 else {
-                    // assume macos arm64
-                    libraryPath = basePath + 'lighter-signer-darwin-arm64.dylib';
+                    if (isAmd64()) {
+                        libraryPath = basePath + 'lighter-signer-darwin-x86.dylib';
+                    }
+                    else {
+                        libraryPath = basePath + 'lighter-signer-darwin-arm64.dylib';
+                    }
                 }
             }
         }

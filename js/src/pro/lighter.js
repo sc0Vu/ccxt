@@ -102,6 +102,7 @@ export default class lighter extends lighterRest {
         return await this.watch(url, messageHash, this.extend(request, params), messageHash, subscription);
     }
     async subscribePrivate(messageHash, params = {}) {
+        await this.preLoadLighterLibrary();
         params['auth'] = this.createAuth(params);
         return await this.subscribePublic(messageHash, params);
     }

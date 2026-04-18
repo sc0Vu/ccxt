@@ -6,7 +6,9 @@ import type { Dict, FundingRate, FundingRates, Int, int, Market, OHLCV, OrderBoo
  */
 export default class lighter extends Exchange {
     describe(): any;
-    loadAccount(chainId: any, privateKey: any, apiKeyIndex: any, accountIndex: any, params?: {}): Promise<import("./base/types.js").Dictionary<any>>;
+    loadAccount(chainId: any, privateKey: any, apiKeyIndex: string, accountIndex: string, params?: {}): Promise<any>;
+    initAuthObject(strAccountIndex: string, strApiKeyIndex: string): void;
+    getLighterPrivateKey(strAccountIndex: string, strApiKeyIndex: string): any;
     /**
      * @method
      * @name lighter#preLoadLighterLibrary
@@ -15,10 +17,17 @@ export default class lighter extends Exchange {
      * @returns {boolean} true if the signer was loaded, false otherwise
      */
     preLoadLighterLibrary(params?: {}): Promise<boolean>;
-    handleAccountIndex(params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue?: any): Promise<(number | object)[]>;
+    handleApiKeyIndex(params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue?: any): any[];
+    handleAccountIndex(params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue?: any): Promise<any[]>;
     createSubAccount(name: string, params?: {}): Promise<any>;
     createAuth(params?: {}): string;
     pow(n: string, m: string): string;
+    hashMessage(message: string): string;
+    signHash(hash: any, privateKey: any): string;
+    signL1AndPrepareTxInfo(txInfo: any, message: any, privateKey: any): string;
+    handleBuilderFeeApproval(accountIndex: number, apiKeyIndex: number): Promise<boolean>;
+    approveBuilderFee(builder: number, takerFeeRate: number, makerFeeRate: number, accountIndex: number, apiKeyIndex: number, params?: object): Promise<any>;
+    changeApiKey(params?: object): Promise<any>;
     setSandboxMode(enable: boolean): void;
     createOrderRequest(symbol: string, type: OrderType, side: OrderSide, amount: number, price?: Num, params?: {}): any[];
     fetchNonce(accountIndex: any, apiKeyIndex: any, params?: {}): Promise<number>;
