@@ -1453,8 +1453,13 @@ public partial class testMainClass
                     }
                 } else
                 {
-                    // assume macos arm64
-                    libraryPath = add(basePath, "lighter-signer-darwin-arm64.dylib");
+                    if (isTrue(isAmd64()))
+                    {
+                        libraryPath = add(basePath, "lighter-signer-darwin-x86.dylib");
+                    } else
+                    {
+                        libraryPath = add(basePath, "lighter-signer-darwin-arm64.dylib");
+                    }
                 }
             }
         }
