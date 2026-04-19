@@ -859,6 +859,26 @@ func (this *MyokxCore) PrivateGetTradingBotRecurringSubOrders(args ...interface{
 	return this.callEndpointAsync("privateGetTradingBotRecurringSubOrders", args...)
 }
 
+func (this *MyokxCore) PrivateGetTradingBotDcaOngoingList(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetTradingBotDcaOngoingList", args...)
+}
+
+func (this *MyokxCore) PrivateGetTradingBotDcaHistoryList(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetTradingBotDcaHistoryList", args...)
+}
+
+func (this *MyokxCore) PrivateGetTradingBotDcaOrders(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetTradingBotDcaOrders", args...)
+}
+
+func (this *MyokxCore) PrivateGetTradingBotDcaPositionDetails(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetTradingBotDcaPositionDetails", args...)
+}
+
+func (this *MyokxCore) PrivateGetTradingBotDcaCycleList(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetTradingBotDcaCycleList", args...)
+}
+
 func (this *MyokxCore) PrivateGetFinanceSavingsBalance(args ...interface{}) <-chan interface{} {
 	return this.callEndpointAsync("privateGetFinanceSavingsBalance", args...)
 }
@@ -1037,6 +1057,18 @@ func (this *MyokxCore) PrivateGetFinanceSfpDcdOrder(args ...interface{}) <-chan 
 
 func (this *MyokxCore) PrivateGetFinanceSfpDcdOrders(args ...interface{}) <-chan interface{} {
 	return this.callEndpointAsync("privateGetFinanceSfpDcdOrders", args...)
+}
+
+func (this *MyokxCore) PrivateGetFinanceSfpDcdCurrencyPair(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetFinanceSfpDcdCurrencyPair", args...)
+}
+
+func (this *MyokxCore) PrivateGetFinanceSfpDcdOrderStatus(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetFinanceSfpDcdOrderStatus", args...)
+}
+
+func (this *MyokxCore) PrivateGetFinanceSfpDcdOrderHistory(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetFinanceSfpDcdOrderHistory", args...)
 }
 
 func (this *MyokxCore) PrivateGetAffiliateInviteeDetail(args ...interface{}) <-chan interface{} {
@@ -1483,6 +1515,38 @@ func (this *MyokxCore) PrivatePostTradingBotRecurringStopOrderAlgo(args ...inter
 	return this.callEndpointAsync("privatePostTradingBotRecurringStopOrderAlgo", args...)
 }
 
+func (this *MyokxCore) PrivatePostTradingBotDcaCreate(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaCreate", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaAmendOrderAlgo(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaAmendOrderAlgo", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaStop(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaStop", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaOrdersManualBuy(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaOrdersManualBuy", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaSettingsReinvestment(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaSettingsReinvestment", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaSettingsTakeProfit(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaSettingsTakeProfit", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaMarginAdd(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaMarginAdd", args...)
+}
+
+func (this *MyokxCore) PrivatePostTradingBotDcaMarginReduce(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostTradingBotDcaMarginReduce", args...)
+}
+
 func (this *MyokxCore) PrivatePostTradingBotRecurringAddInvestment(args ...interface{}) <-chan interface{} {
 	return this.callEndpointAsync("privatePostTradingBotRecurringAddInvestment", args...)
 }
@@ -1641,6 +1705,18 @@ func (this *MyokxCore) PrivatePostFinanceSfpDcdQuote(args ...interface{}) <-chan
 
 func (this *MyokxCore) PrivatePostFinanceSfpDcdOrder(args ...interface{}) <-chan interface{} {
 	return this.callEndpointAsync("privatePostFinanceSfpDcdOrder", args...)
+}
+
+func (this *MyokxCore) PrivatePostFinanceSfpDcdTrade(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostFinanceSfpDcdTrade", args...)
+}
+
+func (this *MyokxCore) PrivatePostFinanceSfpDcdRedeemQuote(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostFinanceSfpDcdRedeemQuote", args...)
+}
+
+func (this *MyokxCore) PrivatePostFinanceSfpDcdRedeem(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privatePostFinanceSfpDcdRedeem", args...)
 }
 
 func (this *MyokxCore) PrivatePostBrokerNdReportSubaccountIp(args ...interface{}) <-chan interface{} {
