@@ -5813,6 +5813,16 @@ class okx extends okx$1["default"] {
         }
         const currencyId = this.safeString(transaction, 'ccy');
         const code = this.safeCurrencyCode(currencyId);
+        let network = undefined;
+        const chain = this.safeString(transaction, 'chain');
+        if (chain !== undefined) {
+            const chainParts = chain.split('-');
+            const networkParts = this.arraySlice(chainParts, 1);
+            const networkId = networkParts.join('-');
+            if (networkId !== undefined) {
+                network = this.networkIdToCode(networkId, code);
+            }
+        }
         const amount = this.safeNumber(transaction, 'amt');
         const status = this.parseTransactionStatus(this.safeString(transaction, 'state'));
         const txid = this.safeString(transaction, 'txId');
@@ -5830,7 +5840,7 @@ class okx extends okx$1["default"] {
             'id': id,
             'currency': code,
             'amount': amount,
-            'network': undefined,
+            'network': network,
             'addressFrom': addressFrom,
             'addressTo': addressTo,
             'address': address,
