@@ -950,6 +950,7 @@ export default class hyperliquid extends hyperliquidRest {
      * @description watch balance and get the amount of funds available for trading or funds locked in orders
      * @see https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} [params.dex] for for hip3 tokens subscription, eg: 'xyz' or 'flx'
      * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
      */
     async watchBalance (params = {}): Promise<Balances> {
