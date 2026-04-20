@@ -5789,6 +5789,16 @@ class okx extends Exchange {
         }
         $currencyId = $this->safe_string($transaction, 'ccy');
         $code = $this->safe_currency_code($currencyId);
+        $network = null;
+        $chain = $this->safe_string($transaction, 'chain');
+        if ($chain !== null) {
+            $chainParts = explode('-', $chain);
+            $networkParts = $this->array_slice($chainParts, 1);
+            $networkId = implode('-', $networkParts);
+            if ($networkId !== null) {
+                $network = $this->network_id_to_code($networkId, $code);
+            }
+        }
         $amount = $this->safe_number($transaction, 'amt');
         $status = $this->parse_transaction_status($this->safe_string($transaction, 'state'));
         $txid = $this->safe_string($transaction, 'txId');
@@ -5805,7 +5815,7 @@ class okx extends Exchange {
             'id' => $id,
             'currency' => $code,
             'amount' => $amount,
-            'network' => null,
+            'network' => $network,
             'addressFrom' => $addressFrom,
             'addressTo' => $addressTo,
             'address' => $address,
