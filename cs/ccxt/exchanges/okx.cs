@@ -6071,6 +6071,18 @@ public partial class okx : Exchange
         }
         object currencyId = this.safeString(transaction, "ccy");
         object code = this.safeCurrencyCode(currencyId);
+        object network = null;
+        object chain = this.safeString(transaction, "chain");
+        if (isTrue(!isEqual(chain, null)))
+        {
+            object chainParts = ((string)chain).Split(new [] {((string)"-")}, StringSplitOptions.None).ToList<object>();
+            object networkParts = this.arraySlice(chainParts, 1);
+            object networkId = String.Join("-", ((IList<object>)networkParts).ToArray());
+            if (isTrue(!isEqual(networkId, null)))
+            {
+                network = this.networkIdToCode(networkId, code);
+            }
+        }
         object amount = this.safeNumber(transaction, "amt");
         object status = this.parseTransactionStatus(this.safeString(transaction, "state"));
         object txid = this.safeString(transaction, "txId");
@@ -6089,7 +6101,7 @@ public partial class okx : Exchange
             { "id", id },
             { "currency", code },
             { "amount", amount },
-            { "network", null },
+            { "network", network },
             { "addressFrom", addressFrom },
             { "addressTo", addressTo },
             { "address", address },
