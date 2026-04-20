@@ -5533,6 +5533,14 @@ class okx(Exchange, ImplicitAPI):
             type = 'deposit'
         currencyId = self.safe_string(transaction, 'ccy')
         code = self.safe_currency_code(currencyId)
+        network = None
+        chain = self.safe_string(transaction, 'chain')
+        if chain is not None:
+            chainParts = chain.split('-')
+            networkParts = self.array_slice(chainParts, 1)
+            networkId = '-'.join(networkParts)
+            if networkId is not None:
+                network = self.network_id_to_code(networkId, code)
         amount = self.safe_number(transaction, 'amt')
         status = self.parse_transaction_status(self.safe_string(transaction, 'state'))
         txid = self.safe_string(transaction, 'txId')
@@ -5548,7 +5556,7 @@ class okx(Exchange, ImplicitAPI):
             'id': id,
             'currency': code,
             'amount': amount,
-            'network': None,
+            'network': network,
             'addressFrom': addressFrom,
             'addressTo': addressTo,
             'address': address,
