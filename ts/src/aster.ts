@@ -2809,7 +2809,7 @@ export default class aster extends Exchange {
         if (clientOrderIdList !== undefined) {
             request['origClientOrderIdList'] = this.json (clientOrderIdList);
         } else {
-            request['orderIdList'] = this.json (ids);
+            request['orderIdList'] = ids;
         }
         let response = undefined;
         if (market['swap']) {
@@ -2878,7 +2878,7 @@ export default class aster extends Exchange {
             'symbol': market['id'],
             'leverage': leverage,
         };
-        const response = await this.fapiPrivatePostV1Leverage (this.extend (request, params));
+        const response = await this.fapiPrivatePostV3Leverage (this.extend (request, params));
         //
         //     {
         //         "leverage": 21,
@@ -3062,16 +3062,16 @@ export default class aster extends Exchange {
         if (type !== undefined) {
             request['type'] = (type === 'add') ? 1 : 2;
         }
+        if (limit !== undefined) {
+            request['limit'] = Math.min (limit, 1000);
+        }
         if (since !== undefined) {
             request['startTime'] = since;
-        }
-        if (limit !== undefined) {
-            request['limit'] = limit;
         }
         if (until !== undefined) {
             request['endTime'] = until;
         }
-        const response = await this.fapiPrivateGetV1PositionMarginHistory (this.extend (request, params));
+        const response = await this.fapiPrivateGetV3PositionMarginHistory (this.extend (request, params));
         //
         //     [
         //         {
@@ -3137,7 +3137,7 @@ export default class aster extends Exchange {
             'amount': amount,
         };
         const code = market['quote'];
-        const response = await this.fapiPrivatePostV1PositionMargin (this.extend (request, params));
+        const response = await this.fapiPrivatePostV3PositionMargin (this.extend (request, params));
         //
         //     {
         //         "amount": 100.0,
@@ -3237,7 +3237,7 @@ export default class aster extends Exchange {
         if (limit !== undefined) {
             request['limit'] = Math.min (limit, 1000); // max 1000
         }
-        const response = await this.fapiPrivateGetV1Income (this.extend (request, params));
+        const response = await this.fapiPrivateGetV3Income (this.extend (request, params));
         return this.parseIncomes (response, market, since, limit);
     }
 
@@ -3329,7 +3329,7 @@ export default class aster extends Exchange {
             params = this.omit (params, 'until');
             request['endTime'] = until;
         }
-        const response = await this.fapiPrivateGetV1Income (this.extend (request, params));
+        const response = await this.fapiPrivateGetV3Income (this.extend (request, params));
         //
         //     [
         //         {
@@ -3830,7 +3830,30 @@ export default class aster extends Exchange {
         // it contains useful stuff like the maintenance margin and initial margin for positions
         const leverageBrackets = this.safeDict (this.options, 'leverageBrackets');
         if ((leverageBrackets === undefined) || (reload)) {
-            const response = await this.fapiPrivateGetV1LeverageBracket (params);
+            const response = await this.fapiPrivateGetV3LeverageBracket (params);
+            //
+            //    [
+            //        {
+            //            "symbol": "TRUTHUSDT",
+            //            "brackets": [
+            //                {
+            //                    "bracket": "1",
+            //                    "initialLeverage": "50",
+            //                    "notionalCap": "5000",
+            //                    "notionalFloor": "0",
+            //                    "maintMarginRatio": "0.01",
+            //                    "cum": "0.0"
+            //                },
+            //                {
+            //                    "bracket": "2",
+            //                    "initialLeverage": "20",
+            //                    "notionalCap": "10000",
+            //                    "notionalFloor": "5000",
+            //                    "maintMarginRatio": "0.025",
+            //                    "cum": "75.0"
+            //                },
+            //                ...
+            //
             this.options['leverageBrackets'] = this.createSafeDictionary ();
             for (let i = 0; i < response.length; i++) {
                 const entry = response[i];
@@ -4102,16 +4125,6 @@ export default class aster extends Exchange {
             }
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
-    }
-
-    encodeAsJsonValues (params) {
-        const result: Dict = {};
-        const keys = Object.keys (params);
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            result[key] = this.urlencode (params[key]);
-        }
-        return result;
     }
 
     handleErrors (httpCode: int, reason: string, url: string, method: string, headers: Dict, body: string, response, requestHeaders, requestBody) {
