@@ -1305,7 +1305,7 @@ export default class aster extends Exchange {
             request['limit'] = this.findNearestCeiling ([ 5, 10, 20, 50, 100, 500, 1000 ], limit);
         }
         if (market['swap']) {
-            response = await this.fapiPublicGetV1Depth (this.extend (request, params));
+            response = await this.fapiPublicGetV3Depth (this.extend (request, params));
         } else {
             response = await this.sapiPublicGetV3Depth (this.extend (request, params));
         }
@@ -2018,10 +2018,12 @@ export default class aster extends Exchange {
         };
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPrivateGetV1CommissionRate (this.extend (request, params));
+            response = await this.fapiPrivateGetV3CommissionRate (this.extend (request, params));
         } else {
             response = await this.sapiPrivateGetV3CommissionRate (this.extend (request, params));
         }
+        //
+        // both SPOT & SWAP has same format
         //
         //     {
         //         "symbol": "BTCUSDT",
@@ -2151,6 +2153,7 @@ export default class aster extends Exchange {
      * @name aster#fetchOrder
      * @description fetches information on an order made by the user
      * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#query-order-user_data
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#query-order-user_data
      * @param {string} id the order id
      * @param {string} symbol unified symbol of the market the order was made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
@@ -2175,31 +2178,39 @@ export default class aster extends Exchange {
         }
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPrivateGetV1Order (this.extend (request, params));
+            response = await this.fapiPrivateGetV3Order (this.extend (request, params));
         } else {
             response = await this.sapiPrivateGetV3Order (this.extend (request, params));
-            //
-            //    {
-            //        "orderId": "417663664",
-            //        "symbol": "ETHUSDT",
-            //        "status": "NEW",
-            //        "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
-            //        "price": "2111.75",
-            //        "avgPrice": "0.000000",
-            //        "origQty": "0.0049",
-            //        "executedQty": "0",
-            //        "cumQuote": "0",
-            //        "timeInForce": "GTC",
-            //        "type": "LIMIT",
-            //        "side": "BUY",
-            //        "stopPrice": "0",
-            //        "origType": "LIMIT",
-            //        "time": "1776281810637",
-            //        "updateTime": "1776281810637",
-            //        "orderListId": "-1"
-            //    }
-            //
         }
+        //
+        // SPOT & SWAP has similar formats
+        //
+        //    {
+        //        "orderId": "17338441758",
+        //        "symbol": "ETHUSDT",
+        //        "status": "FILLED",
+        //        "clientOrderId": "727Wt3TIUgkUCxXp20E543",
+        //        "price": "0",
+        //        "avgPrice": "2304.56000",
+        //        "origQty": "0.010",
+        //        "executedQty": "0.010",
+        //        "cumQuote": "23.04560",
+        //        "timeInForce": "GTC",
+        //        "type": "MARKET",
+        //        "side": "BUY",
+        //        "stopPrice": "0",
+        //        "origType": "MARKET",
+        //        "time": "1776800300736",
+        //        "updateTime": "1776800300700",
+        //        "orderListId": "-1"                                   // only in SPOT
+        //        "positionSide": "BOTH",                               // only in SWAP
+        //        "reduceOnly": false,                                  // only in SWAP
+        //        "closePosition": false,                               // only in SWAP
+        //        "workingType": "CONTRACT_PRICE",                      // only in SWAP
+        //        "priceProtect": false,                                // only in SWAP
+        //        "newChainData": { "hash": "0x46aed5...67bdbec8ba" }   // only in SWAP
+        //    }
+        //
         return this.parseOrder (response, market);
     }
 
@@ -2275,41 +2286,49 @@ export default class aster extends Exchange {
         let request: Dict = {
             'symbol': market['id'],
         };
-        if (since !== undefined) {
-            request['startTime'] = since;
-        }
         if (limit !== undefined) {
             request['limit'] = Math.min (limit, 1000);
+        }
+        if (since !== undefined) {
+            request['startTime'] = since;
         }
         [ request, params ] = this.handleUntilOption ('endTime', request, params);
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPrivateGetV1AllOrders (this.extend (request, params));
+            response = await this.fapiPrivateGetV3AllOrders (this.extend (request, params));
         } else {
             response = await this.sapiPrivateGetV3AllOrders (this.extend (request, params));
-            //
-            //    [
-            //        {
-            //            "orderId": "417594542",
-            //            "symbol": "ETHUSDT",
-            //            "status": "FILLED",
-            //            "clientOrderId": "web_qnvMAhOJsiVbSyu0BdKG",
-            //            "price": "0",                     // value set for unfilled
-            //            "avgPrice": "2351.580000",        // value zero for unfilled
-            //            "origQty": "0.0054",
-            //            "executedQty": "0.0054",          // value zero for unfilled
-            //            "cumQuote": "12.69853200",        // value zero for unfilled
-            //            "timeInForce": "GTC",
-            //            "type": "MARKET",
-            //            "side": "SELL",
-            //            "stopPrice": "0",
-            //            "origType": "MARKET",
-            //            "time": "1776274219582",
-            //            "updateTime": "1776274219609",
-            //            "orderListId": "-1"
-            //        }, ...
-            //
         }
+        //
+        // SPOT & SWAP has similar responses
+        //
+        //    [
+        //        {
+        //            "orderId": "417594542",
+        //            "symbol": "ETHUSDT",
+        //            "status": "FILLED",
+        //            "clientOrderId": "web_qnvMAhOJsiVbSyu0BdKG",
+        //            "price": "0",                     // value set for unfilled
+        //            "avgPrice": "2351.580000",        // value zero for unfilled
+        //            "origQty": "0.0054",
+        //            "executedQty": "0.0054",          // value zero for unfilled
+        //            "cumQuote": "12.69853200",        // value zero for unfilled
+        //            "timeInForce": "GTC",
+        //            "type": "MARKET",
+        //            "side": "SELL",
+        //            "stopPrice": "0",
+        //            "origType": "MARKET",
+        //            "time": "1776274219582",
+        //            "updateTime": "1776274219609",
+        //            "orderListId": "-1",                                     // only in SPOT
+        //            "reduceOnly": false,                                     // only in PERP
+        //            "closePosition": false,                                  // only in PERP
+        //            "positionSide": "BOTH",                                  // only in PERP
+        //            "workingType": "CONTRACT_PRICE",                         // only in PERP
+        //            "priceProtect": false,                                   // only in PERP
+        //            "newChainData": { "hash": "0xe17d3d5b...dbca8b01" }      // only in PERP
+        //        }, ...
+        //
         return this.parseOrders (response, market, since, limit);
     }
 
@@ -2348,63 +2367,40 @@ export default class aster extends Exchange {
         [ subType, params ] = this.handleSubTypeAndParams ('fetchOpenOrders', market, params);
         let response = undefined;
         if (this.isLinear (marketType, subType)) {
-            response = await this.fapiPrivateGetV1OpenOrders (this.extend (request, params));
+            response = await this.fapiPrivateGetV3OpenOrders (this.extend (request, params));
         } else if (marketType === 'spot') {
             response = await this.sapiPrivateGetV3OpenOrders (this.extend (request, params));
-            //
-            //    [
-            //        {
-            //            "orderId": "417663664",
-            //            "symbol": "ETHUSDT",
-            //            "status": "NEW",
-            //            "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
-            //            "price": "2111.75",
-            //            "avgPrice": "0.000000",
-            //            "origQty": "0.0049",
-            //            "executedQty": "0",
-            //            "cumQuote": "0",
-            //            "timeInForce": "GTC",
-            //            "type": "LIMIT",
-            //            "side": "BUY",
-            //            "stopPrice": "0",
-            //            "origType": "LIMIT",
-            //            "time": "1776281810637",
-            //            "updateTime": "1776281810637",
-            //            "orderListId": "-1"
-            //        }
-            //    ]
-            //
-        } else {
-            throw new NotSupported (this.id + ' fetchOpenOrders() does not support ' + marketType + ' markets yet');
         }
         //
-        //     [
-        //         {
-        //             "avgPrice": "0.00000",
-        //             "clientOrderId": "abc",
-        //             "cumQuote": "0",
-        //             "executedQty": "0",
-        //             "orderId": 1917641,
-        //             "origQty": "0.40",
-        //             "origType": "TRAILING_STOP_MARKET",
-        //             "price": "0",
-        //             "reduceOnly": false,
-        //             "side": "BUY",
-        //             "positionSide": "SHORT",
-        //             "status": "NEW",
-        //             "stopPrice": "9300",
-        //             "closePosition": false,
-        //             "symbol": "BTCUSDT",
-        //             "time": 1579276756075,
-        //             "timeInForce": "GTC",
-        //             "type": "TRAILING_STOP_MARKET",
-        //             "activatePrice": "9020",
-        //             "priceRate": "0.3",
-        //             "updateTime": 1579276756075,
-        //             "workingType": "CONTRACT_PRICE",
-        //             "priceProtect": false
-        //         }
-        //     ]
+        // SPOT & SWAP has similar responses
+        //
+        //    [
+        //        {
+        //            "orderId": "17338239315",
+        //            "symbol": "ETHUSDT",
+        //            "status": "NEW",
+        //            "clientOrderId": "web_AD_mbhgla7k15gptmwyr_x",
+        //            "price": "2216.62",
+        //            "avgPrice": "0",
+        //            "origQty": "0.012",
+        //            "executedQty": "0",
+        //            "cumQuote": "0",
+        //            "timeInForce": "GTC",
+        //            "type": "LIMIT",
+        //            "side": "BUY",
+        //            "stopPrice": "0",
+        //            "origType": "LIMIT",
+        //            "time": "1776798208476",
+        //            "updateTime": "1776798208450",
+        //            "orderListId": "-1"                                   // only in SPOT
+        //            "reduceOnly": false,                                  // only in PERP
+        //            "closePosition": false,                               // only in PERP
+        //            "positionSide": "BOTH",                               // only in PERP
+        //            "workingType": "CONTRACT_PRICE",                      // only in PERP
+        //            "priceProtect": false,                                // only in PERP
+        //            "newChainData": { "hash": "0xf8a496....a7fd5" }       // only in PERP
+        //        }
+        //    ]
         //
         return this.parseOrders (response, market, since, limit);
     }
@@ -2414,6 +2410,7 @@ export default class aster extends Exchange {
      * @name aster#createOrder
      * @description create a trade order
      * @see https://asterdex.github.io/aster-api-website/spot-v3/account%26trades/#place-order-trade
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#new-order-trade
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {string} type 'market' or 'limit' or 'STOP' or 'STOP_MARKET' or 'TAKE_PROFIT' or 'TAKE_PROFIT_MARKET' or 'TRAILING_STOP_MARKET'
      * @param {string} side 'buy' or 'sell'
@@ -2441,11 +2438,41 @@ export default class aster extends Exchange {
             if (test) {
                 response = await this.fapiPrivatePostV1OrderTest (request);
             } else {
-                response = await this.fapiPrivatePostV1Order (request);
+                response = await this.fapiPrivatePostV3Order (request);
             }
         } else {
             response = await this.sapiPrivatePostV3Order (request);
         }
+        //
+        // SPOT & SWAP has similar responses
+        //
+        //    {
+        //        "orderId": "17338441758",
+        //        "symbol": "ETHUSDT",
+        //        "status": "NEW",
+        //        "clientOrderId": "727Wt3TIUgkUCxXp20E543",
+        //        "price": "0",
+        //        "avgPrice": "0.00000",
+        //        "origQty": "0.010",
+        //        "executedQty": "0",
+        //        "cumQty": "0",
+        //        "cumQuote": "0",
+        //        "timeInForce": "GTC",
+        //        "type": "MARKET",
+        //        "side": "BUY",
+        //        "stopPrice": "0",
+        //        "origType": "MARKET",
+        //        "time": "1776800300700",
+        //        "updateTime": "1776800300700",
+        //        "orderListId": "-1",                              // only in SPOT
+        //        "workingType": "CONTRACT_PRICE",                  // only in PERP
+        //        "positionSide": "BOTH",                           // only in PERP
+        //        "reduceOnly": false,                              // only in PERP
+        //        "closePosition": false,                           // only in PERP
+        //        "priceProtect": false,                            // only in PERP
+        //        "newChainData": { "hash": "0x46ae....c8ba" }      // only in PERP
+        //    }
+        //
         return this.parseOrder (response, market);
     }
 
@@ -2453,7 +2480,7 @@ export default class aster extends Exchange {
      * @method
      * @name aster#createOrders
      * @description create a list of trade orders
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#place-multiple-orders--trade
+     * @see https://asterdex.github.io/aster-api-website/futures-v3/account%26trades/#new-order-trade
      * @param {Array} orders list of orders to create, each object should contain the parameters required by createOrder, namely symbol, type, side, amount, price and params
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
@@ -2468,6 +2495,8 @@ export default class aster extends Exchange {
         for (let i = 0; i < orders.length; i++) {
             const rawOrder = orders[i];
             const marketId = this.safeString (rawOrder, 'symbol');
+            const currentMarket = this.market (marketId);
+            orderSymbols.push (currentMarket['symbol']);
             const type = this.safeString (rawOrder, 'type');
             const side = this.safeString (rawOrder, 'side');
             const amount = this.safeValue (rawOrder, 'amount');
@@ -2482,9 +2511,39 @@ export default class aster extends Exchange {
             throw new NotSupported (this.id + ' createOrders() does not support ' + market['type'] + ' orders');
         }
         const request: Dict = {
-            'batchOrders': ordersRequests,
+            'batchOrders': this.json (ordersRequests),
         };
-        const response = await this.fapiPrivatePostV1BatchOrders (this.extend (request, params));
+        const response = await this.fapiPrivatePostV3BatchOrders (this.extend (request, params));
+        //
+        //    [
+        //        {
+        //            "orderId": 17338699853,
+        //            "symbol": "ETHUSDT",
+        //            "status": "NEW",
+        //            "clientOrderId": "NxMWPvOEyiF6TWh5UB8BQf0",
+        //            "price": "0",
+        //            "avgPrice": "0.00000",
+        //            "origQty": "0.010",
+        //            "executedQty": "0",
+        //            "cumQty": "0",
+        //            "cumQuote": "0",
+        //            "timeInForce": "GTC",
+        //            "type": "MARKET",
+        //            "reduceOnly": false,
+        //            "closePosition": false,
+        //            "side": "BUY",
+        //            "positionSide": "BOTH",
+        //            "stopPrice": "0",
+        //            "workingType": "CONTRACT_PRICE",
+        //            "priceProtect": false,
+        //            "origType": "MARKET",
+        //            "updateTime": 1776802276050,
+        //            "newChainData": {
+        //                "hash": "0x5e569d9794cf726f72c2d000d401d20315e78e4df7b58023a489864624527dfe"
+        //            }
+        //        }
+        //    ]
+        //
         return this.parseOrders (response);
     }
 
@@ -2669,16 +2728,18 @@ export default class aster extends Exchange {
         };
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPrivateDeleteV1AllOpenOrders (this.extend (request, params));
+            response = await this.fapiPrivateDeleteV3AllOpenOrders (this.extend (request, params));
         } else {
             response = await this.sapiPrivateDeleteV3AllOpenOrders (this.extend (request, params));
-            //
-            //     {
-            //         "code": "200",
-            //         "msg": "The operation of cancel all open order is done."
-            //     }
-            //
         }
+        //
+        // SPOT & SWAP has same response
+        //
+        //     {
+        //         "code": "200",
+        //         "msg": "The operation of cancel all open order is done."
+        //     }
+        //
         return [
             this.safeOrder ({
                 'info': response,
@@ -2714,30 +2775,9 @@ export default class aster extends Exchange {
         params = this.omit (params, [ 'origClientOrderId', 'clientOrderId' ]);
         let response = undefined;
         if (market['swap']) {
-            response = await this.fapiPrivateDeleteV1Order (this.extend (request, params));
+            response = await this.fapiPrivateDeleteV3Order (this.extend (request, params));
         } else {
             response = await this.sapiPrivateDeleteV3Order (this.extend (request, params));
-            //
-            // {
-            //     "orderId": "417663664",
-            //     "symbol": "ETHUSDT",
-            //     "status": "CANCELED",
-            //     "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
-            //     "price": "2111.75",
-            //     "avgPrice": "0.000000",
-            //     "origQty": "0.0049",
-            //     "executedQty": "0",
-            //     "cumQty": "0",
-            //     "cumQuote": "0",
-            //     "timeInForce": "GTC",
-            //     "type": "LIMIT",
-            //     "side": "BUY",
-            //     "stopPrice": "0",
-            //     "origType": "LIMIT",
-            //     "updateTime": "1776318949284",
-            //     "orderListId": "-1"
-            // }
-            //
         }
         return this.parseOrder (response, market);
     }
@@ -2762,51 +2802,56 @@ export default class aster extends Exchange {
         }
         await this.loadMarkets ();
         const market = this.market (symbol);
-        if (market['spot']) {
-            throw new NotSupported (this.id + ' cancelOrders() does not support ' + market['type'] + ' orders');
-        }
         const request: Dict = {
             'symbol': market['id'],
         };
         const clientOrderIdList = this.safeList (params, 'origClientOrderIdList');
         if (clientOrderIdList !== undefined) {
-            request['origClientOrderIdList'] = clientOrderIdList;
+            request['origClientOrderIdList'] = this.json (clientOrderIdList);
         } else {
-            request['orderIdList'] = ids;
+            request['orderIdList'] = this.json (ids);
         }
-        const response = await this.fapiPrivateDeleteV1BatchOrders (this.extend (request, params));
-        //
-        //    [
-        //        {
-        //            "clientOrderId": "myOrder1",
-        //            "cumQty": "0",
-        //            "cumQuote": "0",
-        //            "executedQty": "0",
-        //            "orderId": 283194212,
-        //            "origQty": "11",
-        //            "origType": "TRAILING_STOP_MARKET",
-        //            "price": "0",
-        //            "reduceOnly": false,
-        //            "side": "BUY",
-        //            "positionSide": "SHORT",
-        //            "status": "CANCELED",
-        //            "stopPrice": "9300",                  // please ignore when order type is TRAILING_STOP_MARKET
-        //            "closePosition": false,               // if Close-All
-        //            "symbol": "BTCUSDT",
-        //            "timeInForce": "GTC",
-        //            "type": "TRAILING_STOP_MARKET",
-        //            "activatePrice": "9020",              // activation price, only return with TRAILING_STOP_MARKET order
-        //            "priceRate": "0.3",                   // callback rate, only return with TRAILING_STOP_MARKET order
-        //            "updateTime": 1571110484038,
-        //            "workingType": "CONTRACT_PRICE",
-        //            "priceProtect": false,                // if conditional order trigger is protected
-        //        },
-        //        {
-        //            "code": -2011,
-        //            "msg": "Unknown order sent."
-        //        }
-        //    ]
-        //
+        let response = undefined;
+        if (market['swap']) {
+            response = await this.fapiPrivateDeleteV3BatchOrders (this.extend (request, params));
+            //
+            //    [
+            //        {
+            //            "clientOrderId": "myOrder1",
+            //            "cumQty": "0",
+            //            "cumQuote": "0",
+            //            "executedQty": "0",
+            //            "orderId": 283194212,
+            //            "origQty": "11",
+            //            "origType": "TRAILING_STOP_MARKET",
+            //            "price": "0",
+            //            "reduceOnly": false,
+            //            "side": "BUY",
+            //            "positionSide": "SHORT",
+            //            "status": "CANCELED",
+            //            "stopPrice": "9300",                  // please ignore when order type is TRAILING_STOP_MARKET
+            //            "closePosition": false,               // if Close-All
+            //            "symbol": "BTCUSDT",
+            //            "timeInForce": "GTC",
+            //            "type": "TRAILING_STOP_MARKET",
+            //            "activatePrice": "9020",              // activation price, only return with TRAILING_STOP_MARKET order
+            //            "priceRate": "0.3",                   // callback rate, only return with TRAILING_STOP_MARKET order
+            //            "updateTime": 1571110484038,
+            //            "workingType": "CONTRACT_PRICE",
+            //            "priceProtect": false,                // if conditional order trigger is protected
+            //        },
+            //        {
+            //            "code": -2011,
+            //            "msg": "Unknown order sent."
+            //        }
+            //    ]
+            //
+        } else {
+            response = await this.sapiPrivateDeleteV3AllOpenOrders (this.extend (request, params));
+            //
+            //  {"code": 200,"msg": "The operation of cancel all open order is done."}
+            //
+        }
         return this.parseOrders (response, market);
     }
 
@@ -4018,51 +4063,55 @@ export default class aster extends Exchange {
             }
         } else if (api === 'fapiPrivate' || api === 'sapiPrivate') {
             this.checkRequiredCredentials ();
-            const timestamp = this.milliseconds ();
-            // Nonce is in microseconds
-            let signature = '';
-            let query = undefined;
-         {
-                const nonce = (this.milliseconds () * 1000).toString ();
-                // Sign using EIP-712 typed data per the AsterSignTransaction spec
-                const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
-                const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
-                const domain = {
-                    'name': 'AsterSignTransaction',
-                    'version': '1',
-                    'chainId': v3ChainId,
-                    'verifyingContract': zeroAddress,
-                };
-                const messageTypes = {
-                    'Message': [
-                        { 'name': 'msg', 'type': 'string' },
-                    ],
-                };
-                const signerAddress = this.safeString (this.options, 'signerAddress');
-                if (signerAddress === undefined) {
-                    throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
-                }
-                // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
-                // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
-                const v3Params = this.extend ({}, params, {
-                    'nonce': nonce,
-                    'user': this.walletAddress,
-                    'signer': signerAddress,
-                });
-                const paramString = this.rawencode (v3Params);
-                const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
-                signature = this.signMessage (encodedMessage, this.privateKey);
-                const queryString = paramString + '&' + 'signature=' + signature;
-                if (method === 'GET') {
-                    url += '?' + queryString;
-                } else {
-                    headers = {};
-                    headers['Content-Type'] = 'application/x-www-form-urlencoded';
-                    body = queryString;
-                }
+            const nonce = (this.milliseconds () * 1000).toString ();
+            // Sign using EIP-712 typed data per the AsterSignTransaction spec
+            const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
+            const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
+            const domain = {
+                'name': 'AsterSignTransaction',
+                'version': '1',
+                'chainId': v3ChainId,
+                'verifyingContract': zeroAddress,
+            };
+            const messageTypes = {
+                'Message': [
+                    { 'name': 'msg', 'type': 'string' },
+                ],
+            };
+            const signerAddress = this.safeString (this.options, 'signerAddress');
+            if (signerAddress === undefined) {
+                throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
+            }
+            // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
+            // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
+            const v3Params = this.extend ({}, params, {
+                'nonce': nonce,
+                'user': this.walletAddress,
+                'signer': signerAddress,
+            });
+            const paramString = this.rawencode (v3Params);
+            const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
+            const signature = this.signMessage (encodedMessage, this.privateKey);
+            const queryString = paramString + '&' + 'signature=' + signature;
+            if (method === 'GET') {
+                url += '?' + queryString;
+            } else {
+                headers = {};
+                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                body = queryString;
             }
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
+    }
+
+    encodeAsJsonValues (params) {
+        const result: Dict = {};
+        const keys = Object.keys (params);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            result[key] = this.urlencode (params[key]);
+        }
+        return result;
     }
 
     handleErrors (httpCode: int, reason: string, url: string, method: string, headers: Dict, body: string, response, requestHeaders, requestBody) {

@@ -7868,6 +7868,56 @@
         ],
         "cancelOrders": [
             {
+                "description": "default",
+                "method": "cancelOrders",
+                "input": [
+                    [
+                        17338441758
+                    ],
+                    "ETH/USDT:USDT"
+                ],
+                "httpResponse": [
+                    {
+                        "code": "-2011",
+                        "msg": "Unknown order sent."
+                    }
+                ],
+                "parsedResponse": [
+                    {
+                        "info": {
+                            "code": "-2011",
+                            "msg": "Unknown order sent."
+                        },
+                        "id": null,
+                        "clientOrderId": null,
+                        "symbol": "ETH/USDT:USDT",
+                        "timestamp": null,
+                        "datetime": null,
+                        "lastTradeTimestamp": null,
+                        "lastUpdateTimestamp": null,
+                        "type": null,
+                        "timeInForce": null,
+                        "postOnly": null,
+                        "side": null,
+                        "price": null,
+                        "triggerPrice": null,
+                        "average": null,
+                        "cost": null,
+                        "amount": null,
+                        "filled": null,
+                        "remaining": null,
+                        "status": null,
+                        "fee": null,
+                        "trades": [],
+                        "reduceOnly": null,
+                        "fees": [],
+                        "stopPrice": null,
+                        "takeProfitPrice": null,
+                        "stopLossPrice": null
+                    }
+                ]
+            },
+            {
                 "description": "cancelOrders",
                 "method": "cancelOrders",
                 "input": [
