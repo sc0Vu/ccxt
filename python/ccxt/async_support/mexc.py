@@ -492,11 +492,6 @@ class mexc(Exchange, ImplicitAPI):
             'options': {
                 'adjustForTimeDifference': False,
                 'timeDifference': 0,
-                'unavailableContracts': {
-                    'BTC/USDT:USDT': True,
-                    'LTC/USDT:USDT': True,
-                    'ETH/USDT:USDT': True,
-                },
                 'fetchMarkets': {
                     'types': {
                         'spot': True,
@@ -2251,6 +2246,7 @@ class mexc(Exchange, ImplicitAPI):
         create a trade order
 
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
 
@@ -2388,6 +2384,7 @@ class mexc(Exchange, ImplicitAPI):
  @ignore
         create a trade order
 
+        https://www.mexc.com/api-docs/futures/account-and-trading-endpoints#place-order
         https://mexcdevelop.github.io/apidocs/spot_v3_en/#new-order
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#order-under-maintenance
         https://mexcdevelop.github.io/apidocs/contract_v1_en/#trigger-order-under-maintenance
@@ -2413,10 +2410,6 @@ class mexc(Exchange, ImplicitAPI):
         """
         await self.load_markets()
         symbol = market['symbol']
-        unavailableContracts = self.safe_value(self.options, 'unavailableContracts', {})
-        isContractUnavaiable = self.safe_bool(unavailableContracts, symbol, False)
-        if isContractUnavaiable:
-            raise NotSupported(self.id + ' createSwapOrder() does not support yet self symbol:' + symbol)
         openType = None
         if marginMode is not None:
             if marginMode == 'cross':
@@ -2475,12 +2468,14 @@ class mexc(Exchange, ImplicitAPI):
         if hedged:
             if reduceOnly:
                 params = self.omit(params, 'reduceOnly')  # hedged mode does not accept self parameter
-                side = 'sell' if (side == 'buy') else 'buy'
-            sideInteger = 1 if (side == 'buy') else 3
+                sideInteger = 4 if (side == 'buy') else 2  # close short, close long
+            else:
+                sideInteger = 1 if (side == 'buy') else 3
             request['positionMode'] = 1
         else:
             if reduceOnly:
                 sideInteger = 2 if (side == 'buy') else 4
+                params = self.omit(params, 'reduceOnly')
             else:
                 sideInteger = 1 if (side == 'buy') else 3
         request['side'] = sideInteger

@@ -44,7 +44,7 @@ use BN\BN;
 use Sop\ASN1\Type\UnspecifiedType;
 use Exception;
 
-$version = '4.5.48';
+$version = '4.5.50';
 
 // rounding mode
 const TRUNCATE = 0;
@@ -63,7 +63,7 @@ const PAD_WITH_ZERO = 6;
 
 class Exchange {
 
-    const VERSION = '4.5.48';
+    const VERSION = '4.5.50';
 
     private static $base58_alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
     private static $base58_encoder = null;
@@ -444,6 +444,7 @@ class Exchange {
         'toobit',
         'upbit',
         'wavesexchange',
+        'weex',
         'whitebit',
         'woo',
         'woofipro',
@@ -1499,25 +1500,38 @@ class Exchange {
         return true;
     }
 
-    public function load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
+    public function load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient = false) {
         if ($path == null || $path == '') {
             throw new ExchangeError($this->id . ' load_lighter_library() requires a path to the lighter library. You can find it here https://github.com/elliottech/lighter-python/tree/main/lighter/signers. Please download the appropriate library for your system and provide the path to it.\nExample: exchange.options["libraryPath"] = "path/to/lighter-signer-linux-arm64.so"');
         }
         $lighterSigner = Signer::getInstance($path);
 
+        if ($createClient) {
+            $this->lighter_create_client(
+                $lighterSigner,
+                $chainId,
+                $privateKey,
+                $apiKeyIndex,
+                $accountIndex
+            );
+        }
+        return $lighterSigner;
+    }
+
+    public function lighter_create_client($signer, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
         $url = $this->implode_hostname($this->urls['api']['public']);
-        $lighterSigner->createClient(
+        $signer->createClient(
             $url,
             $privateKey,
             $chainId,
             $apiKeyIndex,
             $accountIndex
         );
-        return $lighterSigner;
+        return $signer;
     }
 
-    public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex) {
-        return $this->load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex);
+    public function load_lighter_library($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient = false) {
+        return $this->load_lighter_library_helper($path, $chainId, $privateKey, $apiKeyIndex, $accountIndex, $createClient);
     }
 
     public function lighter_sign_create_grouped_orders($signer, $request) {
@@ -1540,6 +1554,10 @@ class Exchange {
         $result = $signer->signCreateGroupedOrders(
             $request['grouping_type'],
             $orders_arr,
+            $request['integrator_account_index'],
+            $request['integrator_taker_fee'],
+            $request['integrator_maker_fee'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1559,6 +1577,10 @@ class Exchange {
             $request['reduce_only'],
             $request['trigger_price'],
             $request['order_expiry'],
+            $request['integrator_account_index'],
+            $request['integrator_taker_fee'],
+            $request['integrator_maker_fee'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1570,6 +1592,7 @@ class Exchange {
         $result = $signer->signCancelOrder(
             $request['market_index'],
             $request['order_index'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1582,6 +1605,7 @@ class Exchange {
             $request['asset_index'],
             $request['route_type'],
             $request['amount'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1591,6 +1615,7 @@ class Exchange {
 
     public function lighter_sign_create_sub_account($signer, $request) {
         $result = $signer->signCreateSubAccount(
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1602,6 +1627,7 @@ class Exchange {
         $result = $signer->signCancelAllOrders(
             $request['time_in_force'],
             $request['time'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1616,6 +1642,7 @@ class Exchange {
             $request['base_amount'],
             $request['price'],
             $request['trigger_price'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1632,6 +1659,7 @@ class Exchange {
             $request['amount'],
             $request['usdc_fee'],
             $request['memo'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1644,6 +1672,7 @@ class Exchange {
             $request['market_index'],
             $request['initial_margin_fraction'],
             $request['margin_mode'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
@@ -1665,11 +1694,44 @@ class Exchange {
             $request['market_index'],
             $request['usdc_amount'],
             $request['direction'],
+            false, // skip nonce
             $request['nonce'],
             $request['api_key_index'],
             $request['account_index']
         );
         return [ $result['txType'], $result['txInfo'] ];
+    }
+
+    public function lighter_sign_approve_integrator($signer, $request) {
+        $result = $signer->signApproveIntegrator(
+            $request['integrator_account_index'],
+            $request['integrator_taker_fee'],
+            $request['integrator_maker_fee'],
+            $request['integrator_taker_fee'],
+            $request['integrator_maker_fee'],
+            $request['approval_expiry'],
+            True, # skip nonce
+            $request['nonce'],
+            $request['api_key_index'],
+            $request['account_index'],
+        );
+        return [ $result['txType'], $result['txInfo'], $result['messageToSign'] ];
+    }
+
+    public function lighter_generate_api_key($signer) {
+        $result = $signer->generateAPIKey();
+        return [ $result['privateKey'], $result['publicKey'] ];
+    }
+
+    public function lighter_sign_change_pubkey($signer, $request) {
+        $result = $signer->signChangePubKey(
+            $request['pubkey'],
+            True, # skip nonce
+            $request['nonce'],
+            $request['api_key_index'],
+            $request['account_index'],
+        );
+        return [ $result['txType'], $result['txInfo'], $result['messageToSign'] ];
     }
 
     public function packb($data) {
