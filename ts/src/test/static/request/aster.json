@@ -3,12 +3,9 @@
     "skipKeys": [
         "nonce",
         "timestamp",
-        "recvWindow",
         "signature",
         "userSignature",
-        "userNonce",
-        "user",
-        "signer"
+        "userNonce"
     ],
     "options": {
         "leverageBrackets":{"BTC/USDT:USDT":[["0","0.004"],["50000","0.005"],["250000","0.01"],["3000000","0.025"],["20000000","0.05"],["40000000","0.1"],["100000000","0.125"],["120000000","0.15"],["200000000","0.25"],["300000000","0.5"]],"ETH/USDT:USDT":[["0","0.005"],["100000","0.0065"],["250000","0.01"],["2000000","0.02"],["15000000","0.05"],["30000000","0.1"],["60000000","0.125"],["80000000","0.15"],["100000000","0.25"],["150000000","0.5"]],"LTC/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"ADA/USDT:USDT":[["0","0.0065"],["10000","0.01"],["50000","0.02"],["250000","0.05"],["1000000","0.1"],["2000000","0.125"],["5000000","0.15"],["10000000","0.25"]],"BTC/USD:BTC":[["0","0.004"],["5","0.005"],["10","0.01"],["20","0.025"],["50","0.05"],["100","0.1"],["200","0.125"],["400","0.15"],["1000","0.25"],["1500","0.5"]]},
@@ -34,7 +31,7 @@
                         "fee": 1.01
                     }
                 ],
-                "output": "asset=USDT&receiver=0x1230000000000000000000000000000000000123&userNonce=1776362282719000&chainId=42161&fee=1.01&amount=5&userSignature=0x51e0b4a4045605524f7141def1c27a35273194e4ac79011f27a4fa6e070b2b5636ed422323e67bf48c3ed325ed85f0acf1734e4c04bac2d0f1bd39fde6e9a8451c&nonce=1776362282755000&user=0x1230000000000000000000000000000000000123&signer=0x1230000000000000000000000000000000000123&signature=0x69a7fdfe7d6f9ed8310c93963dc7e4ae8c073a46530f5b2850a4d7a38c1cc74304dd6b660c02b4f615039c88b4a26df671f39922d6f74a4f8cb4db495306af621b"
+                "output": "asset=USDT&receiver=0x1230000000000000000000000000000000000123&userNonce=1776362282719000&chainId=42161&fee=1.01&amount=5&userSignature=0x51e0b4a4045605524f7141def1c27a35273194e4ac79011f27a4fa6e070b2b5636ed422323e67bf48c3ed325ed85f0acf1734e4c04bac2d0f1bd39fde6e9a8451c&nonce=1776362282755000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x69a7fdfe7d6f9ed8310c93963dc7e4ae8c073a46530f5b2850a4d7a38c1cc74304dd6b660c02b4f615039c88b4a26df671f39922d6f74a4f8cb4db495306af621b"
             }
         ],
         "createOrder": [
@@ -357,6 +354,17 @@
         ],
         "fetchBalance": [
             {
+                "description": "swap",
+                "method": "fetchBalance",
+                "url": "https://fapi.asterdex.com/fapi/v3/balance?nonce=1776872065013000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x3ebab2403ee617bc793b4eb47c6c5393c3a2b0ff0f0c32f910cb1926f84e37682e38ded9ea4b032df1ac049c7045137193a9a3ce9e41c9c4e30789899bb2fa911c",
+                "input": [
+                    {
+                        "type": "swap"
+                    }
+                ],
+                "output": null
+            },
+            {
                 "description": "fetchBalance - spot",
                 "method": "fetchBalance",
                 "url": "https://sapi.asterdex.com/api/v3/account?nonce=1776835698415000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x136972f484139dd89c63377503c5bcccf6dfeebb585f30bbf78ad6a3ac55d3801a7d53c3625944179bc3774686cbe8ea2a960a2e8d8ea8e66c76c251e528fb081c",
@@ -584,7 +592,7 @@
                     417663664,
                     "ETH/USDT"
                 ],
-                "output": "symbol=ETHUSDT&orderId=417663664&nonce=1776318948277000&user=0x1230000000000000000000000000000000000123&signer=0x1230000000000000000000000000000000000123&signature=0x4aa48434f01282881450559ff99802a34993655932fdd7ccb7db827770b982ce60d1b076f1f6e3581e05b0687e0c165d8a54f020fffbc0ce4ec52790fc87bf0b1b"
+                "output": "symbol=ETHUSDT&orderId=417663664&nonce=1776318948277000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x4aa48434f01282881450559ff99802a34993655932fdd7ccb7db827770b982ce60d1b076f1f6e3581e05b0687e0c165d8a54f020fffbc0ce4ec52790fc87bf0b1b"
             },
             {
                 "description": "cancel trigger order",
@@ -641,7 +649,7 @@
                     ],
                     "ETH/USDT:USDT"
                 ],
-                "output": "symbol=ETHUSDT&orderIdList=[17338441758]&nonce=1776804445707000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x95fab69eec04f22e286f7aa009fd279ec5815d7af8c30c04a37a9c1a2ab47fed098e4d46bbaa2c9ef5dc4ef6782d13bedb97d5fbd7debeb7f29295bb2dd916d21b"
+                "output": "symbol=ETHUSDT&orderIdList=[17338441758]&nonce=1776804445707000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x95fab69eec04f22e286f7aa009fd279ec5815d7af8c30c04a37a9c1a2ab47fed098e4d46bbaa2c9ef5dc4ef6782d13bedb97d5fbd7debeb7f29295bb2dd916d21b"
             }
         ],
         "setMarginMode": [
