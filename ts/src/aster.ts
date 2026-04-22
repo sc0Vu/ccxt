@@ -2242,26 +2242,39 @@ export default class aster extends Exchange {
         } else {
             request['orderId'] = id;
         }
-        const response = await this.sapiPrivateGetV3OpenOrder (this.extend (request, params));
+        let response = undefined;
+        if (market['spot']) {
+            response = await this.sapiPrivateGetV3OpenOrder (this.extend (request, params));
+        } else {
+            response = await this.fapiPrivateGetV3OpenOrder (this.extend (request, params));
+        }
+        //
+        // SPOT & SWAP has similar formats
         //
         //    {
-        //        "orderId": "417663664",
+        //        "orderId": "17338441758",
         //        "symbol": "ETHUSDT",
-        //        "status": "NEW",
-        //        "clientOrderId": "web_YrnsFvHisQA0cmCVr1Qr",
-        //        "price": "2111.75",
-        //        "avgPrice": "0.000000",
-        //        "origQty": "0.0049",
-        //        "executedQty": "0",
-        //        "cumQuote": "0",
+        //        "status": "FILLED",
+        //        "clientOrderId": "727Wt3TIUgkUCxXp20E543",
+        //        "price": "0",
+        //        "avgPrice": "2304.56000",
+        //        "origQty": "0.010",
+        //        "executedQty": "0.010",
+        //        "cumQuote": "23.04560",
         //        "timeInForce": "GTC",
-        //        "type": "LIMIT",
+        //        "type": "MARKET",
         //        "side": "BUY",
         //        "stopPrice": "0",
-        //        "origType": "LIMIT",
-        //        "time": "1776281810637",
-        //        "updateTime": "1776281810637",
-        //        "orderListId": "-1"
+        //        "origType": "MARKET",
+        //        "time": "1776800300736",
+        //        "updateTime": "1776800300700",
+        //        "orderListId": "-1"                                   // only in SPOT
+        //        "positionSide": "BOTH",                               // only in SWAP
+        //        "reduceOnly": false,                                  // only in SWAP
+        //        "closePosition": false,                               // only in SWAP
+        //        "workingType": "CONTRACT_PRICE",                      // only in SWAP
+        //        "priceProtect": false,                                // only in SWAP
+        //        "newChainData": { "hash": "0x46aed5...67bdbec8ba" }   // only in SWAP
         //    }
         //
         return this.parseOrder (response, market);
@@ -2515,7 +2528,7 @@ export default class aster extends Exchange {
             throw new NotSupported (this.id + ' createOrders() does not support ' + market['type'] + ' orders');
         }
         const request: Dict = {
-            'batchOrders': this.json (ordersRequests),
+            'batchOrders': ordersRequests,
         };
         const response = await this.fapiPrivatePostV3BatchOrders (this.extend (request, params));
         //
@@ -2814,7 +2827,7 @@ export default class aster extends Exchange {
         };
         const clientOrderIdList = this.safeList (params, 'origClientOrderIdList');
         if (clientOrderIdList !== undefined) {
-            request['origClientOrderIdList'] = this.json (clientOrderIdList);
+            request['origClientOrderIdList'] = clientOrderIdList;
         } else {
             request['orderIdList'] = ids;
         }
@@ -4122,7 +4135,7 @@ export default class aster extends Exchange {
                 'user': this.walletAddress,
                 'signer': signerAddress,
             });
-            const paramString = this.rawencode (v3Params);
+            const paramString = this.encodeValuesWithJson (v3Params);
             const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
             const signature = this.signMessage (encodedMessage, this.privateKey);
             const queryString = paramString + '&' + 'signature=' + signature;
@@ -4135,6 +4148,17 @@ export default class aster extends Exchange {
             }
         }
         return { 'url': url, 'method': method, 'body': body, 'headers': headers };
+    }
+
+    encodeValuesWithJson (values: Dict): string {
+        let encodedString = '';
+        const keys = Object.keys (values);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const value = values[key];
+            encodedString += key + '=' + this.encodeURIComponent (value) + '&';
+        }
+        return encodedString.slice (0, -1);
     }
 
     handleErrors (httpCode: int, reason: string, url: string, method: string, headers: Dict, body: string, response, requestHeaders, requestBody) {
