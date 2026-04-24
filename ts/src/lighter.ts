@@ -888,7 +888,7 @@ export default class lighter extends Exchange {
         // avoid skipNonce for l1 operations
         const skipNonce = this.safeBool (params, 'skipNonce', true);
         if (skipNonce) {
-            return this.microseconds ();
+            return this.milliseconds ();
         }
         const response = await this.publicGetNextNonce ({ 'account_index': accountIndex, 'api_key_index': apiKeyIndex });
         return this.safeInteger (response, 'nonce');
