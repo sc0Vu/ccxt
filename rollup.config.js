@@ -6,7 +6,6 @@ import rename from './rollup.rename.js'
 
 export default [
   {
-    preserveModules: true,
     context: 'globalThis',
     input: "./js/ccxt.js",
     output: [
