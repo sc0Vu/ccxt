@@ -8370,6 +8370,9 @@ class Exchange {
         }
         return '';
     }
+    async isUTAEnabled(params = {}) {
+        return false; // stub
+    }
 }
 
 exports.Exchange = Exchange;

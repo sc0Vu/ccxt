@@ -8359,5 +8359,8 @@ export default class Exchange {
         }
         return '';
     }
+    async isUTAEnabled(params = {}) {
+        return false; // stub
+    }
 }
 export { Exchange, };
