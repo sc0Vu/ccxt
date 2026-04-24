@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { Currency, Exchange } from "../../../../ccxt";
 import testSharedMethods from './test.sharedMethods.js';
 
@@ -42,8 +43,29 @@ function testCurrency (exchange: Exchange, skippedProperties: object, method: st
             emptyAllowedFor.push ('precision');
         }
     }
-    testSharedMethods.assertStructure (exchange, skippedProperties, method, entry, format, emptyAllowedFor);
+    //
     testSharedMethods.assertCurrencyCode (exchange, skippedProperties, method, entry, entry['code']);
+    // check if empty networks should be skipped
+    const networks = exchange.safeDict (entry, 'networks', {});
+    const networkKeys = Object.keys (networks);
+    const networkKeysLength = networkKeys.length;
+    if (networkKeysLength === 0 && ('skipCurrenciesWithoutNetworks' in skippedProperties)) {
+        return;
+    }
+    //
+    try {
+        testSharedMethods.assertStructure (exchange, skippedProperties, method, entry, format, emptyAllowedFor);
+    } catch (e) {
+        const message = exchange.exceptionMessage (e);
+        // check structure if key is numeric, not string
+        if (message.indexOf ('"id" key') >= 0) {
+            // @ts-ignore
+            format['id'] = 123;
+            testSharedMethods.assertStructure (exchange, skippedProperties, method, entry, format, emptyAllowedFor);
+        } else {
+            assert (message === '', message);
+        }
+    }
     //
     testSharedMethods.checkPrecisionAccuracy (exchange, skippedProperties, method, entry, 'precision');
     testSharedMethods.assertGreaterOrEqual (exchange, skippedProperties, method, entry, 'fee', '0');
