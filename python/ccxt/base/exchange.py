@@ -8157,3 +8157,6 @@ class Exchange(object):
         if ms % second == 0:
             return(ms / second) + 's'
         return ''
+
+    def is_uta_enabled(self, params={}):
+        return False  # stub
