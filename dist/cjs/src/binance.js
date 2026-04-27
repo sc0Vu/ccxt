@@ -11,7 +11,7 @@ var rsa = require('./base/functions/rsa.js');
 var crypto = require('./base/functions/crypto.js');
 var ed25519 = require('./static_dependencies/noble-curves/ed25519.js');
 
-// ----------------------------------------------------------------------------
+//  ---------------------------------------------------------------------------
 //  ---------------------------------------------------------------------------
 /**
  * @class binance
@@ -5739,7 +5739,7 @@ class binance extends binance$1["default"] {
         };
         return this.safeString(statuses, status, status);
     }
-    parseOrderType(type, marketType) {
+    parseOrderTypeByMarket(type, marketType) {
         let types = {};
         if ((marketType !== undefined) && marketType === 'spot') {
             types = {
@@ -6347,7 +6347,7 @@ class binance extends binance$1["default"] {
             'lastTradeTimestamp': lastTradeTimestamp,
             'lastUpdateTimestamp': lastUpdateTimestamp,
             'symbol': symbol,
-            'type': this.parseOrderType(type, marketType),
+            'type': this.parseOrderTypeByMarket(type, marketType),
             'timeInForce': timeInForce,
             'postOnly': postOnly,
             'reduceOnly': this.safeBool(order, 'reduceOnly'),
