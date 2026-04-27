@@ -4,8 +4,7 @@ import Exchange from './abstract/aster.js';
 import { AccountNotEnabled, AccountSuspended, ArgumentsRequired, AuthenticationError, BadRequest, BadResponse, BadSymbol, DuplicateOrderId, ExchangeClosedByUser, ExchangeError, InsufficientFunds, InvalidNonce, InvalidOrder, MarketClosed, NetworkError, NoChange, NotSupported, OperationFailed, OperationRejected, OrderImmediatelyFillable, OrderNotFillable, OrderNotFound, PermissionDenied, RateLimitExceeded, RequestTimeout } from './base/errors.js';
 import { TRUNCATE, TICK_SIZE } from './base/functions/number.js';
 import Precise from './base/Precise.js';
-import type { Balances, Currencies, Currency, Dict, FundingRate, FundingRateHistory, FundingRates, int, Int, LedgerEntry, Leverage, Leverages, MarginMode, MarginModes, MarginModification, Market, Num, OHLCV, Order, OrderBook, OrderRequest, OrderSide, OrderType, Position, Str, Strings, Ticker, Tickers, Trade, TradingFeeInterface, Transaction, TransferEntry } from './base/types.js';
-import { sha256 } from './static_dependencies/noble-hashes/sha256.js';
+import type { Balances, Currencies, Currency, Dict, FundingRate, FundingRates, int, Int, LastPrices, LedgerEntry, Leverage, Leverages, MarginMode, MarginModes, MarginModification, Market, Num, OHLCV, Order, OrderBook, OrderRequest, OrderSide, OrderType, Position, Str, Strings, Ticker, Tickers, Trade, TradingFeeInterface, Transaction, TransferEntry } from './base/types.js';
 import { ecdsa } from './base/functions/crypto.js';
 import { keccak_256 as keccak } from './static_dependencies/noble-hashes/sha3.js';
 import { secp256k1 } from './static_dependencies/noble-curves/secp256k1.js';
@@ -1500,8 +1499,6 @@ export default class aster extends Exchange {
             response = await this.fapiPublicGetV3Ticker24hr (params);
         } else if (marketType === 'spot') {
             response = await this.sapiPublicGetV3Ticker24hr (params);
-        } else {
-            throw new NotSupported (this.id + ' fetchTickers() does not support ' + marketType + ' markets yet');
         }
         //
         //     [
@@ -1577,7 +1574,7 @@ export default class aster extends Exchange {
             results.push (priceData);
         }
         symbols = this.marketSymbols (symbols);
-        return this.filterByArray (results, 'symbol', symbols);
+        return this.filterByArray (results, 'symbol', symbols) as LastPrices;
     }
 
     parseLastPrice (entry, market: Market = undefined) {
