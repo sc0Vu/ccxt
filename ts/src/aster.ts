@@ -932,7 +932,7 @@ export default class aster extends Exchange {
         [ marketType, params ] = this.handleMarketTypeAndParams ('fetchTime', undefined, params);
         let response = undefined;
         if (marketType === 'swap') {
-            response = await this.fapiPublicGetTime (params);
+            response = await this.fapiPublicGetV3Time (params);
         } else {
             response = await this.sapiPublicGetV3Time (params);
         }
