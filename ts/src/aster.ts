@@ -370,9 +370,11 @@ export default class aster extends Exchange {
                         'v3/order': 1,
                         'v3/asset/wallet/transfer': 5,
                         'v3/aster/user-withdraw': 1,
+                        'v3/listenKey': 1,
                     },
                     'put': [
                         'v1/listenKey',
+                        'v3/listenKey',
                     ],
                     'delete': {
                         // v1
@@ -382,6 +384,7 @@ export default class aster extends Exchange {
                         // v3
                         'v3/allOpenOrders': 1,
                         'v3/order': 1,
+                        'v3/listenKey': 1,
                     },
                 },
             },
