@@ -649,7 +649,7 @@
                     ],
                     "ETH/USDT:USDT"
                 ],
-                "output": "symbol=ETHUSDT&orderIdList=[17338441758]&nonce=1776804445707000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x95fab69eec04f22e286f7aa009fd279ec5815d7af8c30c04a37a9c1a2ab47fed098e4d46bbaa2c9ef5dc4ef6782d13bedb97d5fbd7debeb7f29295bb2dd916d21b"
+                "output": "symbol=ETHUSDT&orderIdList=%5B17338441758%5D&nonce=1776804445707000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x95fab69eec04f22e286f7aa009fd279ec5815d7af8c30c04a37a9c1a2ab47fed098e4d46bbaa2c9ef5dc4ef6782d13bedb97d5fbd7debeb7f29295bb2dd916d21b"
             }
         ],
         "setMarginMode": [

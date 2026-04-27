@@ -4152,9 +4152,10 @@ export default class aster extends Exchange {
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const value = values[key];
-            const isObj = Array.isArray (value) || typeof value === 'object';
-            const finalvalue = isObj ? this.json (value) : this.encodeURIComponent (value);
-            encodedString += key + '=' + finalvalue + '&';
+            const isObj = Array.isArray (value) || this.isDictionary (value);
+            const valueJsonified = isObj ? this.json (value) : value.toString ();
+            const encoded = this.encodeURIComponent (valueJsonified);
+            encodedString += key + '=' + encoded + '&';
         }
         return encodedString.slice (0, -1);
     }
