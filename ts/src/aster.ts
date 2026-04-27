@@ -3949,10 +3949,11 @@ export default class aster extends Exchange {
         this.checkAddress (address);
         await this.loadMarkets ();
         const currency = this.currency (code);
+        const nonce = this.milliseconds () * 1000;
         const request: Dict = {
             'asset': currency['id'],
             'receiver': address,
-            'userNonce': (this.milliseconds () * 1000).toString (),
+            'userNonce': nonce.toString (),
         };
         let chainId = this.safeInteger (params, 'chainId');
         // TODO: check how ARBI signature would work
@@ -4104,7 +4105,7 @@ export default class aster extends Exchange {
             }
         } else if (api === 'fapiPrivate' || api === 'sapiPrivate') {
             this.checkRequiredCredentials ();
-            const nonce = (this.milliseconds () * 1000).toString ();
+            const nonce = this.milliseconds () * 1000;
             // Sign using EIP-712 typed data per the AsterSignTransaction spec
             const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
             const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
@@ -4126,7 +4127,7 @@ export default class aster extends Exchange {
             // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
             // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
             const v3Params = this.extend (params, {
-                'nonce': nonce,
+                'nonce': nonce.toString (),
                 'user': this.walletAddress,
                 'signer': signerAddress,
             });
