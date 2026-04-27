@@ -46,7 +46,7 @@ export default class aster extends asterRest {
                 'api': {
                     'ws': {
                         'public': {
-                            'spot': 'wss://sstream.asterdex.com/stream',
+                            'spot': 'wss://sstream.asterdex.com/ws',
                             'swap': 'wss://fstream.asterdex.com/stream',
                         },
                         'private': {
@@ -537,8 +537,7 @@ export default class aster extends asterRest {
      * @method
      * @name aster#watchTrades
      * @description watches information on multiple trades made in a market
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#collection-transaction-flow
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#aggregate-trade-streams
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/websocket-market-streams/#collection-transaction-flow
      * @param {string} symbol unified market symbol of the market trades were made in
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum number of trade structures to retrieve
@@ -554,8 +553,7 @@ export default class aster extends asterRest {
      * @method
      * @name aster#unWatchTrades
      * @description unsubscribe from the trades channel
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-spot-api.md#collection-transaction-flow
-     * @see https://github.com/asterdex/api-docs/blob/master/aster-finance-futures-api.md#aggregate-trade-streams
+     * @see https://asterdex.github.io/aster-api-website/spot-v3/websocket-market-streams/#collection-transaction-flow
      * @param {string} symbol unified market symbol of the market trades were made in
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=trade-structure}
@@ -595,12 +593,14 @@ export default class aster extends asterRest {
         const request: Dict = {
             'method': 'SUBSCRIBE',
             'params': subscriptionArgs,
+            'id': 1,
         };
         for (let i = 0; i < symbols.length; i++) {
             const symbol = symbols[i];
             const market = this.market (symbol);
-            subscriptionArgs.push (this.safeStringLower (market, 'id') + '@aggTrade');
-            messageHashes.push ('trade:' + market['symbol']);
+            const marketId = this.safeStringLower (market, 'id');
+            subscriptionArgs.push (marketId + '@aggTrade');
+            messageHashes.push ('trade::' + market['symbol']);
         }
         const trades = await this.watchMultiple (url, messageHashes, this.extend (request, params), messageHashes);
         if (this.newUpdates) {
@@ -652,55 +652,36 @@ export default class aster extends asterRest {
     handleTrade (client: Client, message) {
         //
         //     {
-        //         "stream": "btcusdt@aggTrade",
-        //         "data": {
-        //             "e": "aggTrade",
-        //             "E": 1754551358681,
-        //             "a": 20505890,
-        //             "s": "BTCUSDT",
-        //             "p": "114783.7",
-        //             "q": "0.020",
-        //             "f": 26024678,
-        //             "l": 26024682,
-        //             "T": 1754551358528,
-        //             "m": false
-        //         }
+        //         "e": "aggTrade",
+        //         "E": 1754551358681,
+        //         "a": 20505890,
+        //         "s": "BTCUSDT",
+        //         "p": "114783.7",
+        //         "q": "0.020",
+        //         "f": 26024678,
+        //         "l": 26024682,
+        //         "T": 1754551358528,
+        //         "m": false
         //     }
         //
         const marketType = this.getAccountTypeFromUrl (client.url);
-        const trade = this.safeDict (message, 'data');
+        const trade = message;
         const marketId = this.safeString (trade, 's');
         const market = this.safeMarket (marketId, undefined, undefined, marketType);
         const parsed = this.parseWsTrade (trade, market);
         const symbol = parsed['symbol'];
-        let stored = this.safeValue (this.trades, symbol);
-        if (stored === undefined) {
+        if (!(symbol in this.trades)) {
             const limit = this.safeInteger (this.options, 'tradesLimit', 1000);
-            stored = new ArrayCache (limit);
-            this.trades[symbol] = stored;
+            this.trades[symbol] = new ArrayCache (limit);
         }
+        const stored = this.trades[symbol];
         stored.append (parsed);
-        const messageHash = 'trade' + ':' + symbol;
-        client.resolve (stored, messageHash);
+        client.resolve (stored, 'trade::' + symbol);
     }
 
     parseWsTrade (trade, market = undefined): Trade {
         //
-        // public watchTrades
-        //
-        //     {
-        //         "e": "trade",       // event type
-        //         "E": 1579481530911, // event time
-        //         "s": "ETHBTC",      // symbol
-        //         "t": 158410082,     // trade id
-        //         "p": "0.01914100",  // price
-        //         "q": "0.00700000",  // quantity
-        //         "b": 586187049,     // buyer order id
-        //         "a": 586186710,     // seller order id
-        //         "T": 1579481530910, // trade time
-        //         "m": false,         // is the buyer the market maker
-        //         "M": true           // binance docs say it should be ignored
-        //     }
+        // public watchTrades (spot)
         //
         //     {
         //        "e": "aggTrade",  // Event type
@@ -1911,12 +1892,8 @@ export default class aster extends asterRest {
     }
 
     handleMessage (client: Client, message) {
-        const stream = this.safeString (message, 'stream');
-        if (stream !== undefined) {
-            const part = stream.split ('@');
-            let topic = this.safeString (part, 1, '');
-            const part2 = topic.split ('_');
-            topic = this.safeString (part2, 0, '');
+        if (this.getAccountTypeFromUrl (client.url) === 'spot') {
+            const eChannel = this.safeString (message, 'e');
             const methods: Dict = {
                 'ticker': this.handleTicker,
                 'aggTrade': this.handleTrade,
@@ -1927,7 +1904,7 @@ export default class aster extends asterRest {
                 'markPrice': this.handleTicker,
                 'bookTicker': this.handleBidAsk,
             };
-            const method = this.safeValue (methods, topic);
+            const method = this.safeValue (methods, eChannel);
             if (method !== undefined) {
                 method.call (this, client, message);
             }
