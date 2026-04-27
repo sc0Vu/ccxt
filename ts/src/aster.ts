@@ -1975,8 +1975,9 @@ export default class aster extends Exchange {
      * @returns {object} response from the exchange
      */
     async setPositionMode (hedged: boolean, symbol: Str = undefined, params = {}) {
+        const strValue = hedged ? 'true' : 'false';
         const request: Dict = {
-            'dualSidePosition': hedged,
+            'dualSidePosition': strValue,
         };
         //
         //     {
