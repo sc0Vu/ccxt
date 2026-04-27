@@ -424,9 +424,9 @@ export default class aster extends Exchange {
                 'quoteOrderQty': true, // whether market orders support amounts in quote currency
                 'accountsByType': {
                     'spot': 'SPOT',
+                    'swap': 'FUTURE',
                     'future': 'FUTURE',
                     'linear': 'FUTURE',
-                    'swap': 'FUTURE',
                 },
                 'networks': {
                     'ERC20': 'ETH',
@@ -2447,16 +2447,10 @@ export default class aster extends Exchange {
     async createOrder (symbol: string, type: OrderType, side: OrderSide, amount: number, price: Num = undefined, params = {}) {
         await this.loadMarkets ();
         const market = this.market (symbol);
-        const test = this.safeBool (params, 'test', false);
-        params = this.omit (params, 'test');
         const request = this.createOrderRequest (symbol, type, side, amount, price, params);
         let response = undefined;
         if (market['swap']) {
-            if (test) {
-                response = await this.fapiPrivatePostV1OrderTest (request);
-            } else {
-                response = await this.fapiPrivatePostV3Order (request);
-            }
+            response = await this.fapiPrivatePostV3Order (request);
         } else {
             response = await this.sapiPrivatePostV3Order (request);
         }
@@ -4040,24 +4034,15 @@ export default class aster extends Exchange {
         } else if (fromId === 'FUTURE' && toId === 'SPOT') {
             type = 'FUTURE_SPOT';
         }
-        let response = undefined;
-        if (type !== undefined) {
-            const defaultClientTranId = this.numberToString (this.milliseconds ());
-            const clientTranId = this.safeString (params, 'clientTranId', defaultClientTranId);
-            request['kindType'] = type;
-            request['clientTranId'] = clientTranId;
-            response = await this.sapiPrivatePostV3AssetWalletTransfer (this.extend (request, params));
-        } else {
-            // transfer asset to other address
-            request['toAddress'] = toAccount;
-            response = await this.sapiPrivatePostV1AssetSendToAddress (this.extend (request, params));
+        if (type === undefined) {
+            throw new ArgumentsRequired (this.id + ' transfer() requires fromAccount and toAccount parameters to be either SPOT or FUTURE');
         }
-        //
-        //     {
-        //         "tranId":13526853623,
-        //         "status": "SUCCESS"
-        //     }
-        //
+        let response = undefined;
+        const defaultClientTranId = this.numberToString (this.milliseconds ());
+        const clientTranId = this.safeString (params, 'clientTranId', defaultClientTranId);
+        request['kindType'] = type;
+        request['clientTranId'] = clientTranId;
+        response = await this.sapiPrivatePostV3AssetWalletTransfer (this.extend (request, params));
         return this.parseTransfer (response, currency);
     }
 
