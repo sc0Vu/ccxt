@@ -3976,28 +3976,38 @@ export default class aster extends Exchange {
         request['amount'] = this.currencyToPrecision (code, amount, network);
         request['userSignature'] = this.signWithdrawPayload (request, network);
         const response = await this.sapiPrivatePostV3AsterUserWithdraw (this.extend (request, params));
+        //
+        //   {
+        //       "withdrawId": "1097219372504338432",
+        //       "hash": "0x9e6baa3eb75d92a1164eef51a0cc97b9591930518ba3e8e5ab40ce524ba4e463"
+        //   }
+        //
+        return this.parseTransaction (response, currency);
+    }
+
+    parseTransaction (transaction, currency: Currency = undefined): Transaction {
         return {
-            'info': response,
-            'id': this.safeString (response, 'withdrawId'),
-            'txid': this.safeString (response, 'hash'),
+            'info': transaction,
+            'id': this.safeString (transaction, 'withdrawId'),
+            'txid': this.safeString (transaction, 'hash'),
             'timestamp': undefined,
             'datetime': undefined,
-            'network': network,
-            'address': address,
-            'addressTo': address,
+            'network': undefined,
+            'address': undefined,
+            'addressTo': undefined,
             'addressFrom': undefined,
-            'tag': tag,
-            'tagTo': tag,
+            'tag': undefined,
+            'tagTo': undefined,
             'tagFrom': undefined,
             'type': 'withdrawal',
-            'amount': amount,
-            'currency': code,
+            'amount': undefined,
+            'currency': undefined,
             'status': undefined,
             'updated': undefined,
             'internal': undefined,
             'comment': undefined,
             'fee': undefined,
-        } as Transaction;
+        };
     }
 
     /**
