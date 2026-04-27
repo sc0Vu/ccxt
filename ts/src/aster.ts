@@ -1803,8 +1803,9 @@ export default class aster extends Exchange {
     async fetchFundingRateHistory (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}) {
         await this.loadMarkets ();
         let request: Dict = {};
+        let market: Market = undefined;
         if (symbol !== undefined) {
-            const market = this.market (symbol);
+            market = this.market (symbol);
             request['symbol'] = market['id'];
         }
         if (since !== undefined) {
@@ -1824,7 +1825,7 @@ export default class aster extends Exchange {
         //         }
         //     ]
         //
-        return this.parseFundingRateHistories (response, symbol);
+        return this.parseFundingRateHistories (response, market);
     }
 
     parseFundingRateHistory (contract, market: Market = undefined) {
