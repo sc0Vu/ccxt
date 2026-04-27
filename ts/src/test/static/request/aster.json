@@ -356,7 +356,7 @@
             {
                 "description": "swap",
                 "method": "fetchBalance",
-                "url": "https://fapi.asterdex.com/fapi/v3/balance?nonce=1776872065013000&user=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signer=0x35a5B33Be664B09F78b5089eb6185f71c8a7f88f&signature=0x3ebab2403ee617bc793b4eb47c6c5393c3a2b0ff0f0c32f910cb1926f84e37682e38ded9ea4b032df1ac049c7045137193a9a3ce9e41c9c4e30789899bb2fa911c",
+                "url": "https://fapi.asterdex.com/fapi/v3/balance?nonce=1776872065013000&user=wallet&signer=0x1230000000000000000000000000000000000123&signature=0x3ebab2403ee617bc793b4eb47c6c5393c3a2b0ff0f0c32f910cb1926f84e37682e38ded9ea4b032df1ac049c7045137193a9a3ce9e41c9c4e30789899bb2fa911c",
                 "input": [
                     {
                         "type": "swap"
