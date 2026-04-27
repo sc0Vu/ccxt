@@ -3162,9 +3162,7 @@ export default class aster extends Exchange {
         //         "type": 1
         //     }
         //
-        return this.extend (this.parseMarginModification (response, market), {
-            'code': code,
-        });
+        return this.extend (this.parseMarginModification (response, market), { 'code': code });
     }
 
     /**
@@ -4127,7 +4125,7 @@ export default class aster extends Exchange {
             }
             // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
             // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
-            const v3Params = this.extend ({}, params, {
+            const v3Params = this.extend (params, {
                 'nonce': nonce,
                 'user': this.walletAddress,
                 'signer': signerAddress,
