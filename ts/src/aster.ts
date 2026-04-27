@@ -1937,7 +1937,7 @@ export default class aster extends Exchange {
         };
         const response = await this.fapiPrivatePostV3MarginType (this.extend (request, params));
         //
-        //     {"code": 200,"msg": "success"} 
+        //     { "code": 200,"msg": "success" }
         //
         return response;
     }
