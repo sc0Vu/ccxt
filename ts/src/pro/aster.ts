@@ -348,8 +348,6 @@ export default class aster extends asterRest {
     handleTicker (client: Client, message) {
         //
         //     {
-        //         "stream": "trumpusdt@ticker",
-        //         "data": {
         //             "e": "24hrTicker",
         //             "E": 1754451187277,
         //             "s": "CAKEUSDT",
@@ -368,11 +366,8 @@ export default class aster extends asterRest {
         //             "F": 6571389,
         //             "L": 6574507,
         //             "n": 3119
-        //         }
         //     }
         //     {
-        //         "stream": "btcusdt@markPrice",
-        //         "data": {
         //             "e": "markPriceUpdate",
         //             "E": 1754660466000,
         //             "s": "BTCUSDT",
@@ -381,11 +376,10 @@ export default class aster extends asterRest {
         //             "i": "116836.93534884",
         //             "r": "0.00010000",
         //             "T": 1754668800000
-        //         }
         //     }
         //
         const marketType = this.getAccountTypeFromUrl (client.url);
-        const ticker = this.safeDict (message, 'data');
+        const ticker = message;
         const parsed = this.parseWsTicker (ticker, marketType);
         const symbol = parsed['symbol'];
         const messageHash = 'ticker:' + symbol;
@@ -518,8 +512,6 @@ export default class aster extends asterRest {
     handleBidAsk (client: Client, message) {
         //
         //     {
-        //         "stream": "btcusdt@bookTicker",
-        //         "data": {
         //             "e": "bookTicker",
         //             "u": 157240846459,
         //             "s": "BTCUSDT",
@@ -529,11 +521,10 @@ export default class aster extends asterRest {
         //             "A": "0.001",
         //             "T": 1754896692922,
         //             "E": 1754896692926
-        //         }
         //     }
         //
         const marketType = this.getAccountTypeFromUrl (client.url);
-        const data = this.safeDict (message, 'data', {});
+        const data = message;
         const marketId = this.safeString (data, 's');
         const market = this.safeMarket (marketId, undefined, undefined, marketType);
         const ticker = this.parseWsBidAsk (data, market);
@@ -987,8 +978,6 @@ export default class aster extends asterRest {
     handleOrderBook (client: Client, message) {
         //
         //     {
-        //         "stream": "btcusdt@depth20",
-        //         "data": {
         //             "e": "depthUpdate",
         //             "E": 1754556878284,
         //             "T": 1754556878031,
@@ -1008,11 +997,10 @@ export default class aster extends asterRest {
         //                     "1.060"
         //                 ]
         //             ]
-        //         }
         //     }
         //
         const marketType = this.getAccountTypeFromUrl (client.url);
-        const data = this.safeDict (message, 'data');
+        const data = message;
         const marketId = this.safeString (data, 's');
         const timestamp = this.safeInteger (data, 'T');
         const market = this.safeMarket (marketId, undefined, undefined, marketType);
@@ -1161,8 +1149,6 @@ export default class aster extends asterRest {
     handleOHLCV (client: Client, message) {
         //
         //     {
-        //         "stream": "btcusdt@kline_1m",
-        //         "data": {
         //             "e": "kline",
         //             "E": 1754655777119,
         //             "s": "BTCUSDT",
@@ -1185,11 +1171,10 @@ export default class aster extends asterRest {
         //                 "Q": "0.0000",
         //                 "B": "0"
         //             }
-        //         }
         //     }
         //
         const marketType = this.getAccountTypeFromUrl (client.url);
-        const data = this.safeDict (message, 'data');
+        const data = message;
         const marketId = this.safeString (data, 's');
         const market = this.safeMarket (marketId, undefined, undefined, marketType);
         const symbol = market['symbol'];
