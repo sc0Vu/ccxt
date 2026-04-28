@@ -1189,7 +1189,8 @@ export default class aster extends Exchange {
         const untilDefined = ('until' in params);
         if (sinceDefined) {
             request['startTime'] = since;
-        } else if (untilDefined) {
+        }
+        if (untilDefined) {
             request = this.handleUntilOption ('endTime', request, params);
         }
         // use historical endpoint for targeted requests
