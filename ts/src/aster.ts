@@ -265,6 +265,9 @@ export default class aster extends Exchange {
                         'v3/mmp': 1,
                         'v3/accountWithJoinMargin': 1,
                         'v4/account': 1,
+                        // builder
+                        'v3/agent': 1,
+                        'v3/builder': 1,
                     },
                     'post': {
                         'v1/positionSide/dual': 1,
@@ -293,6 +296,11 @@ export default class aster extends Exchange {
                         'v3/mmp': 1,
                         'v3/mmpReset': 1,
                         'v3/noop': 1,
+                        // builder
+                        'v3/approveAgent': 1,
+                        'v3/updateAgent': 1,
+                        'v3/approveBuilder': 1,
+                        'v3/updateBuilder': 1,
                     },
                     'put': {
                         'v1/listenKey': 1,
@@ -308,6 +316,9 @@ export default class aster extends Exchange {
                         'v3/mmp': 1,
                         'v1/listenKey': 1,
                         'v3/listenKey': 1,
+                        // builder
+                        'v3/agent': 1,
+                        'v3/builder': 1,
                     },
                 },
                 'sapiPublic': {
@@ -443,6 +454,9 @@ export default class aster extends Exchange {
                 'fetchOpenOrders': {
                     'warnIfNoSymbol': true, // set to false to suppress warning when calling fetchOpenOrders without symbol
                 },
+                'builderFee': true,
+                'builder': '0x1F5877C19e3777Cfd15F9d57253eA4aA5254Ec39',
+                'builderRate': 0.01,
             },
             'exceptions': {
                 'exact': {
@@ -714,6 +728,12 @@ export default class aster extends Exchange {
             this.sapiPublicGetV3ExchangeInfo (params),
             this.fapiPublicGetV3ExchangeInfo (params),
         ];
+        if (!this.isEmptyString (this.privateKey)) {
+            if (this.privateKey.length > 66) {
+                throw new NotSupported (this.id + ' after the latest update (v4.5.50), CCXT now expects the l1 private key to be provided in the credentials. Please check for more details: https://github.com/ccxt/ccxt/wiki/FAQ#how-to-use-the-lighter-exchange-in-ccxt');
+            }
+            promises.push (this.signIn ());
+        }
         const results = await Promise.all (promises);
         const sapiResult = this.safeDict (results, 0, {});
         const sapiRows = this.safeList (sapiResult, 'symbols', []);
@@ -1169,15 +1189,10 @@ export default class aster extends Exchange {
         const untilDefined = ('until' in params);
         if (sinceDefined) {
             request['startTime'] = since;
-            if (!untilDefined) {
-                request['endTime'] = this.sum (since, 3600000); // add 1 hour window
-            }
         } else if (untilDefined) {
             request = this.handleUntilOption ('endTime', request, params);
-            if (!sinceDefined) {
-                request['startTime'] = this.sum (request['endTime'], -3600000); // subtract 1 hour window
-            }
         }
+        // use historical endpoint for targeted requests
         if ('startTime' in request) {
             if (market['swap']) {
                 response = await this.fapiPublicGetV3AggTrades (this.extend (request, params));
@@ -4158,6 +4173,85 @@ export default class aster extends Exchange {
             encodedString += key + '=' + encoded + '&';
         }
         return encodedString.slice (0, -1);
+    }
+
+    /**
+     * @method
+     * @name aster#signIn
+     * @description sign in, must be called prior to using other authenticated methods
+     * @see https://asterdex.github.io/aster-api-website/asterCode/integration-flow/
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns response from exchange
+     */
+    async signIn (params = {}) {
+        await this.initializeClient (params);
+        return true;
+    }
+
+    async initializeClient (params = {}) {
+        const builderFee = this.safeBool (params, 'builderFee', this.safeBool (this.options, 'builderFee', true)); // we shouldn't omit here
+        if (!builderFee) {
+            return false; // skip if builder fee is not enabled
+        }
+        const approvedBuilderFee = this.safeBool (this.options, 'approvedBuilderFee', false);
+        if (approvedBuilderFee) {
+            return true; // skip if builder fee is already approved
+        }
+        const results = await Promise.all ([ this.privateTradingPostFullV1GetAuthorizedBuilders (), this.loadAccountInfos () ]);
+        //
+        // {
+        //     "results": [{
+        //         "builder_account_id": "GRVT_MAIN_ACCOUNT_ID_HERE",
+        //         "max_futures_fee_rate": 0.001,
+        //         "max_spot_fee_rate": 0.0001
+        //     }]
+        // }
+        //
+        const currentBuilders = results[0];
+        const approvedBuilder = this.safeList (currentBuilders, 'results', []);
+        const length = approvedBuilder.length;
+        let found = false;
+        for (let i = 0; i < length; i++) {
+            const builderInfo = this.safeDict (approvedBuilder, i, {});
+            const builderAccountId = this.safeString (builderInfo, 'builder_account_id');
+            if (builderAccountId === this.safeString (this.options, 'builder')) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            this.options['approvedBuilderFee'] = true;
+        } else {
+            try {
+                const defaultFromAccountId = this.safeString (this.options, 'userMainAccountId'); // this.ethGetAddressFromPrivateKey (this.secret); // this.safeString (this.options, 'userMainAccountId');
+                let request: Dict = {
+                    'main_account_id': defaultFromAccountId,
+                    'builder_account_id': this.safeString (this.options, 'builder'),
+                    'max_futures_fee_rate': this.safeString (this.options, 'builderRate'),
+                    'max_spot_fee_rate': this.safeString (this.options, 'builderRate'),
+                    'signature': this.defaultSignature (),
+                };
+                request = this.createSignedRequest (request, 'EIP712_BUILDER_APPROVAL_TYPE');
+                const authResponse = await this.privateTradingPostFullV1AuthorizeBuilder (this.extend (request, params));
+                //
+                // {
+                //     "result": {
+                //         "ack": "true",
+                //         "tx_id":"0"
+                //     }
+                // }
+                //
+                const authResult = this.safeDict (authResponse, 'result');
+                const ack = this.safeBool (authResult, 'ack');
+                if (!ack) {
+                    throw new ExchangeError ('Builder authorization failed, ' + this.json (authResponse));
+                }
+                this.options['approvedBuilderFee'] = true;
+            } catch (e) {
+                this.options['builderFee'] = false; // disable builder fee if an error occurs
+            }
+        }
+        return undefined; // just c#
     }
 
     handleErrors (httpCode: int, reason: string, url: string, method: string, headers: Dict, body: string, response, requestHeaders, requestBody) {

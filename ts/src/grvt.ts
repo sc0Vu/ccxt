@@ -549,6 +549,7 @@ export default class grvt extends Exchange {
     }
 
     async initializeClient (params = {}) {
+        return;
         const builderFee = this.safeBool (params, 'builderFee', this.safeBool (this.options, 'builderFee', true)); // we shouldn't omit here
         if (!builderFee) {
             return false; // skip if builder fee is not enabled
