@@ -456,12 +456,12 @@ export default class aster extends Exchange {
                 },
                 'builderFee': true,
                 'builder': '0x1F5877C19e3777Cfd15F9d57253eA4aA5254Ec39',
-                'builderRate': 0.01,
+                'builderRate': '0.001',
             },
             'exceptions': {
                 'exact': {
                     // 10xx - General Server or Network issues
-                    '-1000': OperationFailed, // UNKNOWN
+                    '-1000': OperationRejected, // UNKNOWN
                     '-1001': NetworkError, // DISCONNECTED
                     '-1002': AuthenticationError, // UNAUTHORIZED
                     '-1003': RateLimitExceeded, // TOO_MANY_REQUESTS
@@ -469,7 +469,7 @@ export default class aster extends Exchange {
                     '-1005': BadRequest, // NO_SUCH_IP
                     '-1006': BadResponse, // UNEXPECTED_RESP
                     '-1007': RequestTimeout, // TIMEOUT
-                    '-1010': OperationFailed, // ERROR_MSG_RECEIVED
+                    '-1010': OperationRejected, // ERROR_MSG_RECEIVED
                     '-1011': PermissionDenied, // NON_WHITE_LIST
                     '-1013': BadRequest, // INVALID_MESSAGE
                     '-1014': OrderNotFillable, // UNKNOWN_ORDER_COMPOSITION
@@ -2734,6 +2734,8 @@ export default class aster extends Exchange {
             request['timeInForce'] = this.safeString (this.options, 'defaultTimeInForce'); // 'GTC' = Good To Cancel (default), 'IOC' = Immediate Or Cancel
         }
         const requestParams = this.omit (params, [ 'newClientOrderId', 'clientOrderId', 'stopPrice', 'triggerPrice', 'trailingTriggerPrice', 'trailingPercent', 'trailingDelta', 'stopPrice', 'stopLossPrice', 'takeProfitPrice' ]);
+        request['builder'] = this.safeString (this.options, 'builder');
+        request['feeRate'] = this.safeString (this.options, 'builderRate');
         return this.extend (request, requestParams);
     }
 
@@ -3931,7 +3933,7 @@ export default class aster extends Exchange {
                 { 'name': 'aster chain', 'type': 'string' },
             ],
         };
-        const withdraw = {
+        const request = {
             'type': 'Withdraw',
             'destination': this.safeString (withdrawPayload, 'receiver'),
             'destination Chain': network,
@@ -3941,7 +3943,7 @@ export default class aster extends Exchange {
             'nonce': this.safeInteger (withdrawPayload, 'userNonce'),
             'aster chain': 'Mainnet',
         };
-        const msg = this.ethEncodeStructuredData (domain, messageTypes, withdraw);
+        const msg = this.ethEncodeStructuredData (domain, messageTypes, request);
         const signature = this.signMessage (msg, this.privateKey);
         return signature;
     }
@@ -4125,30 +4127,47 @@ export default class aster extends Exchange {
             // Sign using EIP-712 typed data per the AsterSignTransaction spec
             const zeroAddress = this.safeString (this.options, 'zeroAddress', '0x0000000000000000000000000000000000000000');
             const v3ChainId = this.safeInteger (this.options, 'v3ChainId', 1666);
+            const signerAddress = this.safeString (this.options, 'signerAddress');
+            if (signerAddress === undefined) {
+                throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
+            }
             const domain = {
                 'name': 'AsterSignTransaction',
                 'version': '1',
                 'chainId': v3ChainId,
                 'verifyingContract': zeroAddress,
             };
-            const messageTypes = {
+            let messageTypes: Dict = {
                 'Message': [
                     { 'name': 'msg', 'type': 'string' },
                 ],
             };
-            const signerAddress = this.safeString (this.options, 'signerAddress');
-            if (signerAddress === undefined) {
-                throw new ArgumentsRequired (this.id + ' requires signerAddress in options when use v3 api');
-            }
             // Build v3 params: original endpoint params + nonce (macroseconds) + user + signer
             // Note: timestamp and recvWindow are not used for v3; nonce replaces timestamp
-            const v3Params = this.extend (params, {
+            const finalParams = this.extend ({
                 'nonce': nonce.toString (),
                 'user': this.walletAddress,
                 'signer': signerAddress,
-            });
-            const paramString = this.encodeValuesWithJson (v3Params);
-            const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, { 'msg': paramString });
+            }, params);
+            let paramString = this.encodeValuesWithJson (finalParams);
+            let paramsToEncode: Dict = { 'msg': paramString };
+            const isApproveBuilder = (path.indexOf ('/approveBuilder') >= 0);
+            if (isApproveBuilder) {
+                // domain['name'] = 'Aster';
+                messageTypes = {
+                    'ApproveBuilder': [
+                        { 'name': 'Builder', 'type': 'address' },
+                        { 'name': 'MaxFeeRate', 'type': 'string' },
+                        { 'name': 'BuilderName', 'type': 'string' },
+                        { 'name': 'User', 'type': 'address' },
+                        { 'name': 'Nonce', 'type': 'uint256' },
+                    ],
+                };
+                delete finalParams['signer']; // signer is not needed for approveBuilder endpoint
+                paramString = this.encodeValuesWithJson (finalParams);
+                paramsToEncode = this.capitalizeKeys (finalParams);
+            }
+            const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, paramsToEncode);
             const signature = this.signMessage (encodedMessage, this.privateKey);
             const queryString = paramString + '&' + 'signature=' + signature;
             if (method === 'GET') {
@@ -4176,6 +4195,18 @@ export default class aster extends Exchange {
         return encodedString.slice (0, -1);
     }
 
+    capitalizeKeys (dict: Dict): Dict {
+        const capitalized: Dict = {};
+        const keys = Object.keys (dict);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const value = dict[key];
+            const capitalizedKey = this.capitalize (key);
+            capitalized[capitalizedKey] = value;
+        }
+        return capitalized;
+    }
+
     /**
      * @method
      * @name aster#signIn
@@ -4198,7 +4229,7 @@ export default class aster extends Exchange {
         if (approvedBuilderFee) {
             return true; // skip if builder fee is already approved
         }
-        const results = await Promise.all ([ this.privateTradingPostFullV1GetAuthorizedBuilders (), this.loadAccountInfos () ]);
+        const results = await Promise.all ([ this.fapiPrivateGetV3Builder ()]);
         //
         // {
         //     "results": [{
@@ -4224,16 +4255,12 @@ export default class aster extends Exchange {
             this.options['approvedBuilderFee'] = true;
         } else {
             try {
-                const defaultFromAccountId = this.safeString (this.options, 'userMainAccountId'); // this.ethGetAddressFromPrivateKey (this.secret); // this.safeString (this.options, 'userMainAccountId');
-                let request: Dict = {
-                    'main_account_id': defaultFromAccountId,
-                    'builder_account_id': this.safeString (this.options, 'builder'),
-                    'max_futures_fee_rate': this.safeString (this.options, 'builderRate'),
-                    'max_spot_fee_rate': this.safeString (this.options, 'builderRate'),
-                    'signature': this.defaultSignature (),
+                const request: Dict = {
+                    'builder': this.safeString (this.options, 'builder'),
+                    'builderName': this.safeString (this.options, 'builderName', 'ccxt'),
+                    'maxFeeRate': this.safeString (this.options, 'builderRate'),
                 };
-                request = this.createSignedRequest (request, 'EIP712_BUILDER_APPROVAL_TYPE');
-                const authResponse = await this.privateTradingPostFullV1AuthorizeBuilder (this.extend (request, params));
+                const authResponse = await this.fapiPrivatePostV3ApproveBuilder (this.extend (request, params));
                 //
                 // {
                 //     "result": {
@@ -4249,7 +4276,7 @@ export default class aster extends Exchange {
                 }
                 this.options['approvedBuilderFee'] = true;
             } catch (e) {
-                this.options['builderFee'] = false; // disable builder fee if an error occurs
+                this.options['builderFee'] = false; // disable if err
             }
         }
         return undefined; // just c#
