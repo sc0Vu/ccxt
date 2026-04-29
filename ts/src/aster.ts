@@ -4169,7 +4169,7 @@ export default class aster extends Exchange {
                 finalParams['signatureChainId'] = v3ChainId;
                 finalParams['asterChain'] = 'Mainnet';
                 delete finalParams['signer']; // signer is not needed for approveBuilder endpoint
-                paramString = this.encodeValuesWithJson (finalParams);
+                paramString = this.encodeValuesWithJson (finalParams) + '&signatureChainId=' + v3ChainId;
                 paramsToEncode = this.capitalizeKeys (finalParams);
             }
             const encodedMessage = this.ethEncodeStructuredData (domain, messageTypes, paramsToEncode);
@@ -4264,6 +4264,7 @@ export default class aster extends Exchange {
                     'builder': this.safeString (this.options, 'builder'),
                     'builderName': this.safeString (this.options, 'builderName', 'ccxt'),
                     'maxFeeRate': this.safeString (this.options, 'builderRate'),
+                    'asterChain': 'Mainnet',
                 };
                 const authResponse = await this.fapiPrivatePostV3ApproveBuilder (this.extend (request, params));
                 //
