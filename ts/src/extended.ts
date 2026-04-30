@@ -2,8 +2,8 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, FundingRateHistory, Int, Market, OHLCV, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
-import { ArgumentsRequired } from './base/errors.js';
+import type { Dict, FundingRateHistory, Int, Market, OHLCV, OpenInterest, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
+import { ArgumentsRequired, BadRequest } from './base/errors.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ export default class extended extends Exchange {
                 'fetchMyTrades': false,
                 'fetchOHLCV': true,
                 'fetchOpenInterest': false,
-                'fetchOpenInterestHistory': false,
+                'fetchOpenInterestHistory': true,
                 'fetchOpenOrders': false,
                 'fetchOrder': false,
                 'fetchOrderBook': true,
@@ -964,6 +964,80 @@ export default class extended extends Exchange {
             'timestamp': timestamp,
             'datetime': this.iso8601 (timestamp),
         } as FundingRateHistory;
+    }
+
+    /**
+     * @method
+     * @name extended#fetchOpenInterestHistory
+     * @description Retrieves the open interest history of a currency
+     * @see https://api.docs.extended.exchange/#get-open-interest-history
+     * @param {string} symbol unified CCXT market symbol
+     * @param {string} timeframe '1h' or '1d'
+     * @param {int} [since] the time(ms) of the earliest record to retrieve as a unix timestamp
+     * @param {int} [limit] the maximum amount of open interest structures to retrieve
+     * @param {object} [params] exchange specific parameters
+     * @param {int} [params.until] timestamp in ms of the latest open interest record to fetch
+     * @returns {object[]} an array of [open interest structures]{@link https://docs.ccxt.com/#/?id=open-interest-structure}
+     */
+    async fetchOpenInterestHistory (symbol: string, timeframe = '1h', since: Int = undefined, limit: Int = undefined, params = {}): Promise<OpenInterest[]> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const interval = this.safeString (this.timeframes, timeframe);
+        if (!this.inArray (interval, [ 'PT1H', 'P1D' ])) {
+            throw new BadRequest (this.id + ' fetchOpenInterestHistory() supports 1h and 1d timeframes only');
+        }
+        if (limit === undefined) {
+            limit = 100;
+        }
+        const until = this.safeInteger (params, 'until', this.milliseconds ());
+        const endTime = this.safeInteger (params, 'endTime', until);
+        params = this.omit (params, [ 'endTime', 'until' ]);
+        if (since === undefined) {
+            since = endTime - (limit * this.parseTimeframe (timeframe) * 1000);
+        }
+        const request: Dict = {
+            'market': market['id'],
+            'interval': interval,
+            'startTime': since,
+            'endTime': endTime,
+            'limit': limit,
+        };
+        const response = await this.v1PublicGetInfoMarketOpenInterests (this.extend (request, params));
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": [
+        //         {
+        //           "i": "112620590.6060360000000000",
+        //           "I": "1473.1408400000000000",
+        //           "t": 1777420800000
+        //         }
+        //       ]
+        //     }
+        //
+        const data = this.safeList (response, 'data', []);
+        return this.parseOpenInterestsHistory (data, market, since, limit);
+    }
+
+    parseOpenInterest (interest: Dict, market: Market = undefined): OpenInterest {
+        //
+        //     {
+        //       "i": "112620590.6060360000000000",
+        //       "I": "1473.1408400000000000",
+        //       "t": 1777420800000
+        //     }
+        //
+        const timestamp = this.safeInteger (interest, 't');
+        return this.safeOpenInterest ({
+            'symbol': market['symbol'],
+            'openInterestAmount': this.safeNumber (interest, 'I'),
+            'openInterestValue': this.safeNumber (interest, 'i'),
+            'baseVolume': this.safeNumber (interest, 'I'),
+            'quoteVolume': this.safeNumber (interest, 'i'),
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'info': interest,
+        }, market);
     }
 
     sign (path, api = 'public', method = 'POST', params = {}, headers = undefined, body = undefined) {
