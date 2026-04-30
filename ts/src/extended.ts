@@ -2,7 +2,7 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, Int, Market, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
+import type { Dict, Int, Market, OHLCV, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -22,139 +22,137 @@ export default class extended extends Exchange {
             'pro': true,
             'has': {
                 'CORS': undefined,
-                'spot': true,
-                'margin': true,
+                'spot': false,
+                'margin': false,
                 'swap': true,
-                'future': true,
+                'future': false,
                 'option': false,
-                'addMargin': true,
-                'borrowCrossMargin': true,
-                'borrowIsolatedMargin': true,
-                'cancelAllOrders': true,
-                'cancelOrder': true,
-                'cancelOrders': true,
-                'closeAllPositions': true,
-                'closePosition': true,
-                'createConvertTrade': true,
+                'addMargin': false,
+                'borrowCrossMargin': false,
+                'borrowIsolatedMargin': false,
+                'cancelAllOrders': false,
+                'cancelOrder': false,
+                'cancelOrders': false,
+                'closeAllPositions': false,
+                'closePosition': false,
+                'createConvertTrade': false,
                 'createDepositAddress': false,
-                'createMarketBuyOrderWithCost': true,
+                'createMarketBuyOrderWithCost': false,
                 'createMarketOrderWithCost': false,
                 'createMarketSellOrderWithCost': false,
-                'createOrder': true,
-                'createOrders': true,
-                'createOrderWithTakeProfitAndStopLoss': true,
-                'createPostOnlyOrder': true,
+                'createOrder': false,
+                'createOrders': false,
+                'createOrderWithTakeProfitAndStopLoss': false,
+                'createPostOnlyOrder': false,
                 'createReduceOnlyOrder': false,
-                'createStopLimitOrder': true,
-                'createStopLossOrder': true,
-                'createStopMarketOrder': true,
-                'createStopOrder': true,
-                'createTakeProfitOrder': true,
+                'createStopLimitOrder': false,
+                'createStopLossOrder': false,
+                'createStopMarketOrder': false,
+                'createStopOrder': false,
+                'createTakeProfitOrder': false,
                 'createTrailingAmountOrder': false,
-                'createTrailingPercentOrder': true,
-                'createTriggerOrder': true,
-                'editOrder': true,
+                'createTrailingPercentOrder': false,
+                'createTriggerOrder': false,
+                'editOrder': false,
                 'fetchAccounts': false,
-                'fetchBalance': true,
-                'fetchBorrowInterest': true,
+                'fetchBalance': false,
+                'fetchBorrowInterest': false,
                 'fetchBorrowRateHistories': false,
                 'fetchBorrowRateHistory': false,
-                'fetchCanceledAndClosedOrders': true,
-                'fetchCanceledOrders': true,
-                'fetchClosedOrders': true,
-                'fetchConvertCurrencies': true,
-                'fetchConvertQuote': true,
+                'fetchCanceledAndClosedOrders': false,
+                'fetchCanceledOrders': false,
+                'fetchClosedOrders': false,
+                'fetchConvertCurrencies': false,
+                'fetchConvertQuote': false,
                 'fetchConvertTrade': false,
-                'fetchConvertTradeHistory': true,
-                'fetchCrossBorrowRate': true,
+                'fetchConvertTradeHistory': false,
+                'fetchCrossBorrowRate': false,
                 'fetchCrossBorrowRates': false,
-                'fetchCurrencies': true,
+                'fetchCurrencies': false,
                 'fetchDeposit': false,
-                'fetchDepositAddress': true,
+                'fetchDepositAddress': false,
                 'fetchDepositAddresses': false,
                 'fetchDepositAddressesByNetwork': false,
-                'fetchDeposits': true,
+                'fetchDeposits': false,
                 'fetchDepositsWithdrawals': false,
-                'fetchDepositWithdrawFee': 'emulated',
-                'fetchDepositWithdrawFees': true,
-                'fetchFundingHistory': true,
-                'fetchFundingInterval': true,
-                'fetchFundingIntervals': true,
-                'fetchFundingRate': true,
-                'fetchFundingRateHistory': true,
-                'fetchFundingRates': true,
+                'fetchDepositWithdrawFee': false,
+                'fetchDepositWithdrawFees': false,
+                'fetchFundingHistory': false,
+                'fetchFundingInterval': false,
+                'fetchFundingIntervals': false,
+                'fetchFundingRate': false,
+                'fetchFundingRateHistory': false,
+                'fetchFundingRates': false,
                 'fetchIndexOHLCV': true,
-                'fetchIsolatedBorrowRate': true,
+                'fetchIsolatedBorrowRate': false,
                 'fetchIsolatedBorrowRates': false,
-                'fetchLedger': true,
-                'fetchLeverage': true,
+                'fetchLedger': false,
+                'fetchLeverage': false,
                 'fetchLeverageTiers': false,
                 'fetchLiquidations': false,
                 'fetchLongShortRatio': false,
-                'fetchLongShortRatioHistory': true,
+                'fetchLongShortRatioHistory': false,
                 'fetchMarginAdjustmentHistory': false,
-                'fetchMarginMode': true,
-                'fetchMarketLeverageTiers': true,
+                'fetchMarginMode': false,
+                'fetchMarketLeverageTiers': false,
                 'fetchMarkets': true,
                 'fetchMarkOHLCV': true,
-                'fetchMarkPrice': true,
-                'fetchMyLiquidations': true,
-                'fetchMyTrades': true,
+                'fetchMarkPrice': false,
+                'fetchMyLiquidations': false,
+                'fetchMyTrades': false,
                 'fetchOHLCV': true,
-                'fetchOpenInterest': true,
+                'fetchOpenInterest': false,
                 'fetchOpenInterestHistory': false,
-                'fetchOpenOrders': true,
-                'fetchOrder': true,
+                'fetchOpenOrders': false,
+                'fetchOrder': false,
                 'fetchOrderBook': true,
                 'fetchOrderBooks': false,
                 'fetchOrders': false,
                 'fetchOrderTrades': false,
-                'fetchPosition': true,
-                'fetchPositionHistory': 'emulated',
+                'fetchPosition': false,
+                'fetchPositionHistory': false,
                 'fetchPositionMode': false,
-                'fetchPositions': true,
-                'fetchPositionsHistory': true,
+                'fetchPositions': false,
+                'fetchPositionsHistory': false,
                 'fetchPositionsRisk': false,
                 'fetchPremiumIndexOHLCV': false,
                 'fetchStatus': false,
                 'fetchTicker': true,
                 'fetchTickers': true,
-                'fetchTime': true,
+                'fetchTime': false,
                 'fetchTrades': true,
-                'fetchTradingFee': true,
-                'fetchTradingFees': true,
+                'fetchTradingFee': false,
+                'fetchTradingFees': false,
                 'fetchTransactions': false,
                 'fetchTransfer': false,
-                'fetchTransfers': true,
+                'fetchTransfers': false,
                 'fetchWithdrawAddresses': false,
                 'fetchWithdrawal': false,
-                'fetchWithdrawals': true,
-                'reduceMargin': true,
-                'repayCrossMargin': true,
-                'repayIsolatedMargin': true,
-                'setLeverage': true,
+                'fetchWithdrawals': false,
+                'reduceMargin': false,
+                'repayCrossMargin': false,
+                'repayIsolatedMargin': false,
+                'setLeverage': false,
                 'setMargin': false,
-                'setMarginMode': true,
-                'setPositionMode': true,
+                'setMarginMode': false,
+                'setPositionMode': false,
                 'signIn': false,
-                'transfer': true,
-                'withdraw': true,
+                'transfer': false,
+                'withdraw': false,
             },
             'timeframes': {
-                '1m': '1m',
-                '3m': '3m',
-                '5m': '5m',
-                '15m': '15m',
-                '30m': '30m',
-                '1h': '1h',
-                '2h': '2h',
-                '4h': '4h',
-                '6h': '6h',
-                '12h': '12h',
-                '1d': '1d',
-                '3d': '3d',
-                '1w': '1w',
-                '1M': '1m',
+                '1m': 'PT1M',
+                '5m': 'PT5M',
+                '15m': 'PT15M',
+                '30m': 'PT30M',
+                '1h': 'PT1H',
+                '2h': 'PT2H',
+                '4h': 'PT4H',
+                '8h': 'PT8H',
+                '12h': 'PT12H',
+                '1d': 'PT24H',
+                '1w': 'P7D',
+                '1M': 'P30D',
             },
             'hostname': 'extended.exchange',
             'urls': {
@@ -788,6 +786,87 @@ export default class extended extends Exchange {
             'cost': undefined,
             'fee': undefined,
         }, market);
+    }
+
+    /**
+     * @method
+     * @name extended#fetchOHLCV
+     * @description fetches historical candlestick data containing the open, high, low, and close price, and the volume of a market
+     * @see https://api.docs.extended.exchange/#get-candles-history
+     * @param {string} symbol unified symbol of the market to fetch OHLCV data for
+     * @param {string} timeframe the length of time each candle represents
+     * @param {int} [since] timestamp in ms of the earliest candle to fetch
+     * @param {int} [limit] the maximum amount of candles to fetch, default 100
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {string} [params.candleType] candle type: 'trades' (default), 'mark-prices', or 'index-prices'
+     * @param {string} [params.price] *ignored if params.candleType is set* 'mark' or 'index' for mark price and index price candles
+     * @param {int} [params.until] end timestamp in ms for the requested period
+     * @returns {int[][]} A list of candles ordered as timestamp, open, high, low, close, volume
+     */
+    async fetchOHLCV (symbol: Str, timeframe = '1m', since: Int = undefined, limit: Int = undefined, params = {}): Promise<OHLCV[]> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const price = this.safeString (params, 'price');
+        let candleType = this.safeString (params, 'candleType');
+        if (candleType === undefined) {
+            if (price === 'mark') {
+                candleType = 'mark-prices';
+            } else if (price === 'index') {
+                candleType = 'index-prices';
+            } else {
+                candleType = 'trades';
+            }
+        }
+        const until = this.safeInteger (params, 'until');
+        params = this.omit (params, [ 'candleType', 'price', 'until' ]);
+        const request: Dict = {
+            'market': market['id'],
+            'candleType': candleType,
+            'interval': this.safeString (this.timeframes, timeframe, timeframe),
+            'limit': (limit !== undefined) ? limit : 100,
+        };
+        if (until !== undefined) {
+            request['endTime'] = until;
+        }
+        const response = await this.v1PublicGetInfoCandlesMarketCandleType (this.extend (request, params));
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": [
+        //         {
+        //           "o": "75657.5",
+        //           "l": "75657.5",
+        //           "h": "75657.5",
+        //           "c": "75657.5",
+        //           "v": "0",
+        //           "T": 1777517880000
+        //         }
+        //       ]
+        //     }
+        //
+        const data = this.safeList (response, 'data', []);
+        return this.parseOHLCVs (data, market, timeframe, since, limit);
+    }
+
+    parseOHLCV (ohlcv: Dict, market: Market = undefined): OHLCV {
+        //
+        //     {
+        //       "o": "75657.5",
+        //       "l": "75657.5",
+        //       "h": "75657.5",
+        //       "c": "75657.5",
+        //       "v": "0",
+        //       "T": 1777517880000
+        //     }
+        //
+        return [
+            this.safeInteger (ohlcv, 'T'),
+            this.safeNumber (ohlcv, 'o'),
+            this.safeNumber (ohlcv, 'h'),
+            this.safeNumber (ohlcv, 'l'),
+            this.safeNumber (ohlcv, 'c'),
+            this.safeNumber (ohlcv, 'v'),
+        ];
     }
 
     sign (path, api = 'public', method = 'POST', params = {}, headers = undefined, body = undefined) {
