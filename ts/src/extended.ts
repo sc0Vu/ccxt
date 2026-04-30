@@ -2,8 +2,9 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, FundingRateHistory, Int, Market, OHLCV, OpenInterest, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
+import type { Currencies, Currency, Dict, FundingRateHistory, Int, Market, OHLCV, OpenInterest, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
 import { ArgumentsRequired, BadRequest } from './base/errors.js';
+import { TICK_SIZE } from './base/functions/number.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -19,6 +20,7 @@ export default class extended extends Exchange {
             'countries': [ 'SG' ],
             'version': 'v2',
             'rateLimit': 600, // Default Tier 1,000 requests/minute ≈ 1.67 request per second
+            'precisionMode': TICK_SIZE,
             'certified': true,
             'pro': true,
             'has': {
@@ -69,7 +71,7 @@ export default class extended extends Exchange {
                 'fetchConvertTradeHistory': false,
                 'fetchCrossBorrowRate': false,
                 'fetchCrossBorrowRates': false,
-                'fetchCurrencies': false,
+                'fetchCurrencies': true,
                 'fetchDeposit': false,
                 'fetchDepositAddress': false,
                 'fetchDepositAddresses': false,
@@ -342,61 +344,7 @@ export default class extended extends Exchange {
         //       "description": "Bitcoin",
         //       "active": true,
         //       "status": "ACTIVE",
-        //       "marketStats": {
-        //         "dailyVolume": "231016077.512960",
-        //         "dailyVolumeBase": "3025.00058",
-        //         "dailyPriceChange": "420",
-        //         "dailyPriceChangePercentage": "0.0055",
-        //         "dailyLow": "75635",
-        //         "dailyHigh": "77399",
-        //         "lastPrice": "77259",
-        //         "askPrice": "77260",
-        //         "bidPrice": "77259",
-        //         "markPrice": "77259.680250000004",
-        //         "indexPrice": "77299.020412500001",
-        //         "fundingRate": "0.000013",
-        //         "nextFundingRate": 1777442400000,
-        //         "openInterest": "115861923.311902",
-        //         "openInterestBase": "1500.40958",
-        //         "deleverageLevels": {
-        //           "shortPositions": [
-        //             {
-        //               "level": 1,
-        //               "rankingLowerBound": "-815.7788"
-        //             },
-        //             {
-        //               "level": 2,
-        //               "rankingLowerBound": "-2.1328"
-        //             },
-        //             {
-        //               "level": 3,
-        //               "rankingLowerBound": "-0.9297"
-        //             },
-        //             {
-        //               "level": 4,
-        //               "rankingLowerBound": "0.0000"
-        //             }
-        //           ],
-        //           "longPositions": [
-        //             {
-        //               "level": 1,
-        //               "rankingLowerBound": "-47234.9095"
-        //             },
-        //             {
-        //               "level": 2,
-        //               "rankingLowerBound": "-0.0030"
-        //             },
-        //             {
-        //               "level": 3,
-        //               "rankingLowerBound": "0.0020"
-        //             },
-        //             {
-        //               "level": 4,
-        //               "rankingLowerBound": "0.0033"
-        //             }
-        //           ]
-        //         }
-        //       },
+        //       "marketStats": { ... },
         //       "tradingConfig": {
         //         "minOrderSize": "0.0001",
         //         "minOrderSizeChange": "0.00001",
@@ -417,13 +365,7 @@ export default class extended extends Exchange {
         //           }
         //         ]
         //       },
-        //       "l2Config": {
-        //         "type": "STARKX",
-        //         "collateralId": "0x1",
-        //         "syntheticId": "0x4254432d3600000000000000000000",
-        //         "syntheticResolution": 1000000,
-        //         "collateralResolution": 1000000
-        //       },
+        //       "l2Config": { ... },
         //       "visibleOnUi": true,
         //       "createdAt": 1752829532673
         //     }
@@ -431,7 +373,10 @@ export default class extended extends Exchange {
         const tradingConfig = this.safeDict (market, 'tradingConfig', {});
         const marketId = this.safeString (market, 'name');
         const baseId = this.safeString (market, 'assetName');
-        const quoteId = this.safeString (market, 'collateralAssetName');
+        let quoteId = this.safeString (market, 'collateralAssetName');
+        if (quoteId === 'USD') {
+            quoteId = 'USDC';
+        }
         const base = this.safeCurrencyCode (baseId);
         const quote = this.safeCurrencyCode (quoteId);
         const settleId = 'USDC';
@@ -495,6 +440,91 @@ export default class extended extends Exchange {
             },
             'created': created,
             'info': market,
+        });
+    }
+
+    /**
+     * @method
+     * @name extended#fetchCurrencies
+     * @description fetches all available currencies on an exchange
+     * @see https://api.docs.extended.exchange/#get-assets
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} an associative dictionary of currencies
+     */
+    async fetchCurrencies (params = {}): Promise<Currencies> {
+        const response = await this.v1PublicGetInfoAssets (params);
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": [
+        //         {
+        //           "id": 1,
+        //           "name": "USD",
+        //           "symbol": "USD",
+        //           "description": "USD Collateral",
+        //           "precision": 6,
+        //           "isActive": true,
+        //           "isCollateral": true,
+        //           "starkexId": "0x1",
+        //           "starkexResolution": 1000000,
+        //           "l1Id": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        //           "l1Resolution": 1000000,
+        //           "version": 3,
+        //           "createdAt": 1752829532673,
+        //           "type": "SPOT",
+        //           "canBeUsedAsCollateral": true,
+        //           "riskFactors": [],
+        //           "availableForTradeFactors": []
+        //         }
+        //       ]
+        //     }
+        //
+        const data = this.safeList (response, 'data', []);
+        return this.parseCurrencies (data);
+    }
+
+    parseCurrency (currency: Dict): Currency {
+        //
+        //     {
+        //       "id": 1,
+        //       "name": "USD",
+        //       "symbol": "USD",
+        //       "description": "USD Collateral",
+        //       "precision": 6,
+        //       "isActive": true,
+        //       "isCollateral": true,
+        //       "starkexId": "0x1",
+        //       "starkexResolution": 1000000,
+        //       "l1Id": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        //       "l1Resolution": 1000000,
+        //       "version": 3,
+        //       "createdAt": 1752829532673,
+        //       "type": "SPOT",
+        //       "canBeUsedAsCollateral": true,
+        //       "riskFactors": [],
+        //       "availableForTradeFactors": []
+        //     }
+        //
+        const currencyId = this.safeString (currency, 'symbol');
+        let code = this.safeCurrencyCode (currencyId);
+        if (currencyId === 'USD') {
+            code = 'USDC';
+        }
+        const name = this.safeString (currency, 'name');
+        const precision = this.safeInteger (currency, 'precision');
+        const isActive = this.safeBool (currency, 'isActive');
+        return this.safeCurrencyStructure ({
+            'id': currencyId,
+            'code': code,
+            'numericId': this.safeInteger (currency, 'id'),
+            'name': name,
+            'active': isActive,
+            'deposit': undefined,
+            'withdraw': undefined,
+            'precision': precision,
+            'type': this.safeStringLower (currency, 'type'),
+            'margin': this.safeBool (currency, 'canBeUsedAsCollateral'),
+            'info': currency,
         });
     }
 
