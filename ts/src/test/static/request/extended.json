@@ -1,0 +1,155 @@
+{
+    "exchange": "extended",
+    "outputType": "json",
+    "methods": {
+        "fetchCurrencies": [
+            {
+                "description": "fetchCurrencies",
+                "method": "fetchCurrencies",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/assets",
+                "input": [],
+                "output": null
+            }
+        ],
+        "fetchMarkets": [
+            {
+                "description": "fetchMarkets",
+                "method": "fetchMarkets",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/markets",
+                "input": [],
+                "output": null
+            }
+        ],
+        "fetchTicker": [
+            {
+                "description": "fetchTicker",
+                "method": "fetchTicker",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/markets/BTC-USD/stats",
+                "input": [
+                    "BTC/USDC:USDC"
+                ],
+                "output": null
+            }
+        ],
+        "fetchTickers": [
+            {
+                "description": "fetchTickers with symbols",
+                "method": "fetchTickers",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/markets?market=BTC-USD",
+                "input": [
+                    [
+                        "BTC/USDC:USDC"
+                    ]
+                ],
+                "output": null
+            }
+        ],
+        "fetchOrderBook": [
+            {
+                "description": "fetchOrderBook with limit",
+                "method": "fetchOrderBook",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/markets/BTC-USD/orderbook",
+                "input": [
+                    "BTC/USDC:USDC",
+                    1
+                ],
+                "output": null
+            }
+        ],
+        "fetchTrades": [
+            {
+                "description": "fetchTrades",
+                "method": "fetchTrades",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/markets/BTC-USD/trades",
+                "input": [
+                    "BTC/USDC:USDC"
+                ],
+                "output": null
+            }
+        ],
+        "fetchOHLCV": [
+            {
+                "description": "fetchOHLCV with until",
+                "method": "fetchOHLCV",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/candles/BTC-USD/trades?interval=PT1M&limit=1&endTime=1777517940000",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "output": null
+            }
+        ],
+        "fetchMarkOHLCV": [
+            {
+                "description": "fetchMarkOHLCV with until",
+                "method": "fetchMarkOHLCV",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/candles/BTC-USD/mark-prices?interval=PT1M&limit=1&endTime=1777517940000",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "output": null
+            }
+        ],
+        "fetchIndexOHLCV": [
+            {
+                "description": "fetchIndexOHLCV with until",
+                "method": "fetchIndexOHLCV",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/candles/BTC-USD/index-prices?interval=PT1M&limit=1&endTime=1777517940000",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "output": null
+            }
+        ],
+        "fetchFundingRateHistory": [
+            {
+                "description": "fetchFundingRateHistory with since, limit, until",
+                "method": "fetchFundingRateHistory",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/BTC-USD/funding?startTime=1777503601028&endTime=1777507201028&limit=1",
+                "input": [
+                    "BTC/USDC:USDC",
+                    1777503601028,
+                    1,
+                    {
+                        "until": 1777507201028
+                    }
+                ],
+                "output": null
+            }
+        ],
+        "fetchOpenInterestHistory": [
+            {
+                "description": "fetchOpenInterestHistory with since, limit, until",
+                "method": "fetchOpenInterestHistory",
+                "url": "https://api.starknet.extended.exchange/api/v1/info/BTC-USD/open-interests?interval=PT1H&startTime=1777417200000&endTime=1777420800000&limit=1",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1h",
+                    1777417200000,
+                    1,
+                    {
+                        "until": 1777420800000
+                    }
+                ],
+                "output": null
+            }
+        ]
+    }
+}

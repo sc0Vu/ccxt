@@ -1,0 +1,981 @@
+{
+    "exchange": "extended",
+    "skipKeys": [],
+    "methods": {
+        "fetchCurrencies": [
+            {
+                "description": "fetchCurrencies",
+                "method": "fetchCurrencies",
+                "input": [],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "id": 1,
+                            "name": "USD",
+                            "symbol": "USD",
+                            "description": "USD Collateral",
+                            "precision": 6,
+                            "isActive": true,
+                            "isCollateral": true,
+                            "starkexId": "0x1",
+                            "starkexResolution": 1000000,
+                            "l1Id": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "l1Resolution": 1000000,
+                            "version": 3,
+                            "createdAt": 1752829532673,
+                            "type": "SPOT",
+                            "canBeUsedAsCollateral": true,
+                            "riskFactors": [],
+                            "availableForTradeFactors": []
+                        }
+                    ]
+                },
+                "parsedResponse": {
+                    "USDC": {
+                        "info": {
+                            "id": 1,
+                            "name": "USD",
+                            "symbol": "USD",
+                            "description": "USD Collateral",
+                            "precision": 6,
+                            "isActive": true,
+                            "isCollateral": true,
+                            "starkexId": "0x1",
+                            "starkexResolution": 1000000,
+                            "l1Id": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                            "l1Resolution": 1000000,
+                            "version": 3,
+                            "createdAt": 1752829532673,
+                            "type": "SPOT",
+                            "canBeUsedAsCollateral": true,
+                            "riskFactors": [],
+                            "availableForTradeFactors": []
+                        },
+                        "id": "USD",
+                        "numericId": 1,
+                        "code": "USDC",
+                        "precision": 6,
+                        "type": "spot",
+                        "name": "USD",
+                        "active": true,
+                        "deposit": null,
+                        "withdraw": null,
+                        "fee": null,
+                        "fees": {},
+                        "networks": {},
+                        "limits": {
+                            "deposit": {
+                                "min": null,
+                                "max": null
+                            },
+                            "withdraw": {
+                                "min": null,
+                                "max": null
+                            }
+                        },
+                        "margin": true
+                    }
+                }
+            }
+        ],
+        "fetchMarkets": [
+            {
+                "description": "fetchMarkets",
+                "method": "fetchMarkets",
+                "input": [],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "name": "BTC-USD",
+                            "uiName": "BTC-USD",
+                            "category": "Crypto",
+                            "subCategory": "L1",
+                            "assetName": "BTC",
+                            "assetPrecision": 5,
+                            "collateralAssetName": "USD",
+                            "collateralAssetPrecision": 6,
+                            "description": "Bitcoin",
+                            "active": true,
+                            "status": "ACTIVE",
+                            "marketStats": {
+                                "dailyVolume": "231216165.666600",
+                                "dailyVolumeBase": "3027.36710",
+                                "dailyPriceChange": "181",
+                                "dailyPriceChangePercentage": "0.0024",
+                                "dailyLow": "75635",
+                                "dailyHigh": "77399",
+                                "lastPrice": "77026",
+                                "askPrice": "77026",
+                                "bidPrice": "77025",
+                                "markPrice": "77006.091897999984",
+                                "indexPrice": "77050.739529925005",
+                                "fundingRate": "0.000012",
+                                "nextFundingRate": 1777446000000,
+                                "openInterest": "114851569.088316",
+                                "openInterestBase": "1491.33012",
+                                "deleverageLevels": {
+                                    "shortPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-784.2884"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-2.1078"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "-0.8754"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0000"
+                                        }
+                                    ],
+                                    "longPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-47747.2010"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-0.0131"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "0.0019"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0032"
+                                        }
+                                    ]
+                                }
+                            },
+                            "tradingConfig": {
+                                "minOrderSize": "0.0001",
+                                "minOrderSizeChange": "0.00001",
+                                "minPriceChange": "1",
+                                "maxMarketOrderValue": "3000000",
+                                "maxLimitOrderValue": "15000000",
+                                "maxPositionValue": "60000000",
+                                "maxLeverage": "50.00",
+                                "hourlyFundingRateCap": "0.25",
+                                "maxNumOrders": "200",
+                                "limitPriceCap": "0.05",
+                                "limitPriceFloor": "0.05",
+                                "riskFactorConfig": [
+                                    {
+                                        "upperBound": "4000000",
+                                        "riskFactor": "0.02",
+                                        "isAvailableForUsers": true
+                                    }
+                                ]
+                            },
+                            "l2Config": {
+                                "type": "STARKX",
+                                "collateralId": "0x1",
+                                "syntheticId": "0x4254432d3600000000000000000000",
+                                "syntheticResolution": 1000000,
+                                "collateralResolution": 1000000
+                            },
+                            "visibleOnUi": true,
+                            "createdAt": 1752829532673
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    {
+                        "id": "BTC-USD",
+                        "lowercaseId": null,
+                        "symbol": "BTC/USDC:USDC",
+                        "base": "BTC",
+                        "quote": "USDC",
+                        "settle": "USDC",
+                        "baseId": "BTC",
+                        "quoteId": "USDC",
+                        "settleId": "USDC",
+                        "type": "swap",
+                        "spot": false,
+                        "margin": false,
+                        "swap": true,
+                        "future": false,
+                        "option": false,
+                        "index": null,
+                        "active": true,
+                        "contract": true,
+                        "linear": true,
+                        "inverse": false,
+                        "subType": null,
+                        "taker": 0.002,
+                        "maker": 0.002,
+                        "contractSize": 1,
+                        "expiry": null,
+                        "expiryDatetime": null,
+                        "strike": null,
+                        "optionType": null,
+                        "precision": {
+                            "amount": 0.00001,
+                            "price": 1
+                        },
+                        "limits": {
+                            "leverage": {
+                                "min": 1,
+                                "max": 50
+                            },
+                            "amount": {
+                                "min": 0.0001,
+                                "max": null
+                            },
+                            "price": {
+                                "min": null,
+                                "max": null
+                            },
+                            "cost": {
+                                "min": null,
+                                "max": 15000000
+                            }
+                        },
+                        "marginModes": {
+                            "cross": null,
+                            "isolated": null
+                        },
+                        "created": 1752829532673,
+                        "info": {
+                            "name": "BTC-USD",
+                            "uiName": "BTC-USD",
+                            "category": "Crypto",
+                            "subCategory": "L1",
+                            "assetName": "BTC",
+                            "assetPrecision": 5,
+                            "collateralAssetName": "USD",
+                            "collateralAssetPrecision": 6,
+                            "description": "Bitcoin",
+                            "active": true,
+                            "status": "ACTIVE",
+                            "marketStats": {
+                                "dailyVolume": "231216165.666600",
+                                "dailyVolumeBase": "3027.36710",
+                                "dailyPriceChange": "181",
+                                "dailyPriceChangePercentage": "0.0024",
+                                "dailyLow": "75635",
+                                "dailyHigh": "77399",
+                                "lastPrice": "77026",
+                                "askPrice": "77026",
+                                "bidPrice": "77025",
+                                "markPrice": "77006.091897999984",
+                                "indexPrice": "77050.739529925005",
+                                "fundingRate": "0.000012",
+                                "nextFundingRate": 1777446000000,
+                                "openInterest": "114851569.088316",
+                                "openInterestBase": "1491.33012",
+                                "deleverageLevels": {
+                                    "shortPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-784.2884"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-2.1078"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "-0.8754"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0000"
+                                        }
+                                    ],
+                                    "longPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-47747.2010"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-0.0131"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "0.0019"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0032"
+                                        }
+                                    ]
+                                }
+                            },
+                            "tradingConfig": {
+                                "minOrderSize": "0.0001",
+                                "minOrderSizeChange": "0.00001",
+                                "minPriceChange": "1",
+                                "maxMarketOrderValue": "3000000",
+                                "maxLimitOrderValue": "15000000",
+                                "maxPositionValue": "60000000",
+                                "maxLeverage": "50.00",
+                                "hourlyFundingRateCap": "0.25",
+                                "maxNumOrders": "200",
+                                "limitPriceCap": "0.05",
+                                "limitPriceFloor": "0.05",
+                                "riskFactorConfig": [
+                                    {
+                                        "upperBound": "4000000",
+                                        "riskFactor": "0.02",
+                                        "isAvailableForUsers": true
+                                    }
+                                ]
+                            },
+                            "l2Config": {
+                                "type": "STARKX",
+                                "collateralId": "0x1",
+                                "syntheticId": "0x4254432d3600000000000000000000",
+                                "syntheticResolution": 1000000,
+                                "collateralResolution": 1000000
+                            },
+                            "visibleOnUi": true,
+                            "createdAt": 1752829532673
+                        }
+                    }
+                ]
+            }
+        ],
+        "fetchTicker": [
+            {
+                "description": "fetchTicker",
+                "method": "fetchTicker",
+                "input": [
+                    "BTC/USDC:USDC"
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": {
+                        "dailyVolume": "231216165.666600",
+                        "dailyVolumeBase": "3027.36710",
+                        "dailyPriceChange": "181",
+                        "dailyPriceChangePercentage": "0.0024",
+                        "dailyLow": "75635",
+                        "dailyHigh": "77399",
+                        "lastPrice": "77026",
+                        "askPrice": "77026",
+                        "bidPrice": "77025",
+                        "markPrice": "77006.091897999984",
+                        "indexPrice": "77050.739529925005",
+                        "fundingRate": "0.000012",
+                        "nextFundingRate": 1777446000000,
+                        "openInterest": "114851569.088316",
+                        "openInterestBase": "1491.33012",
+                        "deleverageLevels": {
+                            "shortPositions": [
+                                {
+                                    "level": 1,
+                                    "rankingLowerBound": "-784.2884"
+                                },
+                                {
+                                    "level": 2,
+                                    "rankingLowerBound": "-2.1078"
+                                },
+                                {
+                                    "level": 3,
+                                    "rankingLowerBound": "-0.8754"
+                                },
+                                {
+                                    "level": 4,
+                                    "rankingLowerBound": "0.0000"
+                                }
+                            ],
+                            "longPositions": [
+                                {
+                                    "level": 1,
+                                    "rankingLowerBound": "-47747.2010"
+                                },
+                                {
+                                    "level": 2,
+                                    "rankingLowerBound": "-0.0131"
+                                },
+                                {
+                                    "level": 3,
+                                    "rankingLowerBound": "0.0019"
+                                },
+                                {
+                                    "level": 4,
+                                    "rankingLowerBound": "0.0032"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "parsedResponse": {
+                    "symbol": "BTC/USDC:USDC",
+                    "timestamp": null,
+                    "datetime": null,
+                    "high": 77399,
+                    "low": 75635,
+                    "bid": 77025,
+                    "bidVolume": null,
+                    "ask": 77026,
+                    "askVolume": null,
+                    "vwap": 76375.3314444753,
+                    "open": 76845,
+                    "close": 77026,
+                    "last": 77026,
+                    "previousClose": null,
+                    "change": 181,
+                    "percentage": 0.24,
+                    "average": 76935,
+                    "baseVolume": 3027.3671,
+                    "quoteVolume": 231216165.6666,
+                    "markPrice": 77006.09189799998,
+                    "indexPrice": 77050.739529925,
+                    "info": {
+                        "dailyVolume": "231216165.666600",
+                        "dailyVolumeBase": "3027.36710",
+                        "dailyPriceChange": "181",
+                        "dailyPriceChangePercentage": "0.0024",
+                        "dailyLow": "75635",
+                        "dailyHigh": "77399",
+                        "lastPrice": "77026",
+                        "askPrice": "77026",
+                        "bidPrice": "77025",
+                        "markPrice": "77006.091897999984",
+                        "indexPrice": "77050.739529925005",
+                        "fundingRate": "0.000012",
+                        "nextFundingRate": 1777446000000,
+                        "openInterest": "114851569.088316",
+                        "openInterestBase": "1491.33012",
+                        "deleverageLevels": {
+                            "shortPositions": [
+                                {
+                                    "level": 1,
+                                    "rankingLowerBound": "-784.2884"
+                                },
+                                {
+                                    "level": 2,
+                                    "rankingLowerBound": "-2.1078"
+                                },
+                                {
+                                    "level": 3,
+                                    "rankingLowerBound": "-0.8754"
+                                },
+                                {
+                                    "level": 4,
+                                    "rankingLowerBound": "0.0000"
+                                }
+                            ],
+                            "longPositions": [
+                                {
+                                    "level": 1,
+                                    "rankingLowerBound": "-47747.2010"
+                                },
+                                {
+                                    "level": 2,
+                                    "rankingLowerBound": "-0.0131"
+                                },
+                                {
+                                    "level": 3,
+                                    "rankingLowerBound": "0.0019"
+                                },
+                                {
+                                    "level": 4,
+                                    "rankingLowerBound": "0.0032"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "fetchTickers": [
+            {
+                "description": "fetchTickers with symbols",
+                "method": "fetchTickers",
+                "input": [
+                    [
+                        "BTC/USDC:USDC"
+                    ]
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "name": "BTC-USD",
+                            "uiName": "BTC-USD",
+                            "category": "Crypto",
+                            "subCategory": "L1",
+                            "assetName": "BTC",
+                            "assetPrecision": 5,
+                            "collateralAssetName": "USD",
+                            "collateralAssetPrecision": 6,
+                            "description": "Bitcoin",
+                            "active": true,
+                            "status": "ACTIVE",
+                            "marketStats": {
+                                "dailyVolume": "231216165.666600",
+                                "dailyVolumeBase": "3027.36710",
+                                "dailyPriceChange": "181",
+                                "dailyPriceChangePercentage": "0.0024",
+                                "dailyLow": "75635",
+                                "dailyHigh": "77399",
+                                "lastPrice": "77026",
+                                "askPrice": "77026",
+                                "bidPrice": "77025",
+                                "markPrice": "77006.091897999984",
+                                "indexPrice": "77050.739529925005",
+                                "fundingRate": "0.000012",
+                                "nextFundingRate": 1777446000000,
+                                "openInterest": "114851569.088316",
+                                "openInterestBase": "1491.33012",
+                                "deleverageLevels": {
+                                    "shortPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-784.2884"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-2.1078"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "-0.8754"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0000"
+                                        }
+                                    ],
+                                    "longPositions": [
+                                        {
+                                            "level": 1,
+                                            "rankingLowerBound": "-47747.2010"
+                                        },
+                                        {
+                                            "level": 2,
+                                            "rankingLowerBound": "-0.0131"
+                                        },
+                                        {
+                                            "level": 3,
+                                            "rankingLowerBound": "0.0019"
+                                        },
+                                        {
+                                            "level": 4,
+                                            "rankingLowerBound": "0.0032"
+                                        }
+                                    ]
+                                }
+                            },
+                            "tradingConfig": {
+                                "minOrderSize": "0.0001",
+                                "minOrderSizeChange": "0.00001",
+                                "minPriceChange": "1",
+                                "maxMarketOrderValue": "3000000",
+                                "maxLimitOrderValue": "15000000",
+                                "maxPositionValue": "60000000",
+                                "maxLeverage": "50.00",
+                                "hourlyFundingRateCap": "0.25",
+                                "maxNumOrders": "200",
+                                "limitPriceCap": "0.05",
+                                "limitPriceFloor": "0.05",
+                                "riskFactorConfig": [
+                                    {
+                                        "upperBound": "4000000",
+                                        "riskFactor": "0.02",
+                                        "isAvailableForUsers": true
+                                    }
+                                ]
+                            },
+                            "l2Config": {
+                                "type": "STARKX",
+                                "collateralId": "0x1",
+                                "syntheticId": "0x4254432d3600000000000000000000",
+                                "syntheticResolution": 1000000,
+                                "collateralResolution": 1000000
+                            },
+                            "visibleOnUi": true,
+                            "createdAt": 1752829532673
+                        }
+                    ]
+                },
+                "parsedResponse": {
+                    "BTC/USDC:USDC": {
+                        "symbol": "BTC/USDC:USDC",
+                        "timestamp": null,
+                        "datetime": null,
+                        "high": 77399,
+                        "low": 75635,
+                        "bid": 77025,
+                        "bidVolume": null,
+                        "ask": 77026,
+                        "askVolume": null,
+                        "vwap": 76375.3314444753,
+                        "open": 76845,
+                        "close": 77026,
+                        "last": 77026,
+                        "previousClose": null,
+                        "change": 181,
+                        "percentage": 0.24,
+                        "average": 76935,
+                        "baseVolume": 3027.3671,
+                        "quoteVolume": 231216165.6666,
+                        "markPrice": 77006.09189799998,
+                        "indexPrice": 77050.739529925,
+                        "info": {
+                            "dailyVolume": "231216165.666600",
+                            "dailyVolumeBase": "3027.36710",
+                            "dailyPriceChange": "181",
+                            "dailyPriceChangePercentage": "0.0024",
+                            "dailyLow": "75635",
+                            "dailyHigh": "77399",
+                            "lastPrice": "77026",
+                            "askPrice": "77026",
+                            "bidPrice": "77025",
+                            "markPrice": "77006.091897999984",
+                            "indexPrice": "77050.739529925005",
+                            "fundingRate": "0.000012",
+                            "nextFundingRate": 1777446000000,
+                            "openInterest": "114851569.088316",
+                            "openInterestBase": "1491.33012",
+                            "deleverageLevels": {
+                                "shortPositions": [
+                                    {
+                                        "level": 1,
+                                        "rankingLowerBound": "-784.2884"
+                                    },
+                                    {
+                                        "level": 2,
+                                        "rankingLowerBound": "-2.1078"
+                                    },
+                                    {
+                                        "level": 3,
+                                        "rankingLowerBound": "-0.8754"
+                                    },
+                                    {
+                                        "level": 4,
+                                        "rankingLowerBound": "0.0000"
+                                    }
+                                ],
+                                "longPositions": [
+                                    {
+                                        "level": 1,
+                                        "rankingLowerBound": "-47747.2010"
+                                    },
+                                    {
+                                        "level": 2,
+                                        "rankingLowerBound": "-0.0131"
+                                    },
+                                    {
+                                        "level": 3,
+                                        "rankingLowerBound": "0.0019"
+                                    },
+                                    {
+                                        "level": 4,
+                                        "rankingLowerBound": "0.0032"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "fetchOrderBook": [
+            {
+                "description": "fetchOrderBook with limit",
+                "method": "fetchOrderBook",
+                "input": [
+                    "BTC/USDC:USDC",
+                    1
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": {
+                        "market": "BTC-USD",
+                        "bid": [
+                            {
+                                "qty": "14.46084",
+                                "price": "76214"
+                            }
+                        ],
+                        "ask": [
+                            {
+                                "qty": "0.11585",
+                                "price": "76215"
+                            }
+                        ]
+                    }
+                },
+                "parsedResponse": {
+                    "symbol": "BTC/USDC:USDC",
+                    "bids": [
+                        [
+                            76214,
+                            14.46084
+                        ]
+                    ],
+                    "asks": [
+                        [
+                            76215,
+                            0.11585
+                        ]
+                    ],
+                    "timestamp": null,
+                    "datetime": null,
+                    "nonce": null
+                }
+            }
+        ],
+        "fetchTrades": [
+            {
+                "description": "fetchTrades",
+                "method": "fetchTrades",
+                "input": [
+                    "BTC/USDC:USDC"
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "i": 2049676905958871000,
+                            "m": "BTC-USD",
+                            "S": "SELL",
+                            "tT": "TRADE",
+                            "T": 1777516030193,
+                            "p": "76140",
+                            "q": "0.00165"
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    {
+                        "id": "2049676905958871000",
+                        "info": {
+                            "i": 2049676905958871000,
+                            "m": "BTC-USD",
+                            "S": "SELL",
+                            "tT": "TRADE",
+                            "T": 1777516030193,
+                            "p": "76140",
+                            "q": "0.00165"
+                        },
+                        "timestamp": 1777516030193,
+                        "datetime": "2026-04-30T02:27:10.193Z",
+                        "symbol": "BTC/USDC:USDC",
+                        "order": null,
+                        "type": null,
+                        "side": "sell",
+                        "takerOrMaker": null,
+                        "price": 76140,
+                        "amount": 0.00165,
+                        "cost": 125.631,
+                        "fee": {
+                            "cost": null,
+                            "currency": null
+                        },
+                        "fees": []
+                    }
+                ]
+            }
+        ],
+        "fetchOHLCV": [
+            {
+                "description": "fetchOHLCV with until",
+                "method": "fetchOHLCV",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "o": "75657.5",
+                            "l": "75657.5",
+                            "h": "75657.5",
+                            "c": "75657.5",
+                            "v": "0",
+                            "T": 1777517880000
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    [
+                        1777517880000,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        0
+                    ]
+                ]
+            }
+        ],
+        "fetchMarkOHLCV": [
+            {
+                "description": "fetchMarkOHLCV with until",
+                "method": "fetchMarkOHLCV",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "o": "75657.5",
+                            "l": "75657.5",
+                            "h": "75657.5",
+                            "c": "75657.5",
+                            "v": "0",
+                            "T": 1777517880000
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    [
+                        1777517880000,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        0
+                    ]
+                ]
+            }
+        ],
+        "fetchIndexOHLCV": [
+            {
+                "description": "fetchIndexOHLCV with until",
+                "method": "fetchIndexOHLCV",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1m",
+                    1777517880000,
+                    1,
+                    {
+                        "until": 1777517940000
+                    }
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "o": "75657.5",
+                            "l": "75657.5",
+                            "h": "75657.5",
+                            "c": "75657.5",
+                            "v": "0",
+                            "T": 1777517880000
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    [
+                        1777517880000,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        75657.5,
+                        0
+                    ]
+                ]
+            }
+        ],
+        "fetchFundingRateHistory": [
+            {
+                "description": "fetchFundingRateHistory with since, limit, until",
+                "method": "fetchFundingRateHistory",
+                "input": [
+                    "BTC/USDC:USDC",
+                    1777503601028,
+                    1,
+                    {
+                        "until": 1777507201028
+                    }
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "m": "BTC-USD",
+                            "f": "0.000008",
+                            "T": 1777507201028
+                        }
+                    ],
+                    "pagination": {
+                        "cursor": 1784963886257016800,
+                        "count": 1
+                    }
+                },
+                "parsedResponse": [
+                    {
+                        "info": {
+                            "m": "BTC-USD",
+                            "f": "0.000008",
+                            "T": 1777507201028,
+                            "cursor": 1784963886257016800
+                        },
+                        "symbol": "BTC/USDC:USDC",
+                        "fundingRate": 0.000008,
+                        "timestamp": 1777507201028,
+                        "datetime": "2026-04-30T00:00:01.028Z"
+                    }
+                ]
+            }
+        ],
+        "fetchOpenInterestHistory": [
+            {
+                "description": "fetchOpenInterestHistory with since, limit, until",
+                "method": "fetchOpenInterestHistory",
+                "input": [
+                    "BTC/USDC:USDC",
+                    "1h",
+                    1777417200000,
+                    1,
+                    {
+                        "until": 1777420800000
+                    }
+                ],
+                "httpResponse": {
+                    "status": "OK",
+                    "data": [
+                        {
+                            "i": "112620590.6060360000000000",
+                            "I": "1473.1408400000000000",
+                            "t": 1777420800000
+                        }
+                    ]
+                },
+                "parsedResponse": [
+                    {
+                        "symbol": "BTC/USDC:USDC",
+                        "openInterestAmount": 1473.14084,
+                        "openInterestValue": 112620590.606036,
+                        "baseVolume": 1473.14084,
+                        "quoteVolume": 112620590.606036,
+                        "timestamp": 1777420800000,
+                        "datetime": "2026-04-29T00:00:00.000Z",
+                        "info": {
+                            "i": "112620590.6060360000000000",
+                            "I": "1473.1408400000000000",
+                            "t": 1777420800000
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
