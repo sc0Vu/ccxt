@@ -2,7 +2,7 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, Int, Market, OrderBook, Str, Strings, Ticker, Tickers } from './base/types.js';
+import type { Dict, Int, Market, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -714,6 +714,80 @@ export default class extended extends Exchange {
             orderbook['asks'] = this.arraySlice (orderbook['asks'], 0, limit);
         }
         return orderbook;
+    }
+
+    /**
+     * @method
+     * @name extended#fetchTrades
+     * @description get the list of most recent trades for a particular symbol
+     * @see https://api.docs.extended.exchange/#get-market-last-trades
+     * @param {string} symbol unified symbol of the market to fetch trades for
+     * @param {int} [since] timestamp in ms of the earliest trade to fetch
+     * @param {int} [limit] the maximum amount of trades to fetch
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=public-trades}
+     */
+    async fetchTrades (symbol: Str, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Trade[]> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const request: Dict = {
+            'market': market['id'],
+        };
+        const response = await this.v1PublicGetInfoMarketsMarketTrades (this.extend (request, params));
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": [
+        //         {
+        //           "i": 2.049676905958871e+18,
+        //           "m": "BTC-USD",
+        //           "S": "SELL",
+        //           "tT": "TRADE",
+        //           "T": 1777516030193,
+        //           "p": "76140",
+        //           "q": "0.00165"
+        //         }
+        //       ]
+        //     }
+        //
+        const data = this.safeList (response, 'data', []);
+        return this.parseTrades (data, market, since, limit);
+    }
+
+    parseTrade (trade: Dict, market: Market = undefined): Trade {
+        //
+        //     {
+        //       "i": 2.049676905958871e+18,
+        //       "m": "BTC-USD",
+        //       "S": "SELL",
+        //       "tT": "TRADE",
+        //       "T": 1777516030193,
+        //       "p": "76140",
+        //       "q": "0.00165"
+        //     }
+        //
+        const marketId = this.safeString (trade, 'm');
+        market = this.safeMarket (marketId, market);
+        const timestamp = this.safeInteger (trade, 'T');
+        const priceString = this.safeString (trade, 'p');
+        const amountString = this.safeString (trade, 'q');
+        const sideRaw = this.safeString (trade, 'S');
+        const side = (sideRaw !== undefined) ? sideRaw.toLowerCase () : undefined;
+        return this.safeTrade ({
+            'id': this.safeString (trade, 'i'),
+            'info': trade,
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+            'symbol': market['symbol'],
+            'order': undefined,
+            'type': undefined,
+            'side': side,
+            'takerOrMaker': undefined,
+            'price': priceString,
+            'amount': amountString,
+            'cost': undefined,
+            'fee': undefined,
+        }, market);
     }
 
     sign (path, api = 'public', method = 'POST', params = {}, headers = undefined, body = undefined) {
