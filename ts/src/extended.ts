@@ -2,7 +2,8 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, Int, Market, OHLCV, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
+import type { Dict, FundingRateHistory, Int, Market, OHLCV, OrderBook, Str, Strings, Ticker, Tickers, Trade } from './base/types.js';
+import { ArgumentsRequired } from './base/errors.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -81,7 +82,7 @@ export default class extended extends Exchange {
                 'fetchFundingInterval': false,
                 'fetchFundingIntervals': false,
                 'fetchFundingRate': false,
-                'fetchFundingRateHistory': false,
+                'fetchFundingRateHistory': true,
                 'fetchFundingRates': false,
                 'fetchIndexOHLCV': true,
                 'fetchIsolatedBorrowRate': false,
@@ -173,6 +174,8 @@ export default class extended extends Exchange {
                     'public': {
                         'get': [
                             'info/markets',
+                            'info/assets',
+                            'info/assets/{asset}/price',
                             'info/markets/{market}/stats',
                             'info/markets/{market}/orderbook',
                             'info/markets/{market}/trades',
@@ -867,6 +870,100 @@ export default class extended extends Exchange {
             this.safeNumber (ohlcv, 'c'),
             this.safeNumber (ohlcv, 'v'),
         ];
+    }
+
+    /**
+     * @method
+     * @name extended#fetchFundingRateHistory
+     * @description fetches historical funding rate prices
+     * @see https://api.docs.extended.exchange/#get-funding-rates-history
+     * @param {string} symbol unified symbol of the market to fetch funding rate history for
+     * @param {int} [since] timestamp in ms of the earliest funding rate to fetch
+     * @param {int} [limit] the maximum amount of entries to fetch
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {int} [params.until] timestamp in ms of the latest funding rate to fetch
+     * @param {int} [params.endTime] exchange-specific end timestamp in ms of the latest funding rate to fetch
+     * @param {int} [params.cursor] offset of the result set
+     * @param {boolean} [params.paginate] default false, when true will automatically paginate by calling this endpoint multiple times. See in the docs all the [available parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-params)
+     * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure}
+     */
+    async fetchFundingRateHistory (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<FundingRateHistory[]> {
+        if (symbol === undefined) {
+            throw new ArgumentsRequired (this.id + ' fetchFundingRateHistory() requires a symbol argument');
+        }
+        await this.loadMarkets ();
+        let paginate = false;
+        [ paginate, params ] = this.handleOptionAndParams (params, 'fetchFundingRateHistory', 'paginate');
+        if (paginate) {
+            return await this.fetchPaginatedCallCursor ('fetchFundingRateHistory', symbol, since, limit, params, 'cursor', 'cursor', undefined, 10000) as FundingRateHistory[];
+        }
+        const market = this.market (symbol);
+        symbol = market['symbol'];
+        if (limit === undefined) {
+            limit = 100;
+        }
+        const until = this.safeInteger (params, 'until', this.milliseconds ());
+        const endTime = this.safeInteger (params, 'endTime', until);
+        params = this.omit (params, [ 'endTime', 'until' ]);
+        if (since === undefined) {
+            since = endTime - (limit * 60 * 60 * 1000);
+        }
+        const request: Dict = {
+            'market': market['id'],
+            'startTime': since,
+            'endTime': endTime,
+            'limit': limit,
+        };
+        const response = await this.v1PublicGetInfoMarketFunding (this.extend (request, params));
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": [
+        //         {
+        //           "m": "BTC-USD",
+        //           "f": "0.000008",
+        //           "T": 1777507201028
+        //         }
+        //       ],
+        //       "pagination": {
+        //         "cursor": 1784963886257016832,
+        //         "count": 1
+        //       }
+        //     }
+        //
+        const data = this.safeList (response, 'data', []);
+        const pagination = this.safeDict (response, 'pagination', {});
+        const cursor = this.safeValue (pagination, 'cursor');
+        const result: FundingRateHistory[] = [];
+        for (let i = 0; i < data.length; i++) {
+            let entry = data[i];
+            if ((cursor !== undefined) && (i === data.length - 1)) {
+                entry = this.extend (entry, { 'cursor': cursor });
+            }
+            result.push (this.parseFundingRateHistory (entry, market));
+        }
+        const sorted = this.sortBy (result, 'timestamp');
+        return this.filterBySymbolSinceLimit (sorted, symbol, since, limit) as FundingRateHistory[];
+    }
+
+    parseFundingRateHistory (info: Dict, market: Market = undefined): FundingRateHistory {
+        //
+        //     {
+        //       "m": "BTC-USD",
+        //       "f": "0.000008",
+        //       "T": 1777507201028
+        //     }
+        //
+        const marketId = this.safeString (info, 'm');
+        market = this.safeMarket (marketId, market);
+        const timestamp = this.safeInteger (info, 'T');
+        return {
+            'info': info,
+            'symbol': market['symbol'],
+            'fundingRate': this.safeNumber (info, 'f'),
+            'timestamp': timestamp,
+            'datetime': this.iso8601 (timestamp),
+        } as FundingRateHistory;
     }
 
     sign (path, api = 'public', method = 'POST', params = {}, headers = undefined, body = undefined) {
