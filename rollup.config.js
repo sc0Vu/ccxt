@@ -42,7 +42,8 @@ export default [
       'debug',
       "http-proxy-agent",
       "https-proxy-agent",
-      "protobufjs/minimal"
+      "protobufjs/minimal",
+      "protobufjs/minimal.js"
     ]
   }
 ];

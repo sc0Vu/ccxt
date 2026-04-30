@@ -16,6 +16,8 @@ const basePlugins = [
       { find: 'node:zlib', replacement: 'browserify-zlib' },
       { find: 'node:stream', replacement: 'stream-browserify' },
       { find: 'node:process', replacement: 'process/browser' },
+      { find: 'node:os', replacement: 'os-browserify' },
+      { find: 'node:path', replacement: 'path-browserify' },
       { find: 'http', replacement: 'stream-http' },
       { find: 'https', replacement: 'https-browserify' },
       { find: 'zlib', replacement: 'browserify-zlib' },
@@ -38,6 +40,7 @@ const onwarn = ( warning, next ) => {
   if ( warning.message.indexOf('Circular dependency: node_modules/') > -1 ) return
   if ( warning.message.indexOf('output.globals') > -1 ) return
   if ( warning.message.indexOf('Creating a browser bundle that depends on Node.js built-in modules') > -1 ) return
+  if ( warning.code === 'THIS_IS_UNDEFINED' ) return
   next( warning )
 }
 
@@ -46,7 +49,8 @@ const external = [
   'socks-proxy-agent',
   'node:net',
   'net',
-  'tls'
+  'tls',
+  'node:fs'
 ]
 
 export default [
