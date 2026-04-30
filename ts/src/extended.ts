@@ -2,7 +2,7 @@
 //  ---------------------------------------------------------------------------
 
 import Exchange from './abstract/extended.js';
-import type { Dict, Int, Market, Str, Strings, Ticker, Tickers } from './base/types.js';
+import type { Dict, Int, Market, OrderBook, Str, Strings, Ticker, Tickers } from './base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -668,6 +668,52 @@ export default class extended extends Exchange {
             'indexPrice': this.safeNumber (ticker, 'indexPrice'),
             'info': ticker,
         }, market);
+    }
+
+    /**
+     * @method
+     * @name extended#fetchOrderBook
+     * @description fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
+     * @see https://api.docs.extended.exchange/#get-market-order-book
+     * @param {string} symbol unified symbol of the market to fetch the order book for
+     * @param {int} [limit] the maximum amount of order book entries to return
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/#/?id=order-book-structure} indexed by market symbols
+     */
+    async fetchOrderBook (symbol: string, limit: Int = undefined, params = {}): Promise<OrderBook> {
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const request: Dict = {
+            'market': market['id'],
+        };
+        const response = await this.v1PublicGetInfoMarketsMarketOrderbook (this.extend (request, params));
+        //
+        //     {
+        //       "status": "OK",
+        //       "data": {
+        //         "market": "BTC-USD",
+        //         "bid": [
+        //           {
+        //             "qty": "14.46084",
+        //             "price": "76214"
+        //           }
+        //         ],
+        //         "ask": [
+        //           {
+        //             "qty": "0.11585",
+        //             "price": "76215"
+        //           }
+        //         ]
+        //       }
+        //     }
+        //
+        const data = this.safeDict (response, 'data', {});
+        const orderbook = this.parseOrderBook (data, market['symbol'], undefined, 'bid', 'ask', 'price', 'qty');
+        if (limit !== undefined) {
+            orderbook['bids'] = this.arraySlice (orderbook['bids'], 0, limit);
+            orderbook['asks'] = this.arraySlice (orderbook['asks'], 0, limit);
+        }
+        return orderbook;
     }
 
     sign (path, api = 'public', method = 'POST', params = {}, headers = undefined, body = undefined) {
