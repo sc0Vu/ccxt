@@ -63,9 +63,9 @@ export default class hibachi extends Exchange {
                 'editOrders': true,
                 'fetchAccounts': false,
                 'fetchBalance': true,
-                'fetchCanceledOrders': false,
+                'fetchCanceledOrders': true,
                 'fetchClosedOrder': false,
-                'fetchClosedOrders': false,
+                'fetchClosedOrders': true,
                 'fetchConvertCurrencies': false,
                 'fetchConvertQuote': false,
                 'fetchCurrencies': false,
@@ -244,7 +244,20 @@ export default class hibachi extends Exchange {
                         'symbolRequired': false,
                     },
                     'fetchOrders': undefined,
-                    'fetchClosedOrders': undefined,
+                    'fetchCanceledOrders': {
+                        'marginMode': false,
+                        'limit': undefined,
+                        'daysBack': undefined,
+                        'untilDays': undefined,
+                        'symbolRequired': false,
+                    },
+                    'fetchClosedOrders': {
+                        'marginMode': false,
+                        'limit': undefined,
+                        'daysBack': undefined,
+                        'untilDays': undefined,
+                        'symbolRequired': false,
+                    },
                     'fetchOHLCV': {
                         'limit': undefined,
                     },
@@ -666,7 +679,8 @@ export default class hibachi extends Exchange {
         return this.parseTicker (ticker, market);
     }
 
-    parseOrderStatus (status: string): string {
+    parseOrderStatus (status: Str): Str {
+        const uppercaseStatus = (status !== undefined) ? status.toUpperCase () : undefined;
         const statuses: Dict = {
             'PENDING': 'open',
             'CHILD_PENDING': 'open',
@@ -675,9 +689,10 @@ export default class hibachi extends Exchange {
             'PARTIALLY_FILLED': 'open',
             'FILLED': 'closed',
             'CANCELLED': 'canceled',
+            'PARTIAL_CANCELLED': 'canceled',
             'REJECTED': 'rejected',
         };
-        return this.safeString (statuses, status, status);
+        return this.safeString (statuses, uppercaseStatus, status);
     }
 
     parseOrder (order: Dict, market: Market = undefined): Order {
@@ -686,6 +701,7 @@ export default class hibachi extends Exchange {
         const status = this.safeString (order, 'status');
         const type = this.safeStringLower (order, 'orderType');
         const price = this.safeString (order, 'price');
+        const average = this.safeString (order, 'avgFillPrice');
         const rawSide = this.safeString (order, 'side');
         let side: Str = undefined;
         if (rawSide === 'BID') {
@@ -694,13 +710,18 @@ export default class hibachi extends Exchange {
             side = 'sell';
         }
         const amount = this.safeString (order, 'totalQuantity');
-        const remaining = this.safeString (order, 'availableQuantity');
+        let remaining = this.safeString (order, 'availableQuantity');
         const totalQuantity = this.safeString (order, 'totalQuantity');
         const availableQuantity = this.safeString (order, 'availableQuantity');
-        let filled: Str = undefined;
+        let filled = this.safeString (order, 'filledQuantity');
         if (totalQuantity !== undefined && availableQuantity !== undefined) {
             filled = Precise.stringSub (totalQuantity, availableQuantity);
         }
+        if (remaining === undefined && totalQuantity !== undefined && filled !== undefined) {
+            remaining = Precise.stringSub (totalQuantity, filled);
+        }
+        const timestamp = this.safeInteger (order, 'createdAt');
+        const lastUpdateTimestamp = this.safeInteger (order, 'closedAt');
         let timeInForce = 'GTC';
         const orderFlags = this.safeValue (order, 'orderFlags');
         let postOnly = false;
@@ -718,16 +739,16 @@ export default class hibachi extends Exchange {
             'id': this.safeString (order, 'orderId'),
             'clientOrderId': undefined,
             'datetime': undefined,
-            'timestamp': undefined,
+            'timestamp': timestamp,
             'lastTradeTimestamp': undefined,
-            'lastUpdateTimestamp': undefined,
+            'lastUpdateTimestamp': lastUpdateTimestamp,
             'status': this.parseOrderStatus (status),
             'symbol': market['symbol'],
             'type': type,
             'timeInForce': timeInForce,
             'side': side,
             'price': price,
-            'average': undefined,
+            'average': average,
             'amount': amount,
             'filled': filled,
             'remaining': remaining,
@@ -762,6 +783,110 @@ export default class hibachi extends Exchange {
         };
         const response = await this.privateGetTradeOrder (this.extend (request, params));
         return this.parseOrder (response, market);
+    }
+
+    /**
+     * @ignore
+     * @method
+     * @name hibachi#fetchOrdersByStatus
+     * @description fetches information on multiple orders filtered by terminal status
+     * @see https://api-doc.hibachi.xyz/#0ca35e79-a80e-4a91-bd32-de3fc2b0b1fa
+     * @param {string} status exchange specific order status
+     * @param {string} [symbol] unified market symbol of the orders
+     * @param {int} [since] timestamp in ms of the earliest order
+     * @param {int} [limit] the maximum number of orders to return
+     * @param {object} [params] extra parameters
+     * @param {int} [params.until] timestamp in ms of the latest order
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
+     */
+    async fetchOrdersByStatus (status: string, symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Order[]> {
+        await this.loadMarkets ();
+        let market: Market = undefined;
+        const request: Dict = {
+            'accountId': this.getAccountId (),
+            'status': status,
+        };
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+            request['marketSymbols'] = market['id'];
+        }
+        if (since !== undefined) {
+            request['startTime'] = since;
+        }
+        let until: Int = undefined;
+        [ until, params ] = this.handleOptionAndParams (params, 'fetchOrdersByStatus', 'until');
+        if (until !== undefined) {
+            request['endTime'] = until;
+        }
+        const response = await this.privateGetTradeOrdersHistory (this.extend (request, params));
+        //
+        //     {
+        //         "hasMore": false,
+        //         "orders": [
+        //             {
+        //                 "accountId": 128,
+        //                 "avgFillPrice": "2900.000000",
+        //                 "closedAt": 1777811627000,
+        //                 "createdAt": 1777811620000,
+        //                 "filledQuantity": "1.200000000",
+        //                 "orderFlags": null,
+        //                 "orderId": "596002791293190100",
+        //                 "orderType": "MARKET",
+        //                 "parentOrderId": null,
+        //                 "price": null,
+        //                 "side": "BID",
+        //                 "sourceType": "regular",
+        //                 "status": "Filled",
+        //                 "symbol": "ETH/USDT-P",
+        //                 "totalQuantity": "1.200000000",
+        //                 "triggerDirection": null,
+        //                 "triggerPrice": null
+        //             }
+        //         ]
+        //     }
+        //
+        const orders = this.safeList (response, 'orders', []);
+        return this.parseOrders (orders, market, since, limit);
+    }
+
+    /**
+     * @method
+     * @name hibachi#fetchClosedOrders
+     * @description fetches information on multiple closed orders made by the user
+     * @see https://api-doc.hibachi.xyz/#0ca35e79-a80e-4a91-bd32-de3fc2b0b1fa
+     * @param {string} [symbol] unified market symbol of the closed orders
+     * @param {int} [since] timestamp in ms of the earliest order
+     * @param {int} [limit] the maximum number of closed orders to return
+     * @param {object} [params] extra parameters
+     * @param {string} [params.status] exchange specific order status, default is filled
+     * @param {int} [params.until] timestamp in ms of the latest order
+     * @param {string} [params.cursorOrderId] pagination cursor, returns orders with orderId strictly less than this value
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
+     */
+    async fetchClosedOrders (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Order[]> {
+        let status: Str = undefined;
+        [ status, params ] = this.handleOptionAndParams (params, 'fetchClosedOrders', 'status', 'filled');
+        return await this.fetchOrdersByStatus (status, symbol, since, limit, params);
+    }
+
+    /**
+     * @method
+     * @name hibachi#fetchCanceledOrders
+     * @description fetches information on multiple canceled orders made by the user
+     * @see https://api-doc.hibachi.xyz/#0ca35e79-a80e-4a91-bd32-de3fc2b0b1fa
+     * @param {string} [symbol] unified market symbol of the canceled orders
+     * @param {int} [since] timestamp in ms of the earliest order
+     * @param {int} [limit] the maximum number of canceled orders to return
+     * @param {object} [params] extra parameters
+     * @param {string} [params.status] exchange specific order status, possible values are cancelled, partial_cancelled and rejected
+     * @param {int} [params.until] timestamp in ms of the latest order
+     * @param {string} [params.cursorOrderId] pagination cursor, returns orders with orderId strictly less than this value
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
+     */
+    async fetchCanceledOrders (symbol: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Order[]> {
+        let status: Str = undefined;
+        [ status, params ] = this.handleOptionAndParams (params, 'fetchCanceledOrders', 'status', 'cancelled');
+        return await this.fetchOrdersByStatus (status, symbol, since, limit, params);
     }
 
     /**

@@ -54,6 +54,38 @@
                 "output": null
             }
         ],
+        "fetchClosedOrders": [
+            {
+                "description": "fetch closed orders",
+                "method": "fetchClosedOrders",
+                "url": "https://api.hibachi.xyz/trade/orders/history?accountId=13787&status=filled&marketSymbols=SOL%2FUSDT-P&startTime=1754040000000&endTime=1754050000000",
+                "input": [
+                    "SOL/USDT:USDT",
+                    1754040000000,
+                    null,
+                    {
+                        "until": 1754050000000
+                    }
+                ],
+                "output": null
+            }
+        ],
+        "fetchCanceledOrders": [
+            {
+                "description": "fetch canceled orders",
+                "method": "fetchCanceledOrders",
+                "url": "https://api.hibachi.xyz/trade/orders/history?accountId=13787&status=cancelled&marketSymbols=SOL%2FUSDT-P&startTime=1754040000000&endTime=1754050000000",
+                "input": [
+                    "SOL/USDT:USDT",
+                    1754040000000,
+                    null,
+                    {
+                        "until": 1754050000000
+                    }
+                ],
+                "output": null
+            }
+        ],
         "createOrder": [
             {
                 "description": "limit buy order",
