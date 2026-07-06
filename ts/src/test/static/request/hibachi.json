@@ -81,6 +81,18 @@
                 "output": "{\"accountId\":13787,\"symbol\":\"SOL/USDT-P\",\"nonce\":1754046927291,\"side\":\"BID\",\"orderType\":\"MARKET\",\"quantity\":\"0.1\",\"price\":\"\",\"signature\":\"b15bd932744c622dafd92fca1e45119473a5df91d1d495f92e12624399395405\",\"maxFeesPercent\":\"0.00045\"}"
             }
         ],
+        "setLeverage": [
+            {
+                "description": "set leverage",
+                "method": "setLeverage",
+                "url": "https://api.hibachi.xyz/trade/account/leverage",
+                "input": [
+                    5,
+                    "SOL/USDT:USDT"
+                ],
+                "output": "{\"accountId\":13787,\"symbol\":\"SOL/USDT-P\",\"initialMarginRate\":\"0.2\"}"
+            }
+        ],
         "fetchOrderBook": [
             {
                 "description": "orderbook",

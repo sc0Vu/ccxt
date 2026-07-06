@@ -394,6 +394,28 @@
                 }
             }
         ],
+        "setLeverage": [
+            {
+                "description": "set leverage",
+                "method": "setLeverage",
+                "input": [
+                    5,
+                    "SOL/USDT:USDT"
+                ],
+                "httpResponse": {
+                    "status": "success"
+                },
+                "parsedResponse": {
+                    "info": {
+                        "status": "success"
+                    },
+                    "symbol": "SOL/USDT:USDT",
+                    "marginMode": null,
+                    "longLeverage": 5,
+                    "shortLeverage": 5
+                }
+            }
+        ],
         "fetchOrderBook": [
             {
                 "description": "orderbook",

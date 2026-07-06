@@ -5,10 +5,10 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import Exchange from './abstract/hibachi.js';
 import { TICK_SIZE } from './base/functions/number.js';
-import type{ Balances, Currencies, Dict, Market, Str, Ticker, Trade, Int, Num, OrderSide, OrderType, OrderBook, TradingFees, Transaction, DepositAddress, OHLCV, Order, LedgerEntry, Currency, int, Position, Strings, FundingRate, FundingRateHistory, OrderRequest, Fee, NullableDict } from './base/types.js';
+import type{ Balances, Currencies, Dict, Market, Str, Ticker, Trade, Int, Num, OrderSide, OrderType, OrderBook, TradingFees, Transaction, DepositAddress, OHLCV, Order, LedgerEntry, Currency, int, Position, Strings, FundingRate, FundingRateHistory, OrderRequest, Fee, NullableDict, Leverage } from './base/types.js';
 import { ecdsa } from './base/functions/crypto.js';
 import { Precise } from './base/Precise.js';
-import { BadRequest, ExchangeError, OrderNotFound } from './base/errors.js';
+import { ArgumentsRequired, BadRequest, ExchangeError, OrderNotFound } from './base/errors.js';
 
 // ---------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ export default class hibachi extends Exchange {
                 'fetchTransfers': false,
                 'fetchWithdrawals': true,
                 'reduceMargin': false,
-                'setLeverage': false,
+                'setLeverage': true,
                 'setMargin': false,
                 'setPositionMode': false,
                 'transfer': false,
@@ -796,6 +796,43 @@ export default class hibachi extends Exchange {
             };
         }
         return result;
+    }
+
+    /**
+     * @method
+     * @name hibachi#setLeverage
+     * @description set the level of leverage for a market
+     * @see https://api-doc.hibachi.xyz/#a28d8b6d-cc12-4b39-a540-57ebc707585b
+     * @param {int} leverage the rate of leverage
+     * @param {string} symbol unified market symbol
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} a [leverage structure]{@link https://docs.ccxt.com/?id=leverage-structure}
+     */
+    async setLeverage (leverage: int, symbol: Str = undefined, params = {}): Promise<Leverage> {
+        if (symbol === undefined) {
+            throw new ArgumentsRequired (this.id + ' setLeverage() requires a symbol argument');
+        }
+        await this.loadMarkets ();
+        const market = this.market (symbol);
+        const leverageString = this.numberToString (leverage);
+        const request: Dict = {
+            'accountId': this.getAccountId (),
+            'symbol': market['id'],
+            'initialMarginRate': Precise.stringDiv ('1', leverageString),
+        };
+        const response = await this.privatePostTradeAccountLeverage (this.extend (request, params));
+        //
+        //     {
+        //         "status": "success"
+        //     }
+        //
+        return {
+            'info': response,
+            'symbol': market['symbol'],
+            'marginMode': undefined,
+            'longLeverage': leverage,
+            'shortLeverage': leverage,
+        } as Leverage;
     }
 
     orderMessage (market, nonce: number, feeRate: number, type: OrderType, side: OrderSide, amount: number, price: Num = undefined) {
